@@ -40,12 +40,12 @@ import com.yiqun.translator.data.local.vision.model.Line
 import com.yiqun.translator.data.local.vision.model.Paragraph
 import com.yiqun.translator.data.local.vision.model.PointedTextToken
 import com.yiqun.translator.data.local.vision.model.SenseGroupVisionText
-import com.yiqun.translator.data.remote.ai.chatgpt.SenseGroup
 import com.yiqun.translator.data.local.vision.model.Sentence
 import com.yiqun.translator.data.local.vision.model.VisionResponse
 import com.yiqun.translator.data.local.vision.model.VisionText
 import com.yiqun.translator.data.local.vision.model.Word
 import com.yiqun.translator.data.remote.ai.SenseGroupRepository
+import com.yiqun.translator.data.remote.ai.chatgpt.SenseGroup
 import com.yiqun.translator.data.remote.firebase.AnalyticsRepository
 import com.yiqun.translator.data.remote.firebase.RemoteConfigRepository
 import com.yiqun.translator.data.remote.translation.Transaction
@@ -56,7 +56,6 @@ import com.yiqun.translator.extensions.finishService
 import com.yiqun.translator.extensions.gotoStore
 import com.yiqun.translator.extensions.openGoogleApp
 import com.yiqun.translator.extensions.toPx
-import com.yiqun.translator.extensions._unionWith
 import com.yiqun.translator.ui.screen.overlay.dialog.DialogView
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuBarView
 import com.yiqun.translator.ui.screen.overlay.translation.DismissRunningCommand
@@ -852,7 +851,7 @@ class TargetHandleViewModel(
         val cached = sentence.senseGroupCache[tokenOffset]
         if (cached != null) {
             Timber.tag(TAG).d("SENSE_GROUP cache hit word=[${pointedToken.text}] chunk=[${cached.text}]")
-            return buildSenseGroupVisionText(sentence, positionedWord, cached)
+            return SenseGroupVisionText.from(sentence, cached, positionedWord.boundingBox)
         }
 
         val sentenceText = sentence.representation
@@ -863,6 +862,7 @@ class TargetHandleViewModel(
             senseGroupRepository.senseGroupAt(
                 word = wordText,
                 sentence = sentenceText,
+                pointedTokenOffset = tokenOffset,
                 sourceLanguageCode = sourceLanguageCode,
                 targetLanguageCode = targetLanguageCode,
             )
@@ -878,7 +878,7 @@ class TargetHandleViewModel(
         }
 
         sentence.senseGroupCache[tokenOffset] = group
-        return buildSenseGroupVisionText(sentence, positionedWord, group)
+        return SenseGroupVisionText.from(sentence, group, positionedWord.boundingBox)
     }
 
     private fun pointedCharOffset(word: Word, pointerPosition: Point): Int {
@@ -919,57 +919,6 @@ class TargetHandleViewModel(
             }
         }
         return 0
-    }
-
-    /**
-     */
-    private fun buildSenseGroupVisionText(
-        sentence: Sentence,
-        pointedWord: Word,
-        group: SenseGroup,
-    ): SenseGroupVisionText {
-        val rectsInChunk = mutableListOf<Rect>()
-        for (line in sentence.lines) {
-            for (word in line.words) {
-                val wOff = sentence.wordCharOffset(word) ?: continue
-                val wEnd = wOff + word.representation.length
-                if (wOff < group.charRange.last && wEnd > group.charRange.first) {
-                    val charRects = charRectsInRange(word, wOff, group.charRange)
-                    if (charRects.isNotEmpty()) {
-                        rectsInChunk.addAll(charRects)
-                    } else {
-                        rectsInChunk.add(word.boundingBox)
-                    }
-                }
-            }
-        }
-        val unionBoundingBox: Rect = if (rectsInChunk.isNotEmpty()) {
-            rectsInChunk.reduce { acc, rect -> acc._unionWith(rect) }
-        } else {
-            pointedWord.boundingBox
-        }
-        return SenseGroupVisionText(
-            parentSentence = sentence,
-            senseGroup = group,
-            boundingBox = unionBoundingBox,
-            writingDirection = sentence.writingDirection,
-            fontHeight = sentence.fontHeight,
-        )
-    }
-
-    private fun charRectsInRange(word: Word, wordOffset: Int, range: IntRange): List<Rect> {
-        if (word.chars.isEmpty()) return emptyList()
-
-        val rects = mutableListOf<Rect>()
-        var charOffset = wordOffset
-        for (char in word.chars) {
-            val charEnd = charOffset + char.representation.length
-            if (charOffset < range.last && charEnd > range.first) {
-                rects.add(char.boundingBox)
-            }
-            charOffset = charEnd
-        }
-        return rects
     }
 
     /**

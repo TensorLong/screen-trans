@@ -2,6 +2,7 @@ package com.yiqun.translator.ui.screen.overlay.visiontext
 
 import android.content.Context
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.os.Build
 import android.view.Gravity
 import android.view.MotionEvent
@@ -43,6 +44,7 @@ import com.yiqun.translator.data.local.vision.TextDetectMode
 import com.yiqun.translator.data.local.vision.WritingDirection
 import com.yiqun.translator.data.local.vision.model.Line
 import com.yiqun.translator.data.local.vision.model.Paragraph
+import com.yiqun.translator.data.local.vision.model.SenseGroupVisionText
 import com.yiqun.translator.data.local.vision.model.Sentence
 import com.yiqun.translator.data.local.vision.model.VisionText
 import com.yiqun.translator.data.local.vision.model.Word
@@ -152,7 +154,39 @@ fun VisionTextBox(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        if (visionText is Sentence) {
+        if (visionText is SenseGroupVisionText) {
+            visionText.highlightBoxes.forEach {
+                val boxWidth = TypedValueCompat.pxToDp(it.width().toFloat(), displayMetrics).dp
+                val boxHeight = TypedValueCompat.pxToDp(it.height().toFloat(), displayMetrics).dp
+                val relativeBoundingBox = it.relativeTo(visionText.boundingBox)
+                val paddingStart = when (visionText.writingDirection) {
+                    WritingDirection.LTR, WritingDirection.TTB_LTR -> TypedValueCompat.pxToDp(relativeBoundingBox.left.toFloat(), displayMetrics).dp
+                    WritingDirection.RTL, WritingDirection.TTB_RTL -> TypedValueCompat.pxToDp(relativeBoundingBox.right.toFloat(), displayMetrics).dp
+                }
+                val paddingTop = TypedValueCompat.pxToDp(relativeBoundingBox.top.toFloat(), displayMetrics).dp
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            start = paddingStart,
+                            top = paddingTop,
+                        )
+                ) {
+                    Text(
+                        text = "",
+                        style = MaterialTheme.typography.bodySmall.copy(color = Color.Black, fontSize = 11.sp),
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .background(visionTextColor.copy(alpha = alpha))
+                            .width(boxWidth)
+                            .height(boxHeight),
+                        textAlign = TextAlign.Start,
+                        overflow = TextOverflow.Clip,
+                    )
+                }
+            }
+        } else if (visionText is Sentence) {
             visionText.lines.forEach {
                 val lineWidth = TypedValueCompat.pxToDp(it.width.toFloat(), displayMetrics).dp
                 val lineHeight = TypedValueCompat.pxToDp(it.height.toFloat(), displayMetrics).dp
@@ -253,5 +287,14 @@ fun VisionTextBox(
         }
     }
 
+}
+
+private fun Rect.relativeTo(parentBoundingBox: Rect): Rect {
+    return Rect(
+        left - parentBoundingBox.left,
+        top - parentBoundingBox.top,
+        right - parentBoundingBox.left,
+        bottom - parentBoundingBox.top,
+    )
 }
 

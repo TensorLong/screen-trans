@@ -84,6 +84,7 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
     suspend fun senseGroupAt(
         word: String,
         sentence: String,
+        pointedTokenOffset: Int? = null,
         sourceLanguageCode: String,
         targetLanguageCode: String,
     ): SenseGroup? {
@@ -109,6 +110,9 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 "\n\n" +
                 "Rules (all MUST be followed):" +
                 "\n - The chunk MUST contain the pointed word." +
+                "\n - If pointed_word_start and pointed_word_end are provided, identify " +
+                "the word occurrence at exactly those character offsets. Do NOT use an " +
+                "earlier repeated occurrence of the same word." +
                 "\n - The chunk MUST appear VERBATIM in the sentence — copy the substring " +
                 "exactly, do not paraphrase, do not normalize punctuation, do not change " +
                 "case." +
@@ -124,6 +128,10 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
         val userPayload = JSONObject().apply {
             put("word", word)
             put("sentence", sentence)
+            if (pointedTokenOffset != null) {
+                put("pointed_word_start", pointedTokenOffset)
+                put("pointed_word_end", pointedTokenOffset + word.length)
+            }
             put("source_language", sourceLanguageCode)
             put("target_language", targetLanguageCode)
         }.toString()
@@ -170,18 +178,21 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 Timber.tag(TAG).w("senseGroupAt() empty chunk in response: $raw")
                 return null
             }
-            val start = sentence.indexOf(chunkText)
-            if (start < 0) {
+            val range = chunkCharRange(sentence, chunkText, pointedTokenOffset)
+            if (range == null) {
                 Timber.tag(TAG).w("senseGroupAt() chunk [$chunkText] not found in sentence [$sentence]")
+                return null
+            }
+            if (pointedTokenOffset != null && !range.containsExclusive(pointedTokenOffset)) {
+                Timber.tag(TAG).w("senseGroupAt() chunk [$chunkText] does not contain pointed offset [$pointedTokenOffset]")
                 return null
             }
             if (!chunkText.contains(word)) {
                 Timber.tag(TAG).w("senseGroupAt() chunk [$chunkText] does not contain word [$word]")
                 return null
             }
-            val end = start + chunkText.length
-            Timber.tag(TAG).d("senseGroupAt() OK word=[$word] chunk=[$chunkText] tr=[$translation] range=$start..$end")
-            SenseGroup(chunkText, translation, start..end)
+            Timber.tag(TAG).d("senseGroupAt() OK word=[$word] chunk=[$chunkText] tr=[$translation] range=${range.first}..${range.last}")
+            SenseGroup(chunkText, translation, range)
         } catch (e: Exception) {
             Timber.tag(TAG).w(e, "senseGroupAt() parse failed: $raw")
             null
@@ -223,12 +234,46 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 .sorted()
         }
 
+        fun chunkCharRange(
+            sentence: String,
+            chunkText: String,
+            pointedTokenOffset: Int? = null,
+        ): IntRange? {
+            val chunk = chunkText.takeIf { it.isNotEmpty() } ?: return null
+            val occurrences = mutableListOf<IntRange>()
+            var searchFrom = 0
+            while (searchFrom <= sentence.length) {
+                val start = sentence.indexOf(chunk, startIndex = searchFrom)
+                if (start < 0) break
+                val end = start + chunk.length
+                occurrences.add(start..end)
+                searchFrom = (start + 1).coerceAtMost(sentence.length + 1)
+            }
+            if (occurrences.isEmpty()) return null
+            if (pointedTokenOffset == null) return occurrences.first()
+
+            return occurrences.firstOrNull { it.containsExclusive(pointedTokenOffset) }
+                ?: occurrences.minByOrNull { distanceToExclusiveRange(pointedTokenOffset, it) }
+        }
+
         private fun isOpenRouterBaseUrl(baseUrl: String?): Boolean {
             val normalized = baseUrl?.trim()?.lowercase().orEmpty()
             return normalized.startsWith("https://openrouter.ai/") ||
                     normalized == "https://openrouter.ai" ||
                     normalized.startsWith("http://openrouter.ai/") ||
                     normalized == "http://openrouter.ai"
+        }
+
+        private fun IntRange.containsExclusive(offset: Int): Boolean {
+            return offset >= first && offset < last
+        }
+
+        private fun distanceToExclusiveRange(offset: Int, range: IntRange): Int {
+            return when {
+                offset < range.first -> range.first - offset
+                offset >= range.last -> offset - range.last + 1
+                else -> 0
+            }
         }
     }
 }

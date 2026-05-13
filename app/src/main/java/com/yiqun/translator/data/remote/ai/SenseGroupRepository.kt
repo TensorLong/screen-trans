@@ -15,12 +15,14 @@ class SenseGroupRepository @Inject constructor(
     suspend fun senseGroupAt(
         word: String,
         sentence: String,
+        pointedTokenOffset: Int,
         sourceLanguageCode: String,
         targetLanguageCode: String,
     ): SenseGroup? {
         return chatGPTKit.senseGroupAt(
             word = word,
             sentence = sentence,
+            pointedTokenOffset = pointedTokenOffset,
             sourceLanguageCode = sourceLanguageCode,
             targetLanguageCode = targetLanguageCode,
         )

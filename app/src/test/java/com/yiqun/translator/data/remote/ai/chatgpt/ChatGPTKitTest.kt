@@ -89,4 +89,19 @@ class ChatGPTKitTest {
         assertNotNull("$fieldName should keep its JSON field name in release builds", annotation)
         assertEquals(expectedName, annotation?.value)
     }
+
+    @Test
+    fun chunkCharRangeChoosesOccurrenceThatContainsPointedTokenOffset() {
+        val sentence = "the cat saw the dog"
+        val secondTheOffset = sentence.lastIndexOf("the")
+
+        val range = ChatGPTKit.chunkCharRange(
+            sentence = sentence,
+            chunkText = "the",
+            pointedTokenOffset = secondTheOffset,
+        )
+
+        assertEquals(secondTheOffset, range?.first)
+        assertEquals(secondTheOffset + "the".length, range?.last)
+    }
 }
