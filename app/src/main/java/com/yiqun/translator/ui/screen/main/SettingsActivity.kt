@@ -162,6 +162,8 @@ class SettingsActivity : AVDActivity() {
 
         val liveStateFlow = MutableStateFlow(false)
 
+        val aiApiSettingsDialogLiveStateFlow = MutableStateFlow(false)
+
         val menuBarViewSettlePositionFlow = MutableStateFlow<Point?>(null)
     }
 
@@ -309,6 +311,7 @@ class SettingsActivity : AVDActivity() {
         HelpTextDetectModeView.INSTANCE.clear()
         HelpTranslationKitView.INSTANCE.clear()
         liveStateFlow.value = false
+        aiApiSettingsDialogLiveStateFlow.value = false
         super.onPause()
     }
 
@@ -441,6 +444,9 @@ class SettingsActivity : AVDActivity() {
         var showAiApiSettingsDialog by remember { mutableStateOf(false) }
         var aiApiKeyIsSet by remember {
             mutableStateOf(ApiKeyInfo.chatgptKeyAvailable(context))
+        }
+        LaunchedEffect(showAiApiSettingsDialog) {
+            aiApiSettingsDialogLiveStateFlow.value = showAiApiSettingsDialog
         }
 
         // Automatic translation playback

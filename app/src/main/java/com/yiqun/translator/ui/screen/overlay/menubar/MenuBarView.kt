@@ -12,10 +12,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkHorizontally
@@ -39,6 +36,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRightAlt
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +48,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -81,7 +79,6 @@ import com.yiqun.translator.R
 import com.yiqun.translator.core.OverlayService
 import com.yiqun.translator.data.local.screen.ScreenInfo
 import com.yiqun.translator.data.local.screen.ScreenInfoHolder
-import com.yiqun.translator.data.local.secure.ApiKeyInfo
 import com.yiqun.translator.data.local.vision.TextDetectMode
 import com.yiqun.translator.data.remote.translation.Language
 import com.yiqun.translator.data.remote.translation.TranslationKitType
@@ -145,6 +142,7 @@ class MenuBarView private constructor() : OverlayView() {
             val targetHandleMotionEventState by targetHandleViewModel.motionEventFlow.collectAsStateWithLifecycle()
 
             val settingsActivityLiveState by SettingsActivity.liveStateFlow.collectAsStateWithLifecycle()
+            val aiApiSettingsDialogLiveState by SettingsActivity.aiApiSettingsDialogLiveStateFlow.collectAsStateWithLifecycle()
 
             // Drag handle dock state
             val dragHandleDockState by targetHandleViewModel.dockStateFlow.collectAsStateWithLifecycle()
@@ -161,6 +159,7 @@ class MenuBarView private constructor() : OverlayView() {
                 captureStatus,
                 targetHandleMotionEventState,
                 settingsActivityLiveState,
+                aiApiSettingsDialogLiveState,
                 dragHandleDockState,
                 textDetectMode,
                 fixedAreaViewState
@@ -168,6 +167,7 @@ class MenuBarView private constructor() : OverlayView() {
 
                 view?.let {
                     val menuVisible = when {
+                        aiApiSettingsDialogLiveState -> false
                         settingsActivityLiveState -> true
                         captureStatus != CaptureStatus.Requested
                                 && targetHandleMotionEventState != MotionEvent.ACTION_MOVE
@@ -832,9 +832,6 @@ fun MenuBar(
                                 translationKitType = translationKitType,
                                 sourceLanguage = sourceLanguage,
                                 targetLanguage = targetLanguage,
-                                showGptBadge = textDetectMode == TextDetectMode.SENSE_GROUP &&
-                                        translationKitType == TranslationKitType.GOOGLE &&
-                                        ApiKeyInfo.chatgptKeyAvailable(context),
                                 enabled = !isAnimatingSwapLanguage.value && updateTranslationKitType != null,
                                 onClick = onClickTranslationKitType,
                                 updateTranslationKitType = { kitType ->
@@ -871,184 +868,48 @@ fun TextDetectModeIconButton(
     updateTextDetectMode: (textDetectMode: TextDetectMode) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val currentTextDetectMode = remember { mutableStateOf(textDetectMode) }
+    var expanded by remember { mutableStateOf(false) }
 
-    LaunchedEffect(textDetectMode) {
-        currentTextDetectMode.value = textDetectMode
-    }
-
-    val transition = updateTransition(targetState = currentTextDetectMode.value, label = "TextDetectModeTransition")
-
-    val animationDuration = 400
-
-    var rotationBase by remember { mutableFloatStateOf(0f) }
-    val rotationEven = rotationBase % 2 == 0f
-
-    val rotationZ = animateFloatAsState(
-        label = "TextDetectModeIconButtonRotationZ",
-        targetValue = rotationBase * 180,
-        animationSpec = tween(durationMillis = animationDuration),
-    )
-
-    val alphaWord by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = animationDuration) },
-        label = "AlphaWord"
-    ) { targetState ->
-        if (targetState == TextDetectMode.WORD) 1f else 0f
-    }
-
-    val alphaSentence by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = animationDuration) },
-        label = "alphaSentence"
-    ) { targetState ->
-        if (targetState == TextDetectMode.SENTENCE) 1f else 0f
-    }
-
-    val alphaSenseGroup by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = animationDuration) },
-        label = "alphaSenseGroup"
-    ) { targetState ->
-        if (targetState == TextDetectMode.SENSE_GROUP) 1f else 0f
-    }
-
-    val alphaParagraph by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = animationDuration) },
-        label = "alphaParagraph"
-    ) { targetState ->
-        if (targetState == TextDetectMode.PARAGRAPH) 1f else 0f
-    }
-
-    val alphaSelect by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = animationDuration) },
-        label = "alphaSelect"
-    ) { targetState ->
-        if (targetState == TextDetectMode.SELECT) 1f else 0f
-    }
-
-    val alphaFixedArea by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = animationDuration) },
-        label = "alphaArea"
-    ) { targetState ->
-        if (targetState == TextDetectMode.FIXED_AREA) 1f else 0f
-    }
-
-    val animationFinished = remember(rotationBase) {
-        derivedStateOf {
-            rotationBase > 0 && rotationZ.value >= rotationBase * 180
+    Box(modifier = modifier.wrapContentSize()) {
+        IconButton(
+            modifier = Modifier.size(48.dp),
+            onClick = {
+                expanded = true
+                onClick?.let { it() }
+            },
+            enabled = enabled
+        ) {
+            Icon(
+                painter = painterResource(id = textDetectMode.iconResourceId),
+                contentDescription = "Detect mode: ${textDetectMode.name}",
+                modifier = Modifier.size(24.dp),
+                tint = contentColor
+            )
         }
-    }
-
-    LaunchedEffect(animationFinished.value) {
-        if (animationFinished.value) {
-            updateTextDetectMode(currentTextDetectMode.value)
-        }
-    }
-
-    IconButton(
-        modifier = modifier.size(48.dp),
-        onClick = {
-            currentTextDetectMode.value = when (currentTextDetectMode.value) {
-                TextDetectMode.WORD -> TextDetectMode.SENTENCE
-                TextDetectMode.SENTENCE -> TextDetectMode.SENSE_GROUP
-                TextDetectMode.SENSE_GROUP -> TextDetectMode.PARAGRAPH
-                TextDetectMode.PARAGRAPH -> TextDetectMode.SELECT
-                TextDetectMode.SELECT -> TextDetectMode.FIXED_AREA
-                TextDetectMode.FIXED_AREA -> TextDetectMode.WORD
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            MenuBarDropdownOptions.textDetectModes.forEach { mode ->
+                DropdownMenuItem(
+                    text = { Text(text = mode.text) },
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = mode.iconResourceId),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = contentColor,
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        if (mode != textDetectMode) {
+                            updateTextDetectMode(mode)
+                        }
+                    }
+                )
             }
-            rotationBase++
-            onClick?.let { it() }
-        },
-        enabled = enabled
-    ) {
-        Icon(
-            painter = painterResource(
-                id = if ((currentTextDetectMode.value == TextDetectMode.WORD) == rotationEven) {
-                    R.drawable.ic_detect_mode_word
-                } else {
-                    R.drawable.ic_detect_mode_word_odd
-                }
-            ),
-            contentDescription = "Detect mode: WORD",
-            modifier = Modifier
-                .size(24.dp)
-                .graphicsLayer(
-                    rotationZ = rotationZ.value,
-                    alpha = alphaWord
-                ),
-            tint = contentColor
-        )
-
-        Icon(
-            painter = painterResource(
-                id = if ((currentTextDetectMode.value == TextDetectMode.SENTENCE) == rotationEven) {
-                    R.drawable.ic_detect_mode_sentence
-                } else {
-                    R.drawable.ic_detect_mode_sentence_odd
-                }
-            ),
-            contentDescription = "Detect mode: SENTENCE",
-            modifier = Modifier
-                .size(24.dp)
-                .graphicsLayer(
-                    rotationZ = rotationZ.value,
-                    alpha = alphaSentence
-                ),
-            tint = contentColor
-        )
-
-        Icon(
-            painter = painterResource(id = R.drawable.ic_detect_mode_sense_group),
-            contentDescription = "Detect mode: SENSE_GROUP",
-            modifier = Modifier
-                .size(24.dp)
-                .graphicsLayer(
-                    rotationZ = rotationZ.value,
-                    alpha = alphaSenseGroup
-                ),
-            tint = contentColor
-        )
-
-        Icon(
-            painter = painterResource(id = R.drawable.ic_detect_mode_paragraph),
-            contentDescription = "Detect mode: PARAGRAPH",
-            modifier = Modifier
-                .size(24.dp)
-                .graphicsLayer(
-                    rotationZ = rotationZ.value,
-                    alpha = alphaParagraph
-                ),
-            tint = contentColor
-        )
-
-        Icon(
-            painter = painterResource(id = R.drawable.ic_detect_mode_select),
-            contentDescription = "Detect mode: SELECT",
-            modifier = Modifier
-                .size(24.dp)
-                .graphicsLayer(
-                    rotationZ = rotationZ.value,
-                    alpha = alphaSelect
-                ),
-            tint = contentColor
-        )
-
-        Icon(
-            painter = painterResource(
-                id = if ((currentTextDetectMode.value == TextDetectMode.FIXED_AREA) == rotationEven) {
-                    R.drawable.ic_detect_mode_fixedarea
-                } else {
-                    R.drawable.ic_detect_mode_area_odd
-                }
-            ),
-            contentDescription = "Detect mode: FIXED_AREA",
-            modifier = Modifier
-                .size(24.dp)
-                .graphicsLayer(
-                    rotationZ = rotationZ.value,
-                    alpha = alphaFixedArea
-                ),
-            tint = contentColor
-        )
+        }
     }
 }
 
@@ -1140,7 +1001,6 @@ fun TranslationKitIconButton(
     translationKitType: TranslationKitType,
     sourceLanguage: Language? = null,
     targetLanguage: Language? = null,
-    showGptBadge: Boolean = false,
     enabled: Boolean = true,
     isDarkMode: Boolean? = null,
     colored: Boolean = false,
@@ -1149,171 +1009,55 @@ fun TranslationKitIconButton(
     modifier: Modifier = Modifier
 ) {
     val isDarkMode = isDarkMode ?: isSystemInDarkTheme()
-    val currentKitType = remember { mutableStateOf(translationKitType) }
+    var expanded by remember { mutableStateOf(false) }
+    val availableKitTypes = MenuBarDropdownOptions.translationKitTypes(sourceLanguage, targetLanguage)
 
-    LaunchedEffect(translationKitType) {
-        currentKitType.value = translationKitType
-    }
-
-    val transition = updateTransition(targetState = currentKitType.value, label = "TranslationKitITransition")
-
-    val animationDuration = 400
-
-    var rotationBase by remember { mutableFloatStateOf(0f) }
-    val rotationEven = rotationBase % 2 == 0f
-
-    val rotationZ = animateFloatAsState(
-        label = "TranslationKitIconButtonRotationZ",
-        targetValue = rotationBase * 180,
-        animationSpec = tween(durationMillis = animationDuration),
-    )
-
-    val alphaGoogle by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = animationDuration) },
-        label = "AlphaGoogle"
-    ) { targetState ->
-        if (targetState == TranslationKitType.GOOGLE) 1f else 0f
-    }
-
-    val alphaAzure by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = animationDuration) },
-        label = "alphaAzure"
-    ) { targetState ->
-        if (targetState == TranslationKitType.AZURE) 1f else 0f
-    }
-
-    val alphaDeepl by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = animationDuration) },
-        label = "alphaDeepl"
-    ) { targetState ->
-        if (targetState == TranslationKitType.DEEPL) 1f else 0f
-    }
-
-    val alphaPapago by transition.animateFloat(
-        transitionSpec = { tween(durationMillis = animationDuration) },
-        label = "alphaPapago"
-    ) { targetState ->
-        if (targetState == TranslationKitType.PAPAGO) 1f else 0f
-    }
-
-    val animationFinished = remember(rotationBase) {
-        derivedStateOf {
-            rotationBase > 0 && rotationZ.value >= rotationBase * 180
-        }
-    }
-
-    LaunchedEffect(animationFinished.value) {
-        if (animationFinished.value) {
-            updateTranslationKitType(currentKitType.value)
-        }
-    }
-
-    var nextKitType by remember { mutableStateOf<TranslationKitType?>(null) }
-
-    LaunchedEffect(sourceLanguage, targetLanguage, translationKitType) {
-        nextKitType = null
-        if (sourceLanguage == null || targetLanguage == null) {
-            nextKitType = when (translationKitType) {
-                TranslationKitType.GOOGLE -> TranslationKitType.AZURE
-                TranslationKitType.AZURE -> TranslationKitType.DEEPL
-//                TranslationKitType.DEEPL -> TranslationKitType.YANDEX
-//                TranslationKitType.YANDEX -> TranslationKitType.PAPAGO
-                TranslationKitType.DEEPL -> TranslationKitType.PAPAGO
-                TranslationKitType.PAPAGO -> TranslationKitType.GOOGLE
-            }
-        } else {
-            val commonKitTypes = sourceLanguage.supportKitTypes.toSet().intersect(targetLanguage.supportKitTypes.toSet())
-            val sortedCommonKitTypes: List<TranslationKitType> = commonKitTypes.sortedBy { it.name }
-            val currentKitTypeIndex = sortedCommonKitTypes.indexOf(translationKitType)
-            nextKitType = if (currentKitTypeIndex != -1) {
-                sortedCommonKitTypes[(currentKitTypeIndex + 1) % sortedCommonKitTypes.size]
-            } else {
-                null
-            }
-        }
-    }
-
-    fun getImageResourceId(selected: Boolean): Int {
+    fun imageResourceId(kitType: TranslationKitType, selected: Boolean): Int {
         return if (selected) {
-            if (colored) currentKitType.value.ciResourceId else if (isDarkMode) currentKitType.value.ciGrayDarkResourceId else currentKitType.value.ciGrayResourceId
+            if (colored) kitType.ciResourceId else if (isDarkMode) kitType.ciGrayDarkResourceId else kitType.ciGrayResourceId
         } else {
-            if (colored) currentKitType.value.ciOddResourceId else if (isDarkMode) currentKitType.value.ciGrayOddDarkResourceId else currentKitType.value.ciGrayOddResourceId
+            if (colored) kitType.ciOddResourceId else if (isDarkMode) kitType.ciGrayOddDarkResourceId else kitType.ciGrayOddResourceId
         }
     }
 
-    IconButton(
-        modifier = modifier.size(48.dp),
-        onClick = {
-            nextKitType?.let {
-                currentKitType.value = it
-                rotationBase++
-            }
-            onClick?.let { it() }
-        },
-        enabled = enabled && (nextKitType != null && nextKitType != translationKitType)
-    ) {
-        Image(
-            painter = painterResource(
-                id = getImageResourceId((currentKitType.value == TranslationKitType.GOOGLE) == rotationEven)
-            ),
-            contentDescription = "KitType: ${currentKitType.value}",
-            modifier = Modifier
-                .size(if (showGptBadge && currentKitType.value == TranslationKitType.GOOGLE) 22.dp else 27.dp)
-                .offset(x = if (showGptBadge && currentKitType.value == TranslationKitType.GOOGLE) (-6).dp else 0.dp)
-                .graphicsLayer(
-                    rotationZ = rotationZ.value,
-                    alpha = alphaGoogle
-                ),
-        )
-        if (showGptBadge && currentKitType.value == TranslationKitType.GOOGLE) {
+    Box(modifier = modifier.wrapContentSize()) {
+        IconButton(
+            modifier = Modifier.size(48.dp),
+            onClick = {
+                expanded = true
+                onClick?.let { it() }
+            },
+            enabled = enabled && availableKitTypes.size > 1
+        ) {
             Image(
-                painter = painterResource(id = R.drawable.ci_gpt),
-                contentDescription = "GPT",
-                modifier = Modifier
-                    .size(18.dp)
-                    .offset(x = 9.dp)
-                    .graphicsLayer(
-                        rotationZ = rotationZ.value,
-                        alpha = alphaGoogle
-                    ),
+                painter = painterResource(id = imageResourceId(translationKitType, selected = true)),
+                contentDescription = "KitType: $translationKitType",
+                modifier = Modifier.size(27.dp),
             )
         }
-        Image(
-            painter = painterResource(
-                id = getImageResourceId((currentKitType.value == TranslationKitType.AZURE) == rotationEven)
-            ),
-            contentDescription = "KitType: ${currentKitType.value}",
-            modifier = Modifier
-                .size(27.dp)
-                .graphicsLayer(
-                    rotationZ = rotationZ.value,
-                    alpha = alphaAzure
-                ),
-        )
-        Image(
-            painter = painterResource(
-                id = getImageResourceId((currentKitType.value == TranslationKitType.DEEPL) == rotationEven)
-            ),
-            contentDescription = "KitType: ${currentKitType.value}",
-            modifier = Modifier
-                .size(27.dp)
-                .graphicsLayer(
-                    rotationZ = rotationZ.value,
-                    alpha = alphaDeepl
-                ),
-        )
-        Image(
-            painter = painterResource(
-                id = getImageResourceId((currentKitType.value == TranslationKitType.PAPAGO) == rotationEven)
-            ),
-            contentDescription = "KitType: ${currentKitType.value}",
-            modifier = Modifier
-                .size(27.dp)
-                .graphicsLayer(
-                    rotationZ = rotationZ.value,
-                    alpha = alphaPapago
-                ),
-        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            availableKitTypes.forEach { kitType ->
+                DropdownMenuItem(
+                    text = { Text(text = kitType.text) },
+                    leadingIcon = {
+                        Image(
+                            painter = painterResource(id = imageResourceId(kitType, selected = kitType == translationKitType)),
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        if (kitType != translationKitType) {
+                            updateTranslationKitType(kitType)
+                        }
+                    }
+                )
+            }
+        }
     }
 }
 

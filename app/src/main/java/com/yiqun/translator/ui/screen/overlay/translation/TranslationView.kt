@@ -26,13 +26,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,6 +54,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -66,10 +71,15 @@ import com.yiqun.translator.R
 import com.yiqun.translator.core.OverlayService
 import com.yiqun.translator.data.local.screen.ScreenInfo
 import com.yiqun.translator.data.local.screen.ScreenInfoHolder
+import com.yiqun.translator.data.local.secure.ApiKeyInfo
+import com.yiqun.translator.data.local.vision.TextDetectMode
 import com.yiqun.translator.data.local.vision.WritingDirection
 import com.yiqun.translator.data.local.vision.model.VisionText
+import com.yiqun.translator.data.remote.ai.chatgpt.AiModelIcon
+import com.yiqun.translator.data.remote.ai.chatgpt.AiModelIconResolver
 import com.yiqun.translator.data.remote.translation.Language
 import com.yiqun.translator.data.remote.translation.Transaction
+import com.yiqun.translator.data.remote.translation.TranslationKitType
 import com.yiqun.translator.extensions.toPx
 import com.yiqun.translator.extensions.toSpValue
 import com.yiqun.translator.ui.common.AutoResizeText
@@ -382,6 +392,17 @@ open class TranslationView : OverlayView() {
             lifecycle = lifecycleOwner.lifecycle,
             initialValue = "auto"
         )
+        val textDetectMode by targetHandleViewModel.preferenceRepository.textDetectModeFlow.collectAsStateWithLifecycle(
+            lifecycle = lifecycleOwner.lifecycle,
+            initialValue = TextDetectMode.SENTENCE
+        )
+        val selectedAiModel = ApiKeyInfo.getApiModelChatgpt(context)
+        val showAiModelBadge = textDetectMode == TextDetectMode.SENSE_GROUP &&
+                translation.translationKitType == TranslationKitType.GOOGLE &&
+                ApiKeyInfo.chatgptKeyAvailable(context)
+        val aiModelIcon = remember(selectedAiModel) {
+            AiModelIconResolver.resolve(selectedAiModel)
+        }
         LaunchedEffect(sourceLanguageCode) {
             writingDirection.value = Language.writingDirection(sourceLanguageCode, false)
             isWritingRtl.value = writingDirection.value == WritingDirection.RTL
@@ -504,6 +525,17 @@ open class TranslationView : OverlayView() {
                                     ),
                                 contentScale = ContentScale.Fit,
                             )
+                            if (showAiModelBadge) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "+",
+                                    color = Color(0xFF747278),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                AiModelBadge(icon = aiModelIcon)
+                            }
 
                             Spacer(modifier = Modifier.weight(1f))
 
@@ -606,6 +638,26 @@ open class TranslationView : OverlayView() {
                     }
                 }
             }
+        }
+    }
+
+    @Composable
+    private fun AiModelBadge(icon: AiModelIcon) {
+        Box(
+            modifier = Modifier
+                .sizeIn(minWidth = 16.dp, minHeight = 16.dp)
+                .background(Color(icon.backgroundColor), CircleShape)
+                .padding(horizontal = 4.dp, vertical = 2.dp)
+                .semantics { contentDescription = icon.contentDescription },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = icon.label,
+                color = Color(icon.contentColor),
+                fontSize = if (icon.label.length == 1) 10.sp else 8.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
         }
     }
 
