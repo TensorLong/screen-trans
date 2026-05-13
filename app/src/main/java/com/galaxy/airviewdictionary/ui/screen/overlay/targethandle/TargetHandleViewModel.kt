@@ -40,6 +40,7 @@ import com.galaxy.airviewdictionary.data.local.vision.TextDetectMode
 import com.galaxy.airviewdictionary.data.local.vision.VisionRepository
 import com.galaxy.airviewdictionary.data.local.vision.model.Line
 import com.galaxy.airviewdictionary.data.local.vision.model.Paragraph
+import com.galaxy.airviewdictionary.data.local.vision.model.PointedTextToken
 import com.galaxy.airviewdictionary.data.local.vision.model.SenseGroupVisionText
 import com.galaxy.airviewdictionary.data.remote.ai.chatgpt.SenseGroup
 import com.galaxy.airviewdictionary.data.local.vision.model.Sentence
@@ -905,17 +906,23 @@ class TargetHandleViewModel(
         } ?: return sentence // 단어를 못 찾으면 sentence-level 폴백
 
         val wordOffset = sentence.wordCharOffset(positionedWord) ?: return sentence
+        val pointedToken = PointedTextToken.tokenAt(
+            text = positionedWord.representation,
+            charOffset = pointedCharOffset(positionedWord, pointerPosition),
+        )
+        if (pointedToken.text.isBlank()) return sentence
+        val tokenOffset = wordOffset + pointedToken.start
 
         // 1) 캐시 확인 — 같은 OCR 패스에서 같은 단어를 다시 가리키면 GPT 호출 없이 즉시 반환.
-        val cached = sentence.senseGroupCache[wordOffset]
+        val cached = sentence.senseGroupCache[tokenOffset]
         if (cached != null) {
-            Timber.tag(TAG).d("SENSE_GROUP cache hit word=[${positionedWord.representation}] chunk=[${cached.text}]")
+            Timber.tag(TAG).d("SENSE_GROUP cache hit word=[${pointedToken.text}] chunk=[${cached.text}]")
             return buildSenseGroupVisionText(sentence, positionedWord, cached)
         }
 
         // 2) GPT 호출 — 단어와 문장을 함께 보내고 "그 단어가 속한 의미군"만 받아온다.
         val sentenceText = sentence.representation
-        val wordText = positionedWord.representation
+        val wordText = pointedToken.text
         val targetLanguageCode: String = preferenceRepository.targetLanguageCodeFlow.first()
 
         val group: SenseGroup? = try {
@@ -936,8 +943,48 @@ class TargetHandleViewModel(
             return sentence // 실패 시 sentence 폴백
         }
 
-        sentence.senseGroupCache[wordOffset] = group
+        sentence.senseGroupCache[tokenOffset] = group
         return buildSenseGroupVisionText(sentence, positionedWord, group)
+    }
+
+    private fun pointedCharOffset(word: Word, pointerPosition: Point): Int {
+        if (word.chars.isEmpty()) return 0
+
+        val directCharIndex = word.chars.indexOfFirst { char ->
+            expandedRect(char.boundingBox).contains(pointerPosition.x, pointerPosition.y)
+        }
+        if (directCharIndex >= 0) return wordTextOffsetForChar(word, directCharIndex)
+
+        val nearestCharIndex = word.chars
+            .withIndex()
+            .minByOrNull { (_, char) ->
+                val centerXDistance = kotlin.math.abs(char.boundingBox.centerX() - pointerPosition.x)
+                val centerYDistance = kotlin.math.abs(char.boundingBox.centerY() - pointerPosition.y)
+                centerXDistance + centerYDistance
+            }
+            ?.index
+            ?: 0
+
+        return wordTextOffsetForChar(word, nearestCharIndex)
+    }
+
+    private fun wordTextOffsetForChar(word: Word, charIndex: Int): Int {
+        val safeIndex = charIndex.coerceIn(0, word.chars.lastIndex)
+        var searchFrom = 0
+        for (index in 0..safeIndex) {
+            val charText = word.chars[index].representation
+            val foundAt = word.representation.indexOf(charText, startIndex = searchFrom)
+            if (index == safeIndex) {
+                return (if (foundAt >= 0) foundAt else searchFrom)
+                    .coerceIn(0, word.representation.lastIndex.coerceAtLeast(0))
+            }
+            searchFrom = if (foundAt >= 0) {
+                foundAt + charText.length
+            } else {
+                searchFrom + charText.length
+            }
+        }
+        return 0
     }
 
     /**
@@ -950,7 +997,7 @@ class TargetHandleViewModel(
         pointedWord: Word,
         group: SenseGroup,
     ): SenseGroupVisionText {
-        val wordsInChunk = mutableListOf<Word>()
+        val rectsInChunk = mutableListOf<Rect>()
         for (line in sentence.lines) {
             for (word in line.words) {
                 val wOff = sentence.wordCharOffset(word) ?: continue
@@ -958,12 +1005,17 @@ class TargetHandleViewModel(
                 // ChatGPTKit 은 charRange 를 start..end 로 만들지만 end 는 exclusive (=length).
                 // overlap 조건은 wordStart < chunkEnd && wordEnd > chunkStart.
                 if (wOff < group.charRange.last && wEnd > group.charRange.first) {
-                    wordsInChunk.add(word)
+                    val charRects = charRectsInRange(word, wOff, group.charRange)
+                    if (charRects.isNotEmpty()) {
+                        rectsInChunk.addAll(charRects)
+                    } else {
+                        rectsInChunk.add(word.boundingBox)
+                    }
                 }
             }
         }
-        val unionBoundingBox: Rect = if (wordsInChunk.isNotEmpty()) {
-            wordsInChunk.map { it.boundingBox }.reduce { acc, rect -> acc._unionWith(rect) }
+        val unionBoundingBox: Rect = if (rectsInChunk.isNotEmpty()) {
+            rectsInChunk.reduce { acc, rect -> acc._unionWith(rect) }
         } else {
             pointedWord.boundingBox
         }
@@ -974,6 +1026,21 @@ class TargetHandleViewModel(
             writingDirection = sentence.writingDirection,
             fontHeight = sentence.fontHeight,
         )
+    }
+
+    private fun charRectsInRange(word: Word, wordOffset: Int, range: IntRange): List<Rect> {
+        if (word.chars.isEmpty()) return emptyList()
+
+        val rects = mutableListOf<Rect>()
+        var charOffset = wordOffset
+        for (char in word.chars) {
+            val charEnd = charOffset + char.representation.length
+            if (charOffset < range.last && charEnd > range.first) {
+                rects.add(char.boundingBox)
+            }
+            charOffset = charEnd
+        }
+        return rects
     }
 
     /**
