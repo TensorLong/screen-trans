@@ -1,5 +1,6 @@
 package com.yiqun.translator.data.remote.ai.chatgpt
 
+import com.google.gson.annotations.SerializedName
 import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -26,23 +27,29 @@ interface ChatGPTService {
 }
 
 data class ChatGPTResponse(
-    val choices: List<Choice>
+    @SerializedName("choices")
+    val choices: List<Choice> = emptyList(),
 )
 
 data class Choice(
-    val message: Message
+    @SerializedName("message")
+    val message: Message = Message(),
 )
 
 data class Message(
-    val role: String,
-    val content: String
+    @SerializedName("role")
+    val role: String = "",
+    @SerializedName("content")
+    val content: String = "",
 )
 
 data class ModelListResponse(
+    @SerializedName("data")
     val data: List<ModelInfo> = emptyList(),
 )
 
 data class ModelInfo(
+    @SerializedName("id")
     val id: String = "",
 )
 

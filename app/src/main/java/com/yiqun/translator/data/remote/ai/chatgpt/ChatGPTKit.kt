@@ -28,7 +28,10 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
     }
 
     private fun resolveModel(): String {
-        return configuredModel(ApiKeyInfo.getApiModelChatgpt(context))
+        return configuredModel(
+            model = ApiKeyInfo.getApiModelChatgpt(context),
+            baseUrl = ApiKeyInfo.getApiBaseUrlChatgpt(context),
+        )
     }
 
     private fun authorizationHeader(): String {
@@ -188,16 +191,28 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
     companion object {
         const val BASE_URL = "https://api.example.com/"
         const val DEFAULT_MODEL = "gpt-4o-mini"
+        const val OPENROUTER_DEFAULT_MODEL = "openai/gpt-4o-mini"
         const val CHAT_COMPLETIONS_PATH = "v1/chat/completions"
         const val MODELS_PATH = "v1/models"
 
         fun endpointUrl(baseUrl: String?, path: String): String {
             val base = baseUrl?.trim()?.takeIf { it.isNotEmpty() } ?: BASE_URL
-            return base.trimEnd('/') + "/" + path.trimStart('/')
+            val trimmedBase = base.trimEnd('/')
+            val trimmedPath = path.trimStart('/')
+            val normalizedPath = if (trimmedBase.endsWith("/v1") && trimmedPath.startsWith("v1/")) {
+                trimmedPath.removePrefix("v1/")
+            } else {
+                trimmedPath
+            }
+            return "$trimmedBase/$normalizedPath"
         }
 
-        fun configuredModel(model: String?): String {
-            return model?.trim()?.takeIf { it.isNotEmpty() } ?: DEFAULT_MODEL
+        fun configuredModel(model: String?, baseUrl: String? = null): String {
+            val trimmed = model?.trim()?.takeIf { it.isNotEmpty() }
+            if (isOpenRouterBaseUrl(baseUrl) && (trimmed == null || trimmed == DEFAULT_MODEL)) {
+                return OPENROUTER_DEFAULT_MODEL
+            }
+            return trimmed ?: DEFAULT_MODEL
         }
 
         fun modelIds(response: ModelListResponse): List<String> {
@@ -206,6 +221,14 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 .filter { it.isNotEmpty() }
                 .distinct()
                 .sorted()
+        }
+
+        private fun isOpenRouterBaseUrl(baseUrl: String?): Boolean {
+            val normalized = baseUrl?.trim()?.lowercase().orEmpty()
+            return normalized.startsWith("https://openrouter.ai/") ||
+                    normalized == "https://openrouter.ai" ||
+                    normalized.startsWith("http://openrouter.ai/") ||
+                    normalized == "http://openrouter.ai"
         }
     }
 }
