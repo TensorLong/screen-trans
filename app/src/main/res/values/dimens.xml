@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2023 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     https://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<resources>
+    <dimen name="target_handle_width">70dp</dimen>
+    <dimen name="target_handle_height">112dp</dimen>
+    <dimen name="target_pointer_dimen">24dp</dimen>
+    <dimen name="target_pointer_progress_dimen">14dp</dimen>
+    <dimen name="target_handle_pointer_thumb_space">18dp</dimen>
+    <dimen name="target_handle_thumb_dimen">50dp</dimen>
+
+    <!-- 포인터 멈춤 으로 인정되는 거리 마진 -->
+    <dimen name="targethandle_view_pointer_stopped_distance">6dp</dimen>
+
+    <!-- paragraph 와 paragraph frame 사이 마진 -->
+    <dimen name="visiontext_view_paragraph_frame_margin">4dp</dimen>
+
+    <!-- 스크린과 TranslationView 사이 최소 마진 -->
+    <dimen name="translation_view_screen_min_margin">12dp</dimen>
+    <!-- TranslationView 의 shadow 두께 -->
+    <dimen name="translation_view_shadow_padding">6dp</dimen>
+    <!-- TranslationView 와 content 패딩 -->
+    <dimen name="translation_view_content_padding">8dp</dimen>
+    <!-- TranslationView 최소 너비 -->
+    <dimen name="translation_view_min_width">190dp</dimen>
+    <!-- TranslationView 아래 부분(엔진로고, 복사아이콘) 높이 -->
+    <dimen name="translation_view_bottom_menu_height">32dp</dimen>
+    <!-- VisionText 상하 여백 -->
+    <dimen name="translation_view_vision_text_v_margin">2dp</dimen>
+
+    <!-- Settings 메뉴 텍스트 사이즈 -->
+    <dimen name="settings_menu_text_size">18sp</dimen>
+    <!-- Settings 메뉴 sub텍스트 사이즈 -->
+    <dimen name="settings_menu_subtext_size">14sp</dimen>
+
+    <!-- Area Selection 최소 너비 -->
+    <dimen name="area_selection_min_width">30dp</dimen>
+    <!-- Area Selection 최소 높이 -->
+    <dimen name="area_selection_min_height">20dp</dimen>
+
+
+</resources>

@@ -1,0 +1,117 @@
+<resources>
+    <string name="app_name">Дэлгэц орчуулагч</string>
+
+    <!-- Notification Permission -->
+    <string name="message_permission_notification">Шаардлагатай зөвшөөрөл:\nМэдэгдэл</string>
+    <string name="message_permission_notification_detail">Дэлгэц орчуулагчийг ажиллуулахын тулд мэдэгдлийн зөвшөөрөл олгох шаардлагатай.</string>
+
+    <!-- Overlay Permission -->
+    <string name="message_permission_overlay">Шаардлагатай зөвшөөрөл:\nБусад аппуудын дээр харуулах</string>
+    <string name="message_permission_overlay_detail">Дэлгэц орчуулагчийг ажиллуулахын тулд бусад аппуудын дээр давхарлаж харуулах зөвшөөрөл хэрэгтэй.</string>
+    <string name="message_permission_overlay_denied">Давхаргын зөвшөөрөл татгалзсан</string>
+    <string name="message_permission_overlay_denied_detail">Давхаргын зөвшөөрөл олгогдоогүй.\nАпп хаагдана.</string>
+
+    <!-- MediaProjection token -->
+    <string name="message_media_projection">Шаардлагатай зөвшөөрөл:\nДэлгэц бичлэг</string>
+    <string name="message_media_projection_detail">Дэлгэц орчуулагчийг ажиллуулахын тулд дэлгэц бичлэг хийх зөвшөөрөл хэрэгтэй.\n\nДэлгэц дээрх мэдээлэл зөвхөн орчуулгын зорилгоор ашиглагдах бөгөөд хадгалагдахгүй, дамжуулагдахгүй.</string>
+    <string name="message_media_projection_denied">Дэлгэц бичлэгийн зөвшөөрөл татгалзсан</string>
+    <string name="message_media_projection_denied_detail">Дэлгэц бичлэгийн зөвшөөрөл олгогдоогүй.\nАпп хаагдана.</string>
+
+    <!-- Foreground Service -->
+    <string name="notification_foreground_service">Орчуулгад зориулан дэлгэцийг бичиж байна.</string>
+    <string name="title_start_foreground_service">Foreground үйлчилгээ эхэллээ</string>
+    <string name="message_start_foreground_service">Апп дэлгэцийн контентыг барьж орчуулахын тулд foreground үйлчилгээг эхлүүлж байна.\n\nБичигдсэн зураг хадгалагдахгүй, гадагш илгээгдэхгүй.</string>
+    <string name="label_confirm_start_foreground_service">Эхлүүлэх</string>
+    <string name="label_dismiss_start_foreground_service">Дуусгах</string>
+    <string name="snack_message_start_foreground_service">Апп дэлгэцийн контентыг барьж орчуулахын тулд foreground үйлчилгээг эхлүүлж байна.</string>
+
+    <!-- OverlayService -->
+    <string name="service_menu_finish">Дуусгах</string>
+
+    <!-- LanguageListView -->
+    <string name="title_language_list_view_source">Эх хэл</string>
+    <string name="title_language_list_view_target">Орчуулах хэл</string>
+
+    <!-- VoiceListView -->
+    <string name="title_voice_list_view">Боломжит дуу хоолойнууд</string>
+
+    <!-- Dialog -->
+    <string name="message_authentication_error">Баталгаажуулалтын алдаа</string>
+    <string name="message_authentication_error_detail">Баталгаажуулалтын сервер хариу өгөхгүй байна.\nДараа дахин оролдоно уу.</string>
+    <string name="message_untrusted_environment">Найдвартай бус орчин</string>
+    <string name="message_untrusted_environment_detail">Таны апп Google Play-ийн итгэлцлийн шалгалтыг даваагүй бололтой.</string>
+    <string name="message_unknown_device">Танигдаагүй төхөөрөмж</string>
+    <string name="message_unknown_device_detail">Энэ төхөөрөмж дэмжигдээгүй байна.</string>
+    <string name="message_authentication_required">Баталгаажуулалт шаардлагатай</string>
+    <string name="message_authentication_required_detail">Та Google бүртгэлээр нэвтрэх шаардлагатай.</string>
+    <string name="message_playstore_update_required">Play Store шинэчлэлт шаардлагатай</string>
+    <string name="message_playstore_update_required_detail">Play Store-д холбогдож чадсангүй.\nХуучин хувилбар байж болзошгүй.</string>
+    <string name="message_unknown_source">Энэ апп-ыг Play Store-оос авна уу</string>
+    <string name="message_unknown_source_detail">Апп ашиглахын тулд Google Play-оос татаж авна уу.</string>
+    <string name="message_force_update">Шинэчлэлт шаардлагатай</string>
+    <string name="message_force_update_detail">Энэ хувилбар дэмжигдэхээ больсон.\nДэлгүүрт очно уу.</string>
+    <string name="message_service_unavailable">Үйлчилгээ түр хугацаанд хаагдсан</string>
+    <string name="message_service_unavailable_detail">Үйлчилгээ засварын горимд байна.</string>
+    <string name="message_network_unavailable">Сүлжээ байхгүй</string>
+    <string name="message_network_unavailable_detail">Сүлжээ ашиглах боломжгүй байна.\nШалган дахин оролдоно уу.</string>
+    <string name="message_translate_fixedarea_warn">Батерейны анхааруулга</string>
+    <string name="message_translate_fixedarea_warn_detail">Батерей хурдан дуусах магадлалтай.</string>
+    <string name="message_translate_fixedarea_promotion">Бүтээгдэхүүн худалдан авах мэдээлэл</string>
+    <string name="message_translate_fixedarea_promotion_detail">Манай нэмэлт боломжуудын талаархи найрсаг сануулга %1$s минут тутамд гарч ирнэ.</string>
+    <string name="message_free_trial_ends">Таны үнэгүй туршилтын хугацаа дууссан байна.</string>
+    <string name="message_free_trial_ends_detail">Үнэгүй туршилтын хугацааг сунгахын тулд зар сурталчилгаа үзэх үү?</string>
+    <string name="message_ad_reward">Та %1$d минутын нэмэлт үнэгүй туршилт авлаа!</string>
+    <string name="message_ad_reward_detail">Дараагийн %1$d минутын турш бүх премиум боломжуудыг үнэгүй ашиглаарай.</string>
+
+    <!-- SettingsActivity -->
+    <string name="settings_title">Тохиргоо</string>
+    <string name="settings_menu_cat_pointer">Заагч</string>
+    <string name="settings_menu_pointer_docking_delay">Холболтын саатал</string>
+    <string name="settings_menu_haptic_feedback_to_detection">Илрэхэд доргилт</string>
+    <string name="settings_menu_cat_menubar">Цэсний мөр</string>
+    <string name="settings_menu_menubar_transparency">Цэсний тунгалаг байдал</string>
+    <string name="settings_menu_menubar_composition">Цэсний функцууд</string>
+    <string name="settings_menu_cat_ai">AI засвар</string>
+    <string name="settings_menu_cat_translation">Орчуулга</string>
+    <string name="settings_menu_translation_transparency">Орчуулгын тунгалаг</string>
+    <string name="settings_menu_translation_close_delay">Хаалтын саатал</string>
+    <string name="settings_menu_automated_read_aloud">Авто уншлага</string>
+    <string name="settings_menu_reply_transparency">Хариуг тунгалаг болгох</string>
+    <string name="settings_menu_cat_tts">Текст дуугаар</string>
+    <string name="settings_menu_tts_voices">TTS дуу хоолой</string>
+    <string name="settings_menu_tts_rate">TTS хурд</string>
+    <string name="settings_menu_cat_about">Тухай</string>
+    <string name="settings_menu_on_premium_free_trial">Premium туршилт идэвхтэй</string>
+    <string name="settings_menu_premium_free_trial_remain">%1$d минут үлдсэн</string>
+    <string name="settings_menu_your_premium_benefits">Таны давуу тал</string>
+    <string name="settings_menu_your_premium_benefits_peding">Давуу тал (хүлээгдэж байна)</string>
+    <string name="settings_menu_app_version">Аппын хувилбар</string>
+    <string name="settings_menu_app_version_latest">(Хамгийн сүүлийн)</string>
+
+    <!-- HelpTextDetectModeView, HelpTranslationKitView -->
+    <string name="help_text_no_limit">Premium хувилбарт бүх зүйл хязгааргүй</string>
+    <string name="help_text_no_limit_free">Хэмжээний хязгааргүй, хугацааны хязгааргүй</string>
+    <string name="help_text_no_limit_title">Хязгааргүй ашиглаарай</string>
+    <string name="help_text_no_limit_free_title">Хязгааргүйгээр үнэгүй</string>
+    <string name="help_text_get_premium">Premium авах</string>
+
+    <!-- PremiumView -->
+    <string name="premium_view_get_premium">Premium авах</string>
+    <string name="premium_view_get_premium_purchased">Таны Premium ашиг тус</string>
+    <string name="premium_view_get_premium_pending">Таны Premium ашиг тус (хүлээгдэж байна)</string>
+    <string name="premium_view_get_premium_not_available">Premium одоогоор боломжгүй байна</string>
+    <string name="premium_view_price_format">%1$s/сард • НӨАТ орсон\n• Ямар ч үед цуцлах боломжтой</string>
+    <string name="premium_view_title">Бүх боломжууд,\nСаадгүй ашиглалт.</string>
+    <string name="premium_view_message">Хэмжээ ч хязгааргүй, хугацаа ч хязгааргүй.\nPremium-оор бүхнийг ашигла</string>
+    <string name="premium_view_description_azure">Ихэнх хэл дээр маш нарийн орчуулга хийнэ.</string>
+    <string name="premium_view_description_deepl">Гүн гүнзгий, утгатай орчуулгыг хүргэнэ.</string>
+    <string name="premium_view_description_papago">Papago нь олон хэлийг автоматаар орчуулдаг нейрон систем ашигладаг.</string>
+    <string name="premium_view_description_google">Хамгийн хурдан орчуулга. Үргэлж үнэгүй, хязгааргүй.</string>
+    <string name="premium_view_description_sentence_detection">Хуруугаараа шугамыг зааж орчуул.</string>
+    <string name="premium_view_description_paragraph_detection">Догол мөрийг автоматаар танина.</string>
+    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
+    <string name="premium_view_description_select_detection">Хүссэн хэсгээ зааж орчуулж болно.</string>
+    <string name="premium_view_description_word_detection">Үг бүрийн орчуулга үргэлж үнэгүй, хязгааргүй.</string>
+    <string name="premium_view_description_fixed_area_detection">Та киноны хадмал орчуулга гэх мэт тогтмол бүсүүдийг тасралтгүй орчуулах боломжтой.</string>
+    <string name="premium_view_unsubscribe">Гишүүнчлэлийг цуцлах</string>
+</resources>
