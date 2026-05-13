@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Traducere ecran</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Permisiune necesară:\nNotificări</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Rețeaua este indisponibilă.\nVerifică și încearcă din nou.</string>
     <string name="message_translate_fixedarea_warn">Avertisment pentru baterie</string>
     <string name="message_translate_fixedarea_warn_detail">Bateria se poate descărca rapid.</string>
-    <string name="message_translate_fixedarea_promotion">Informații despre achiziționarea produsului</string>
-    <string name="message_translate_fixedarea_promotion_detail">Un memento prietenos despre funcțiile premium va apărea la fiecare %1$s minute.</string>
-    <string name="message_free_trial_ends">Perioada de probă gratuită s-a încheiat.</string>
-    <string name="message_free_trial_ends_detail">Vrei să vizionezi o reclamă pentru a prelungi perioada de probă?</string>
-    <string name="message_ad_reward">Ai primit încă %1$d minute de probă gratuită!</string>
-    <string name="message_ad_reward_detail">Bucură-te gratuit de toate funcțiile premium pentru următoarele %1$d minute.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Setări</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Bara de meniu</string>
     <string name="settings_menu_menubar_transparency">Transparență meniu</string>
     <string name="settings_menu_menubar_composition">Funcții meniu</string>
-    <string name="settings_menu_cat_ai">Corectare AI</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Traducere</string>
     <string name="settings_menu_translation_transparency">Transparență traducere</string>
     <string name="settings_menu_translation_close_delay">Întârziere închidere</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">Voci TTS</string>
     <string name="settings_menu_tts_rate">Viteză TTS</string>
     <string name="settings_menu_cat_about">Despre</string>
-    <string name="settings_menu_on_premium_free_trial">Trial Premium activ</string>
-    <string name="settings_menu_premium_free_trial_remain">Au mai rămas %1$d minute</string>
-    <string name="settings_menu_your_premium_benefits">Beneficiile tale</string>
-    <string name="settings_menu_your_premium_benefits_peding">Beneficii (în așteptare)</string>
     <string name="settings_menu_app_version">Versiune aplicație</string>
     <string name="settings_menu_app_version_latest">(Cea mai nouă)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Totul este nelimitat cu Premium</string>
     <string name="help_text_no_limit_free">Fără limită de cantitate sau timp</string>
-    <string name="help_text_no_limit_title">Bucură-te fără limite</string>
     <string name="help_text_no_limit_free_title">Gratuit și fără restricții</string>
-    <string name="help_text_get_premium">Obține Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Obține Premium</string>
-    <string name="premium_view_get_premium_purchased">Beneficiile tale Premium</string>
-    <string name="premium_view_get_premium_pending">Beneficiile tale Premium (în așteptare)</string>
-    <string name="premium_view_get_premium_not_available">Premium nu este disponibil momentan</string>
-    <string name="premium_view_price_format">%1$s/lună • TVA inclus\n• Anulează oricând</string>
-    <string name="premium_view_title">Toate funcțiile,\nFără întreruperi.</string>
-    <string name="premium_view_message">Fără limită de cantitate sau timp.\nTotul este nelimitat cu Premium</string>
-    <string name="premium_view_description_azure">Traduce cu acuratețe majoritatea limbilor din lume.</string>
-    <string name="premium_view_description_deepl">Oferim traduceri precise și sofisticate.</string>
-    <string name="premium_view_description_papago">Papago folosește rețele neuronale pentru traduceri automate între mai multe limbi.</string>
-    <string name="premium_view_description_google">Cea mai rapidă traducere. Nelimitat, gratuit pentru totdeauna.</string>
-    <string name="premium_view_description_sentence_detection">Folosește degetul pentru a traduce linii.</string>
-    <string name="premium_view_description_paragraph_detection">Paragrafele sunt detectate automat.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Poți selecta și manual zona dorită.</string>
-    <string name="premium_view_description_word_detection">Traducerea cuvânt cu cuvânt este întotdeauna gratuită și nelimitată.</string>
-    <string name="premium_view_description_fixed_area_detection">Puteți traduce continuu zone fixe, cum ar fi subtitrările filmelor.</string>
-    <string name="premium_view_unsubscribe">Anulează abonamentul</string>
 </resources>

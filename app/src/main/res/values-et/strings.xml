@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Ekraanitõlge</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Nõutav luba:\nTeavitused</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Võrk pole saadaval.\nKontrollige ühendust ja proovige uuesti.</string>
     <string name="message_translate_fixedarea_warn">Akutähtsus</string>
     <string name="message_translate_fixedarea_warn_detail">Aku võib kiiresti tühjeneda.</string>
-    <string name="message_translate_fixedarea_promotion">Toote ostmise teave</string>
-    <string name="message_translate_fixedarea_promotion_detail">Meeldetuletus meie premium-funktsioonide kohta ilmub iga %1$s minuti järel.</string>
-    <string name="message_free_trial_ends">Teie tasuta prooviperiood on lõppenud.</string>
-    <string name="message_free_trial_ends_detail">Kas soovite vaadata reklaami tasuta prooviperioodi pikendamiseks?</string>
-    <string name="message_ad_reward">Olete saanud veel %1$d minutit tasuta prooviperioodi!</string>
-    <string name="message_ad_reward_detail">Nautige kõiki premium-funktsioone tasuta järgmise %1$d minuti jooksul.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Seaded</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Menüüriba</string>
     <string name="settings_menu_menubar_transparency">Menüü läbipaistvus</string>
     <string name="settings_menu_menubar_composition">Menüü funktsioonid</string>
-    <string name="settings_menu_cat_ai">AI parandamine</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Tõlge</string>
     <string name="settings_menu_translation_transparency">Tõlke läbipaistvus</string>
     <string name="settings_menu_translation_close_delay">Sulgemise viivitus</string>
@@ -81,39 +75,13 @@
     <string name="settings_menu_tts_voices">TTS hääled</string>
     <string name="settings_menu_tts_rate">TTS kiirus</string>
     <string name="settings_menu_cat_about">Teave</string>
-    <string name="settings_menu_on_premium_free_trial">Premium proov aktiivne</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d minutit jäänud</string>
-    <string name="settings_menu_your_premium_benefits">Sinu eelised</string>
-    <string name="settings_menu_your_premium_benefits_peding">Eelised (ootel)</string>
     <string name="settings_menu_app_version">Rakenduse versioon</string>
     <string name="settings_menu_app_version_latest">(Uusim)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Kõik on piiranguteta Premiumi puhul</string>
     <string name="help_text_no_limit_free">Ei mingit koguse ega ajapiirangut</string>
-    <string name="help_text_no_limit_title">Naudi piiranguteta</string>
     <string name="help_text_no_limit_free_title">Tasuta ja piiranguteta</string>
-    <string name="help_text_get_premium">Hangi Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Hangi Premium</string>
-    <string name="premium_view_get_premium_purchased">Teie Premium eelised</string>
-    <string name="premium_view_get_premium_pending">Teie Premium eelised (ootel)</string>
-    <string name="premium_view_get_premium_not_available">Premium pole hetkel saadaval</string>
-    <string name="premium_view_price_format">%1$s/kuu • sisaldab KM\n• Tühista igal ajal</string>
-    <string name="premium_view_title">Kõik funktsioonid,\nIlma katkestusteta.</string>
-    <string name="premium_view_message">Ei koguse- ega ajapiiranguid.\nKõik on saadaval Premiumiga</string>
-    <string name="premium_view_description_azure">Tõlgib täpselt enamiku maailma keeltest.</string>
-    <string name="premium_view_description_deepl">Annab tähenduslikke ja täpseid tõlkeid.</string>
-    <string name="premium_view_description_papago">Papago kasutab närvivõrgu algoritmi keelte automaatseks tõlkimiseks.</string>
-    <string name="premium_view_description_google">Kõige kiirem tõlge. Igavesti tasuta ja piiranguteta.</string>
-    <string name="premium_view_description_sentence_detection">Tõlgi ridu sõrmega osutades.</string>
-    <string name="premium_view_description_paragraph_detection">Lõigud tuvastatakse automaatselt.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Saate ka soovitud ala käsitsi valida.</string>
-    <string name="premium_view_description_word_detection">Sõna-sõnalt tõlkimine on alati tasuta ja piiranguteta.</string>
-    <string name="premium_view_description_fixed_area_detection">Saad pidevalt tõlkida fikseeritud alasid, näiteks filmide subtiitreid.</string>
-    <string name="premium_view_unsubscribe">Tühista tellimus</string>
 </resources>
 
 

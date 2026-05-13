@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">സ്ക്രീൻ വിവർത്തകൻ</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">ആവശ്യമായ അനുമതി:\nഅറിയിപ്പുകൾ</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">നെറ്റ്വർക്ക് ലഭ്യമല്ല.\nദയവായി പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക.</string>
     <string name="message_translate_fixedarea_warn">ബാറ്ററി മുന്നറിയിപ്പ്</string>
     <string name="message_translate_fixedarea_warn_detail">ബാറ്ററി വേഗത്തിൽ തീർന്നേക്കാം.</string>
-    <string name="message_translate_fixedarea_promotion">ഉൽപ്പന്നം വാങ്ങുന്നതിനുള്ള വിവരങ്ങൾ</string>
-    <string name="message_translate_fixedarea_promotion_detail">ഞങ്ങളുടെ പ്രീമിയം ഫീച്ചറുകൾക്കായുള്ള സൗഹൃദ റിമൈൻഡർ ഓരോ %1$s മിനിറ്റിന് ശേഷം പ്രത്യക്ഷപ്പെടും.</string>
-    <string name="message_free_trial_ends">നിങ്ങളുടെ സൗജന്യ ട്രയൽ അവസാനിച്ചു.</string>
-    <string name="message_free_trial_ends_detail">ട്രയൽ സമയമുദനപ്പെടുത്തി ഒരു പരസ്യം കാണണോ?</string>
-    <string name="message_ad_reward">നിങ്ങൾക്ക് %1$d കൂടുതൽ മിനിറ്റ് സൗജന്യ ട്രയൽ ലഭിച്ചിട്ടുണ്ട്!</string>
-    <string name="message_ad_reward_detail">അടുത്ത %1$d മിനിറ്റ് മുഴുവൻ പ്രീമിയം സവിശേഷതകൾ സൗജന്യമായി ആസ്വദിക്കുക.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">ക്രമീകരണം</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">മെനു പട്ട</string>
     <string name="settings_menu_menubar_transparency">മെനു പാരദര്‍ശിത്വം</string>
     <string name="settings_menu_menubar_composition">മെനു ഫംഗ്ഷനുകൾ</string>
-    <string name="settings_menu_cat_ai">AI തിരുത്തൽ</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ഭാഷാന്തരം</string>
     <string name="settings_menu_translation_transparency">പരിഭാഷ പാരദര്‍ശിത്വം</string>
     <string name="settings_menu_translation_close_delay">അടയ്ക്കൽ വൈകിപ്പ്</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">TTS ശബ്ദങ്ങൾ</string>
     <string name="settings_menu_tts_rate">TTS വേഗം</string>
     <string name="settings_menu_cat_about">അറിയിക്കുക</string>
-    <string name="settings_menu_on_premium_free_trial">പ്രിമിയം ട്രയൽ പ്രവർത്തിക്കുന്നു</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d മിനിറ്റ് ശേഷിക്കുന്നു</string>
-    <string name="settings_menu_your_premium_benefits">നിങ്ങളുടെ പ്രയോജനങ്ങൾ</string>
-    <string name="settings_menu_your_premium_benefits_peding">നിങ്ങളുടെ പ്രയോജനങ്ങൾ</string>
     <string name="settings_menu_app_version">ആപ്പ് പതിപ്പ്</string>
     <string name="settings_menu_app_version_latest">(അടുത്തത്)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">പ്രിമിയത്തിൽ എല്ലാം അതിജീവ്യമാണ്</string>
     <string name="help_text_no_limit_free">പരിമിതികളില്ല, സമയപരിധിയില്ല</string>
-    <string name="help_text_no_limit_title">പരിമിതികളില്ലാതെ ആസ്വദിക്കുക</string>
     <string name="help_text_no_limit_free_title">പരിമിതികളില്ലാതെ സൗജന്യം</string>
-    <string name="help_text_get_premium">പ്രിമിയം നേടുക</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">പ്രിമിയം നേടുക</string>
-    <string name="premium_view_get_premium_purchased">നിങ്ങളുടെ പ്രിമിയം നേട്ടങ്ങൾ</string>
-    <string name="premium_view_get_premium_pending">നിങ്ങളുടെ പ്രിമിയം നേട്ടങ്ങൾ (കാത്തിരിക്കുന്നു)</string>
-    <string name="premium_view_get_premium_not_available">പ്രിമിയം ഇപ്പോൾ ലഭ്യമല്ല</string>
-    <string name="premium_view_price_format">%1$s/മാസം • ഉൾപ്പെടെ നികുതി\n• എപ്പോഴും റദ്ദാക്കാം</string>
-    <string name="premium_view_title">എല്ലാ ഫീച്ചറുകളും,\nതടസ്സങ്ങളില്ലാതെ.</string>
-    <string name="premium_view_message">പരിമിതികളില്ല, സമയപരിധിയില്ല.\nപ്രിമിയത്തിൽ എല്ലാം അതിജീവ്യമാണ്</string>
-    <string name="premium_view_description_azure">ലോകത്തെ മിക്ക ഭാഷകളും കൃത്യതയോടെ വിവർത്തനം ചെയ്യുന്നു.</string>
-    <string name="premium_view_description_deepl">വിവർത്തനത്തിന് അർത്ഥവത്തും നിഗൂഢവുമായ സംഭാഷണങ്ങൾ നൽകുന്നു.</string>
-    <string name="premium_view_description_papago">Papago നൂറൽ മെഷീൻ വിവർത്തനം ഉപയോഗിച്ച് നിരവധി ഭാഷകളിലേക്ക് വിവർത്തനം ചെയ്യുന്നു.</string>
-    <string name="premium_view_description_google">അതി വേഗത്തിൽ വിവർത്തനം ചെയ്യുന്നു. എല്ലാ സമയത്തും സൗജന്യവും പരിധിയില്ലാത്തതുമായ സേവനം.</string>
-    <string name="premium_view_description_sentence_detection">നിങ്ങളുടെ വിരൽ ഉപയോഗിച്ച് വരികൾ വിവർത്തനം ചെയ്യുക.</string>
-    <string name="premium_view_description_paragraph_detection">പാരഗ്രാഫുകൾ സ്വയം തിരിച്ചറിയപ്പെടും.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">നിങ്ങൾക്ക് വേണ്ടിയ ഭാഗം തിരഞ്ഞടുക്കാം.</string>
-    <string name="premium_view_description_word_detection">വാക്ക് തിരിച്ചുള്ള വിവർത്തനം എപ്പോഴും സൗജന്യവും പരിധിയില്ലാത്തതുമാണ്.</string>
-    <string name="premium_view_description_fixed_area_detection">സിനിമ സബ്‌ടൈറ്റിലുകൾ പോലുള്ള സ്ഥിരമായ പ്രദേശങ്ങൾ നിങ്ങൾക്ക് തുടർച്ചയായി വിവർത്തനം ചെയ്യാൻ കഴിയും.</string>
-    <string name="premium_view_unsubscribe">സബ്സ്ക്രിപ്ഷൻ റദ്ദാക്കുക</string>
 </resources>

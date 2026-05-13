@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ဖန်သားပြင်ဘာသာပြန်</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">လိုအပ်သောခွင့်ပြုချက်:\nအသိပေးချက်</string>
@@ -11,13 +11,13 @@
     <string name="message_permission_overlay_denied">Overlay ခွင့်ပြုချက် ပယ်ချခဲ့သည်</string>
     <string name="message_permission_overlay_denied_detail">Overlay ခွင့်ပြုချက်ကို မပေးထားပါ။\nအက်ပ်မှထွက်ပါမည်။</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token request -->
     <string name="message_media_projection">လိုအပ်သောခွင့်ပြုချက်:\nဖန်သားပြင်မှတ်တမ်းတင်ခြင်း</string>
     <string name="message_media_projection_detail">ဖန်သားပြင်ဘာသာပြန်ကိုစတင်ရန် ဖန်သားပြင်မှတ်တမ်းတင်ခွင့်ပြုချက်ပေးရန် လိုအပ်ပါသည်။\n\nဖန်သားပြင်ပေါ်ရှိအချက်အလက်များကိုဘာသာပြန်ရေးအတွက်သာအသုံးပြုမည်ဖြစ်ပြီး သိမ်းဆည်းခြင်း သို့မဟုတ် ပို့ဆောင်ခြင်း မပြုပါ။</string>
     <string name="message_media_projection_denied">ဖန်သားပြင်မှတ်တမ်းတင်ခွင့်ပြုချက် ပယ်ခံခဲ့သည်</string>
     <string name="message_media_projection_denied_detail">ဖန်သားပြင်မှတ်တမ်းတင်ခွင့်ပြုချက် မပေးထားပါ။\nအက်ပ်မှထွက်ပါမည်။</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground service start notification -->
     <string name="notification_foreground_service">ဘာသာပြန်လုပ်ငန်းအတွက် ဖန်သားပြင်ဖမ်းယူမှုကို အသုံးပြုနေသည်။</string>
     <string name="title_start_foreground_service">Foreground Service စတင်ခြင်း</string>
     <string name="message_start_foreground_service">အက်ပ်သည် ဖန်သားပြင်အကြောင်းအရာ ဖမ်းယူပြီး ဘာသာပြန်ရန်အတွက် Foreground Service ကိုစတင်ပါသည်။\n\nဖမ်းယူထားသောပုံများကို မသိမ်းဆည်းပါ၊ မပို့ပါ။</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">ကွန်ယက်မရရှိပါ။\nအတည်ပြုပြီးနောက်ထပ်ကြိုးစားပါ။</string>
     <string name="message_translate_fixedarea_warn">ဘက်ထရီသတိပေးချက်</string>
     <string name="message_translate_fixedarea_warn_detail">ဘက်ထရီအလျင်အမြန် ဆွဲချပေးနိုင်ပါတယ်။</string>
-    <string name="message_translate_fixedarea_promotion">ကုန်ပစ္စည်းဝယ်ယူမှုအချက်အလက်</string>
-    <string name="message_translate_fixedarea_promotion_detail">ကျွန်ုပ်တို့၏ ပရီမီယံလက္ခဏာများအကြောင်း သတိပေးချက်တစ်ခုသည် %1$s မိနစ်တိုင်းတွင် ပေါ်လာပါမည်။</string>
-    <string name="message_free_trial_ends">သင့်အခမဲ့စမ်းသပ်ချိန်ပြီးဆုံးသွားပါပြီ။</string>
-    <string name="message_free_trial_ends_detail">အခမဲ့စမ်းသပ်ချိန်တိုးချင်ရင် ကြော်ငြာကြည့်မလား?</string>
-    <string name="message_ad_reward">%1$d မိနစ်ထပ်မံ၍ အခမဲ့စမ်းသပ်ခွင့်ရရှိထားပါသည်။</string>
-    <string name="message_ad_reward_detail">နောက်ထပ် %1$d မိနစ်အတွင်း premium လုပ်ဆောင်ချက်အားလုံးကို အခမဲ့ အသုံးပြုနိုင်ပါသည်။</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">ဆက်တင်</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">မီနူးဘား</string>
     <string name="settings_menu_menubar_transparency">မီနူး အထင်ကြည်မှု</string>
     <string name="settings_menu_menubar_composition">မီနူး လုပ်ဆောင်ချက်များ</string>
-    <string name="settings_menu_cat_ai">AI ဖြင့်ပြင်ဆင်</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ဘာသာပြန်</string>
     <string name="settings_menu_translation_transparency">ဘာသာပြန် အထင်ကြည်မှု</string>
     <string name="settings_menu_translation_close_delay">ပိတ်ချိန်နောက်ကျမှု</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">TTS အသံများ</string>
     <string name="settings_menu_tts_rate">TTS အမြန်နှုန်း</string>
     <string name="settings_menu_cat_about">အကြောင်း</string>
-    <string name="settings_menu_on_premium_free_trial">Premium စမ်းသပ်မှုအလုပ်လုပ်</string>
-    <string name="settings_menu_premium_free_trial_remain">ကျန် %1$d မိနစ်</string>
-    <string name="settings_menu_your_premium_benefits">သင်၏အကျိုးခံစားခွင့်</string>
-    <string name="settings_menu_your_premium_benefits_peding">အကျိုးခံစားခွင့် (စောင့်နေ)</string>
     <string name="settings_menu_app_version">အပ်ဗားရှင်း</string>
     <string name="settings_menu_app_version_latest">(နောက်ဆုံးထွက်)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">ပရီမီယမ်တွင် ကန့်သတ်ချက်မရှိပါ</string>
     <string name="help_text_no_limit_free">အရေအတွက်ကန့်သတ်မရှိ၊ အချိန်ကန့်သတ်မရှိ</string>
-    <string name="help_text_no_limit_title">ကန့်သတ်မှုမရှိဘဲ အသုံးပြုပါ</string>
     <string name="help_text_no_limit_free_title">အကန့်အသတ်မရှိ မျှတစွာအသုံးပြုပါ</string>
-    <string name="help_text_get_premium">Premium ရယူပါ</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Premium ရယူပါ</string>
-    <string name="premium_view_get_premium_purchased">သင့် Premium အကျိုးခံစားခွင့်များ</string>
-    <string name="premium_view_get_premium_pending">သင့် Premium အကျိုးခံစားခွင့်များ (ဆိုင်းငံ့ထားသည်)</string>
-    <string name="premium_view_get_premium_not_available">Premium (လောလောဆယ် မရနိုင်ပါ)</string>
-    <string name="premium_view_price_format">%1$s/လ • အခွန်ပါဝင်သည်\n• မည်သည့်အချိန်မဆို ဖျက်သိမ်းနိုင်သည်</string>
-    <string name="premium_view_title">အင်္ဂါရပ်အားလုံး၊\nအနှောင့်အယှက်မရှိ။</string>
-    <string name="premium_view_message">အရေအတွက်ကန့်သတ်မရှိ၊ အချိန်ကန့်သတ်မရှိ။\nPremium ဖြင့် အားလုံးကိုအကန့်အသတ်မရှိအသုံးပြုနိုင်သည်။</string>
-    <string name="premium_view_description_azure">ကမ္ဘာအနှံ့ရှိဘာသာစကားအများစုကို တိကျစွာဘာသာပြန်ပေးသည်။</string>
-    <string name="premium_view_description_deepl">အဓိပ္ပါယ်ကိုမှန်ကန်စွာဖော်ပြသည့် ဆန်းသစ်သည့်ဘာသာပြန်မှုများပေးသည်။</string>
-    <string name="premium_view_description_papago">Papago သည် Neural Machine Translation ဖြင့် အများအပြားဘာသာစကားများကိုအလိုအလျောက်ဘာသာပြန်သည်။</string>
-    <string name="premium_view_description_google">အမြန်ဆုံးဘာသာပြန်မှု။ အကန့်အသတ်မရှိ၊ အမြဲအခမဲ့။</string>
-    <string name="premium_view_description_sentence_detection">လိုင်းများကိုလက်ဗွေအတိုင်းဘာသာပြန်နိုင်သည်။</string>
-    <string name="premium_view_description_paragraph_detection">စာပိုဒ်များကိုအလိုအလျောက်သိနိုင်သည်။</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">သင့်လိုအပ်သောအပိုင်းကိုရွေးနိုင်သည်။</string>
-    <string name="premium_view_description_word_detection">စာလုံးအလိုက်ဘာသာပြန်ခြင်းသည် အမြဲအခမဲ့ဖြစ်သည်။</string>
-    <string name="premium_view_description_fixed_area_detection">ရုပ်ရှင်စာတန်းထိုးများကဲ့သို့သော တည်မြဲသောနေရာများကို သင်အမြဲတမ်းဘာသာပြန်နိုင်ပါသည်။</string>
-    <string name="premium_view_unsubscribe">Subscription ဖျက်သိမ်းပါ</string>
 </resources>

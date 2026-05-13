@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ማያ ገጽ ተርጉም</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">የሚያስፈልገው ፍቃድ:\nማሳወቂያዎች</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">ኔትዎርኩ አይገኝም።\nእባክዎ አገናኝነትዎን ያረጋግጡ እና እንደገና ይሞክሩ።</string>
     <string name="message_translate_fixedarea_warn">የባትሪ አስተናጋጅነት</string>
     <string name="message_translate_fixedarea_warn_detail">ባትሪው በፍጥነት ሊያልቅ ይችላል።</string>
-    <string name="message_translate_fixedarea_promotion">የምርት ግዢ መረጃ</string>
-    <string name="message_translate_fixedarea_promotion_detail">ስለ ፕሪሚየም ባለባበሮቻችን አሳሳቢ እንደት በየ %1$s ደቂቃዎቹ ይታያል።</string>
-    <string name="message_free_trial_ends">ነፃ ሙከራዎ አልቋል።</string>
-    <string name="message_free_trial_ends_detail">ነፃ ሙከራዎን ለማራዘም ማስታወቂያ ማየት ትፈልጋለህ?</string>
-    <string name="message_ad_reward">የተጨማሪ %1$d ደቂቃ ነፃ ሙከራ ተቀብለዋል!</string>
-    <string name="message_ad_reward_detail">ቀጣዩ %1$d ደቂቃ ሁሉንም ፕሪሚየም ባህሪያት በነፃ ይበሉ።</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">ቅንብሮች</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">ምናሌ</string>
     <string name="settings_menu_menubar_transparency">የምናሌ ትርፍና</string>
     <string name="settings_menu_menubar_composition">ምናሌ ባህሪዎች</string>
-    <string name="settings_menu_cat_ai">AI ጽሑፍ ማስተካከያ</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ትርጉም</string>
     <string name="settings_menu_translation_transparency">የትርጉም ትርፍና</string>
     <string name="settings_menu_translation_close_delay">መዝጊያ ማቆያ</string>
@@ -81,38 +75,12 @@
     <string name="settings_menu_tts_voices">ድምፆች</string>
     <string name="settings_menu_tts_rate">ፍጥነት</string>
     <string name="settings_menu_cat_about">ስለ</string>
-    <string name="settings_menu_on_premium_free_trial">ፕሬሚየም ተሞክሮ እየተጠቀምን</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d ደቂቃዎች ቀርበዋል</string>
-    <string name="settings_menu_your_premium_benefits">ፕሬሚየም አግባብ</string>
-    <string name="settings_menu_your_premium_benefits_peding">አግባብ (በመጠበቅ)</string>
     <string name="settings_menu_app_version">የመተግበሪያ እትም</string>
     <string name="settings_menu_app_version_latest">(የቅርብ)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">ሁሉም ነገሮች በፕሪሚየም ያለ ገደብ ናቸው</string>
     <string name="help_text_no_limit_free">የብዛት ወይም የጊዜ ገደብ የለም</string>
-    <string name="help_text_no_limit_title">በማንኛውም ገደብ ሳይኖረው ይዘዙ</string>
     <string name="help_text_no_limit_free_title">በፍጹም ነጻ እና ያለ ገደብ</string>
-    <string name="help_text_get_premium">ፕሪሚየም ያግኙ</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">ፕሪሚየም ያግኙ</string>
-    <string name="premium_view_get_premium_purchased">የእርስዎ ፕሪሚየም ጥቅሞች</string>
-    <string name="premium_view_get_premium_pending">የእርስዎ ፕሪሚየም ጥቅሞች (በመጠባበቅ ላይ)</string>
-    <string name="premium_view_get_premium_not_available">ፕሪሚየም በአሁኑ ጊዜ አይገኝም</string>
-    <string name="premium_view_price_format">%1$s/ወር • ግብር ተካትቷል\n• በማንኛውም ጊዜ ማጥፋት ይቻላል</string>
-    <string name="premium_view_title">ሁሉም ባህሪያት፣\nያለ መከላከያ።</string>
-    <string name="premium_view_message">የብዛት ወይም የጊዜ ገደብ የለም።\nሁሉም በፕሪሚየም ይከፈታል</string>
-    <string name="premium_view_description_azure">ከዓለም ዙሪያ ብዙ ቋንቋዎችን ትክክለኛ ይተረጉማል።</string>
-    <string name="premium_view_description_deepl">ትክክለኛና ውስብስብ ትርጉሞችን ይሰጣል።</string>
-    <string name="premium_view_description_papago">Papago በነሮናል መሳሪያ በብዙ ቋንቋዎች በራሱ ይተረጉማል።</string>
-    <string name="premium_view_description_google">በፍጥነት የሚሰጠው ትርጉም። ለዘላለም ነጻ።</string>
-    <string name="premium_view_description_sentence_detection">መስመሮችን ለመተርጎም ጣቶን ይጠቀሙ።</string>
-    <string name="premium_view_description_paragraph_detection">አንቀፆች በራሳቸው ይታወቃሉ።</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">ምርጫ የሚፈልጉትን ክልል ይምረጡ።</string>
-    <string name="premium_view_description_word_detection">ቃላትን በቃል ትርጉም ሁልጊዜ ነጻ እና ያለ ገደብ ነው።</string>
-    <string name="premium_view_description_fixed_area_detection">እንደ ፊልም ንዑሶች ያሉ ቆይታ አካባቢዎችን ቀጥሏል መተርጎም ይችላሉ።</string>
-    <string name="premium_view_unsubscribe">መመዝገብ ማጥፋት</string>
 </resources>
 

@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">ترجمة الشاشة</string>
+  <string name="app_name">Sense Group Translator</string>
 
   <!-- Notification Permission -->
   <string name="message_permission_notification">الإذن المطلوب:\nالإشعارات</string>
@@ -56,12 +56,6 @@
   <string name="message_network_unavailable_detail">الشبكة غير متاحة.\nيرجى التحقق من الاتصال والمحاولة مرة أخرى.</string>
   <string name="message_translate_fixedarea_warn">تحذير البطارية</string>
   <string name="message_translate_fixedarea_warn_detail">قد تنفد البطارية بسرعة.</string>
-  <string name="message_translate_fixedarea_promotion">معلومات شراء المنتج</string>
-  <string name="message_translate_fixedarea_promotion_detail">تذكير ودود بميزاتنا المميزة سيظهر كل %1$s دقيقة.</string>
-  <string name="message_free_trial_ends">انتهت الفترة التجريبية المجانية الخاصة بك.</string>
-  <string name="message_free_trial_ends_detail">هل ترغب في مشاهدة إعلان لتمديد الفترة التجريبية المجانية؟</string>
-  <string name="message_ad_reward">لقد حصلت على %1$d دقيقة إضافية من التجربة المجانية!</string>
-  <string name="message_ad_reward_detail">استمتع بجميع الميزات المميزة مجانًا لمدة %1$d دقيقة القادمة.</string>
 
   <!-- SettingsActivity -->
   <string name="settings_title">الإعدادات</string>
@@ -71,7 +65,7 @@
   <string name="settings_menu_cat_menubar">شريط القوائم</string>
   <string name="settings_menu_menubar_transparency">شفافية القائمة</string>
   <string name="settings_menu_menubar_composition">خيارات القائمة</string>
-  <string name="settings_menu_cat_ai">تصحيح AI</string>
+  <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">الترجمة</string>
   <string name="settings_menu_translation_transparency">شفافية الترجمة</string>
   <string name="settings_menu_translation_close_delay">تأخير الإغلاق</string>
@@ -81,39 +75,13 @@
   <string name="settings_menu_tts_voices">أصوات TTS</string>
   <string name="settings_menu_tts_rate">سرعة TTS</string>
   <string name="settings_menu_cat_about">حول</string>
-  <string name="settings_menu_on_premium_free_trial">تجربة بريميوم نشطة</string>
-  <string name="settings_menu_premium_free_trial_remain">تبقّى %1$d دقيقة</string>
-  <string name="settings_menu_your_premium_benefits">مزايا Premium</string>
-  <string name="settings_menu_your_premium_benefits_peding">مزايا (قيد الانتظار)</string>
   <string name="settings_menu_app_version">إصدار التطبيق</string>
   <string name="settings_menu_app_version_latest">(الأحدث)</string>
 
   <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-  <string name="help_text_no_limit">كل شيء غير محدود مع Premium</string>
   <string name="help_text_no_limit_free">بدون قيود على الكمية أو المدة</string>
-  <string name="help_text_no_limit_title">استمتع بلا حدود</string>
   <string name="help_text_no_limit_free_title">مجاني بدون قيود</string>
-  <string name="help_text_get_premium">احصل على Premium</string>
 
-  <!-- PremiumView -->
-  <string name="premium_view_get_premium">احصل على Premium</string>
-  <string name="premium_view_get_premium_purchased">مزايا Premium الخاصة بك</string>
-  <string name="premium_view_get_premium_pending">مزايا Premium الخاصة بك (قيد الانتظار)</string>
-  <string name="premium_view_get_premium_not_available">Premium غير متاح حاليًا</string>
-  <string name="premium_view_price_format">%1$s/شهريًا • يشمل الضريبة\n• يمكنك الإلغاء في أي وقت</string>
-  <string name="premium_view_title">كل الميزات،\nبدون انقطاعات.</string>
-  <string name="premium_view_message">لا يوجد حد للكمية أو المدة.\nكل شيء متاح مع Premium</string>
-  <string name="premium_view_description_azure">يترجم بدقة معظم لغات العالم.</string>
-  <string name="premium_view_description_deepl">يقدم ترجمات متقنة تعبر عن المعنى بوضوح.</string>
-  <string name="premium_view_description_papago">يقوم Papago بترجمة اللغات تلقائيًا باستخدام تقنية الشبكات العصبية.</string>
-  <string name="premium_view_description_google">أسرع ترجمة. مجانية وغير محدودة إلى الأبد.</string>
-  <string name="premium_view_description_sentence_detection">استخدم إصبعك لترجمة السطور.</string>
-  <string name="premium_view_description_paragraph_detection">يتم التعرف على الفقرات تلقائيًا.</string>
-  <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-  <string name="premium_view_description_select_detection">يمكنك أيضًا تحديد المنطقة التي تريد ترجمتها.</string>
-  <string name="premium_view_description_fixed_area_detection">يمكنك ترجمة المناطق الثابتة مثل ترجمات الأفلام باستمرار.</string>
-  <string name="premium_view_description_word_detection">الترجمة كلمة بكلمة دائمًا مجانية وغير محدودة.</string>
-  <string name="premium_view_unsubscribe">إلغاء الاشتراك</string>
 </resources>
 
 

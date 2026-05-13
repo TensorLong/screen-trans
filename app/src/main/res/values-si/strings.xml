@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">තිර පරිවර්තනය</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">අවශ්‍ය අවසරය:\nදැනුම්දීම්</string>
@@ -11,13 +11,13 @@
     <string name="message_permission_overlay_denied">උපරිම අවසරය ප්‍රතික්ෂේප විය</string>
     <string name="message_permission_overlay_denied_detail">උපරිම අවසරය ලබාදී නොමැත.\nයෙදුම වසා දැමේ.</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token request -->
     <string name="message_media_projection">අවශ්‍ය අවසරය:\nතිර ගතකිරීම</string>
     <string name="message_media_projection_detail">තිර පරිවර්තකය ආරම්භ කිරීමට, තිරය ගත කිරීම සඳහා අවසරය ලබාදිය යුතුය.\n\nතිරයේ තොරතුරු පරිවර්තනය සඳහා පමණක් භාවිතා වන අතර කිසිවක් ගබඩා නොකරන අතරෙහි යැවීම සිදු නොවේ.</string>
     <string name="message_media_projection_denied">තිර ගතකිරීම සඳහා අවසරය ප්‍රතික්ෂේප විය</string>
     <string name="message_media_projection_denied_detail">තිර ගතකිරීම සඳහා අවසරය ලබා නොදී ඇත.\nයෙදුම වසා දැමේ.</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground service start notification -->
     <string name="notification_foreground_service">පරිවර්තනය සඳහා තිර පටිගත කිරීම ක්‍රියාත්මක වේ.</string>
     <string name="title_start_foreground_service">අග්‍රභාග සේවාව ආරම්භ විය</string>
     <string name="message_start_foreground_service">තිර අන්තර්ගතය ලබාගෙන පරිවර්තනය කිරීම සඳහා යෙදුම අග්‍රභාග සේවාවක් ආරම්භ කරයි.\n\nලබාගත් පින්තූර ගබඩා නොකරනු ලබන අතර පිටතට යැවීම සිදු නොවේ.</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">ජාලය නොමැත.\nකරුණාකර පරීක්ෂා කර නැවත උත්සාහ කරන්න.</string>
     <string name="message_translate_fixedarea_warn">බැටරි අනතුරු ඇඟවීම</string>
     <string name="message_translate_fixedarea_warn_detail">බැටරිය ඉතා ඉක්මනින් විශේෂ වශයෙන් නිම විය හැක.</string>
-    <string name="message_translate_fixedarea_promotion">නිෂ්පාදන මිලදී ගැනීම පිළිබඳ තොරතුරු</string>
-    <string name="message_translate_fixedarea_promotion_detail">අපගේ ප්‍රිමියම් විශේෂාංග සම්බන්ධයෙන් මිත්‍රශීලී සටහනක් සෑම මිනිත්තු %1$s කින් වරක් පෙන්වනු ඇත.</string>
-    <string name="message_free_trial_ends">ඔබේ නොමිලේ පරීක්ෂණය අවසන් වී ඇත.</string>
-    <string name="message_free_trial_ends_detail">නොමිලේ කාලය දිගු කිරීම සඳහා ඔබ දැන්වීමක් නරඹන්න කැමතිද?</string>
-    <string name="message_ad_reward">ඔබට %1$d තවත් විනාඩි නොමිලේ නව පරීක්ෂණය ලැබී ඇත!</string>
-    <string name="message_ad_reward_detail">ඊළඟ %1$d විනාඩි සඳහා සියලුම ප්‍රිමියම් විශේෂාංග නොමිලේ භාවිතා කරන්න.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">සැකසීම්</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">මෙනු තීරුව</string>
     <string name="settings_menu_menubar_transparency">මෙනු පැහැදිලිභාවය</string>
     <string name="settings_menu_menubar_composition">මෙනු ක්‍රියාකාරිත්වය</string>
-    <string name="settings_menu_cat_ai">AI නිවැරදි කිරීම</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">පරිවර්තනය</string>
     <string name="settings_menu_translation_transparency">පරිවර්තන පැහැදිලිභාවය</string>
     <string name="settings_menu_translation_close_delay">වසීමේ විලම්බය</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">TTS හඬ</string>
     <string name="settings_menu_tts_rate">TTS වේගය</string>
     <string name="settings_menu_cat_about">පිළිබඳව</string>
-    <string name="settings_menu_on_premium_free_trial">ප්‍රිමියම් ටෙස්ට් ක්‍රියාත්මකයි</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d මිනිත්තු ඉතුරී ඇත</string>
-    <string name="settings_menu_your_premium_benefits">ඔබගේ වාසි</string>
-    <string name="settings_menu_your_premium_benefits_peding">වාසි (පැකින් පවතියි)</string>
     <string name="settings_menu_app_version">යෙදුම් අනුවාදය</string>
     <string name="settings_menu_app_version_latest">(නවතමය)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Premium මගින් සියල්ලම සීමාවන් රහිත වේ</string>
     <string name="help_text_no_limit_free">ප්‍රමාණ සීමාවක් නැත, කාල සීමාවක් නැත</string>
-    <string name="help_text_no_limit_title">සීමාවකින් තොරව භාවිතා කරන්න</string>
     <string name="help_text_no_limit_free_title">සීමා නැතිව නොමිලේ</string>
-    <string name="help_text_get_premium">Premium ලබාගන්න</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Premium ලබාගන්න</string>
-    <string name="premium_view_get_premium_purchased">ඔබගේ Premium වාසි</string>
-    <string name="premium_view_get_premium_pending">ඔබගේ Premium වාසි (සිදු වේමින්)</string>
-    <string name="premium_view_get_premium_not_available">Premium (දැනට නොලැබේ)</string>
-    <string name="premium_view_price_format">%1$s/මසකට • VAT ඇතුළත් වේ\n• ඕනෑම වේලාවක අවලංගු කරන්න</string>
-    <string name="premium_view_title">සියලුම විශේෂාංග,\nවැලඳීමකින් තොරව.</string>
-    <string name="premium_view_message">ප්‍රමාණ සීමාවක් නැත, කාල සීමාවක් නැත.\nPremium මගින් සියල්ලම සීමාවන් රහිත වේ.</string>
-    <string name="premium_view_description_azure">ලෝකයේ බොහෝ භාෂාවන් නිවැරදිව පරිවර්තනය කරයි.</string>
-    <string name="premium_view_description_deepl">උචිත තේරුම සමඟ නවීන පරිවර්තන ලබාදේ.</string>
-    <string name="premium_view_description_papago">Papago පද්ධතිය නියමිතව නියමිත භාෂාවට පරිවර්තනය කරයි.</string>
-    <string name="premium_view_description_google">ඉතා වේගවත් පරිවර්තනය. සදාකාලිකව නොමිලේ.</string>
-    <string name="premium_view_description_sentence_detection">බාරයන් පරිවර්තනය කිරීමට ඇඟිලි භාවිතා කරන්න.</string>
-    <string name="premium_view_description_paragraph_detection">පෙළ කොටස් ස්වයංක්‍රීයව හඳුනාගනී.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">ඔබට අවශ්‍ය පරාසය තෝරා ගත හැක.</string>
-    <string name="premium_view_description_word_detection">වචනයෙන් වචනයට පරිවර්තනය හැමවිටම නොමිලේ සහ සීමා රහිතය.</string>
-    <string name="premium_view_description_fixed_area_detection">චිත්‍රපට උපසිරැසි වැනි ස්ථිර ප්‍රදේශ නිරතුරුවම පරිවර්තනය කළ හැකිය.</string>
-    <string name="premium_view_unsubscribe">දායකත්වය අවලංගු කරන්න</string>
 </resources>

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Preklad obrazovky</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Vyžadované povolenie:\nUpozornenia</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Sieť nie je dostupná.\nSkontrolujte pripojenie a skúste to znova.</string>
     <string name="message_translate_fixedarea_warn">Upozornenie na batériu</string>
     <string name="message_translate_fixedarea_warn_detail">Batéria sa môže rýchlo vybiť.</string>
-    <string name="message_translate_fixedarea_promotion">Informácie o kúpe produktu</string>
-    <string name="message_translate_fixedarea_promotion_detail">Priateľské pripomenutie o našich prémiových funkciách sa zobrazí každých %1$s minút.</string>
-    <string name="message_free_trial_ends">Vaša bezplatná skúšobná verzia skončila.</string>
-    <string name="message_free_trial_ends_detail">Chcete sledovať reklamu na predĺženie skúšobnej verzie?</string>
-    <string name="message_ad_reward">Získali ste ďalších %1$d minút bezplatnej skúšobnej verzie!</string>
-    <string name="message_ad_reward_detail">Využívajte všetky prémiové funkcie zadarmo počas nasledujúcich %1$d minút.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Nastavenia</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Panel s ponukou</string>
     <string name="settings_menu_menubar_transparency">Priehľadnosť ponuky</string>
     <string name="settings_menu_menubar_composition">Funkcie ponuky</string>
-    <string name="settings_menu_cat_ai">AI oprava</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Preklad</string>
     <string name="settings_menu_translation_transparency">Priehľadnosť prekladu</string>
     <string name="settings_menu_translation_close_delay">Zdržanie zatvorenia</string>
@@ -81,39 +75,13 @@
     <string name="settings_menu_tts_voices">Hlasové možnosti TTS</string>
     <string name="settings_menu_tts_rate">Rýchlosť TTS</string>
     <string name="settings_menu_cat_about">O aplikácii</string>
-    <string name="settings_menu_on_premium_free_trial">Premium skúška beží</string>
-    <string name="settings_menu_premium_free_trial_remain">Zostáva %1$d minút</string>
-    <string name="settings_menu_your_premium_benefits">Vaše výhody</string>
-    <string name="settings_menu_your_premium_benefits_peding">Výhody (čaká sa)</string>
     <string name="settings_menu_app_version">Verzia aplikácie</string>
     <string name="settings_menu_app_version_latest">(Najnovšia)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Všetko je neobmedzené s Premium</string>
     <string name="help_text_no_limit_free">Bez obmedzenia množstva alebo času</string>
-    <string name="help_text_no_limit_title">Užívajte si bez obmedzení</string>
     <string name="help_text_no_limit_free_title">Zadarmo bez obmedzení</string>
-    <string name="help_text_get_premium">Získať Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Získať Premium</string>
-    <string name="premium_view_get_premium_purchased">Vaše výhody Premium</string>
-    <string name="premium_view_get_premium_pending">Vaše výhody Premium (Čakajúce)</string>
-    <string name="premium_view_get_premium_not_available">Premium momentálne nie je k dispozícii</string>
-    <string name="premium_view_price_format">%1$s/mesiac • S DPH\n• Možno kedykoľvek zrušiť</string>
-    <string name="premium_view_title">Všetky funkcie,\nBez prerušení.</string>
-    <string name="premium_view_message">Bez obmedzenia množstva alebo času.\nVšetko je k dispozícii s Premium</string>
-    <string name="premium_view_description_azure">Presný preklad väčšiny jazykov sveta.</string>
-    <string name="premium_view_description_deepl">Kvalitné a zmysluplné preklady s presnosťou.</string>
-    <string name="premium_view_description_papago">Papago automaticky prekladá viaceré jazyky pomocou neurónových sietí.</string>
-    <string name="premium_view_description_google">Najrýchlejší preklad. Navždy zdarma a bez obmedzení.</string>
-    <string name="premium_view_description_sentence_detection">Na preklad riadkov použite prst.</string>
-    <string name="premium_view_description_paragraph_detection">Odseky sa automaticky rozpoznávajú.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Môžete tiež vybrať konkrétnu oblasť na preklad.</string>
-    <string name="premium_view_description_word_detection">Preklad slovo po slove je vždy zdarma a bez obmedzenia.</string>
-    <string name="premium_view_description_fixed_area_detection">Môžete nepretržite prekladať pevné oblasti, ako sú napríklad filmové titulky.</string>
-    <string name="premium_view_unsubscribe">Zrušiť odber</string>
 </resources>
 
 

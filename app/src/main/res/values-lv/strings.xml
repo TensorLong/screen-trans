@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">Ekrāna tulkotājs</string>
+  <string name="app_name">Sense Group Translator</string>
 
   <!-- Notification Permission -->
   <string name="message_permission_notification">Nepieciešama atļauja:\nPaziņojumi</string>
@@ -56,12 +56,6 @@
   <string name="message_network_unavailable_detail">Tīkls nav pieejams.\nLūdzu, pārbaudiet un mēģiniet vēlreiz.</string>
   <string name="message_translate_fixedarea_warn">Akumulatora brīdinājums</string>
   <string name="message_translate_fixedarea_warn_detail">Akumulators var ātri izlādeties.</string>
-  <string name="message_translate_fixedarea_promotion">Informācija par produkta iegādi</string>
-  <string name="message_translate_fixedarea_promotion_detail">Draudzīgs atgādinājums par mūsu premium funkcijām parādīsies ik pēc %1$s minūtēm.</string>
-  <string name="message_free_trial_ends">Jūsu bezmaksas izmēģinājuma periods ir beidzies.</string>
-  <string name="message_free_trial_ends_detail">Vai vēlaties skatīties reklāmu, lai pagarinātu bezmaksas izmēģinājumu?</string>
-  <string name="message_ad_reward">Jūs esat saņēmis vēl %1$d minūtes bezmaksas izmēģinājuma!</string>
-  <string name="message_ad_reward_detail">Izbaudiet visas premium funkcijas bez maksas nākamās %1$d minūtes.</string>
 
   <!-- SettingsActivity -->
   <string name="settings_title">Iestatījumi</string>
@@ -71,7 +65,7 @@
   <string name="settings_menu_cat_menubar">Izvēlnes josla</string>
   <string name="settings_menu_menubar_transparency">Izvēlnes caurspīdīgums</string>
   <string name="settings_menu_menubar_composition">Izvēlnes funkcijas</string>
-  <string name="settings_menu_cat_ai">AI labošana</string>
+  <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">Tulkot</string>
   <string name="settings_menu_translation_transparency">Tulk. caurspīdīgums</string>
   <string name="settings_menu_translation_close_delay">Aizvēršanas aizkave</string>
@@ -81,37 +75,11 @@
   <string name="settings_menu_tts_voices">TTS balsis</string>
   <string name="settings_menu_tts_rate">TTS ātrums</string>
   <string name="settings_menu_cat_about">Par</string>
-  <string name="settings_menu_on_premium_free_trial">Premium izmēģinājums aktīvs</string>
-  <string name="settings_menu_premium_free_trial_remain">Atlikušas %1$d minūtes</string>
-  <string name="settings_menu_your_premium_benefits">Jūsu priekšrocības</string>
-  <string name="settings_menu_your_premium_benefits_peding">Priekšrocības (gaida)</string>
   <string name="settings_menu_app_version">Lietotnes versija</string>
   <string name="settings_menu_app_version_latest">(Jaunākā)</string>
 
   <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-  <string name="help_text_no_limit">Viss ir neierobežots ar Premium</string>
   <string name="help_text_no_limit_free">Nav daudzuma ierobežojuma, nav termiņa ierobežojuma</string>
-  <string name="help_text_no_limit_title">Izmanto bez ierobežojumiem</string>
   <string name="help_text_no_limit_free_title">Bez maksas, bez ierobežojumiem</string>
-  <string name="help_text_get_premium">Iegūt Premium</string>
 
-  <!-- PremiumView -->
-  <string name="premium_view_get_premium">Iegūt Premium</string>
-  <string name="premium_view_get_premium_purchased">Jūsu Premium priekšrocības</string>
-  <string name="premium_view_get_premium_pending">Jūsu Premium priekšrocības (gaida)</string>
-  <string name="premium_view_get_premium_not_available">Premium nav pieejams šobrīd</string>
-  <string name="premium_view_price_format">%1$s/mēnesī • Iekļauj PVN\n• Atcelt jebkurā laikā</string>
-  <string name="premium_view_title">Visas funkcijas,\nBez pārtraukumiem.</string>
-  <string name="premium_view_message">Nav ierobežojuma apjomam vai laikam.\nViss ir neierobežots ar Premium</string>
-  <string name="premium_view_description_azure">Precīzi tulko lielāko daļu pasaules valodu.</string>
-  <string name="premium_view_description_deepl">Sniedz dziļi nozīmīgus un kvalitatīvus tulkojumus.</string>
-  <string name="premium_view_description_papago">Papago izmanto neironu tulkošanas tehnoloģiju vairāku valodu tulkošanai.</string>
-  <string name="premium_view_description_google">Ātrākais tulkojums. Neierobežoti un bez maksas uz visiem laikiem.</string>
-  <string name="premium_view_description_sentence_detection">Izmantojiet pirkstus, lai tulkotu rindas.</string>
-  <string name="premium_view_description_paragraph_detection">Automātiska rindkopu atpazīšana.</string>
-  <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-  <string name="premium_view_description_select_detection">Varat arī izvēlēties konkrētu apgabalu.</string>
-  <string name="premium_view_description_word_detection">Vārdu pa vārdam tulkojums vienmēr ir bez maksas un bez ierobežojumiem.</string>
-  <string name="premium_view_description_fixed_area_detection">Jūs varat nepārtraukti tulkot fiksētas zonas, piemēram, filmu subtitrus.</string>
-  <string name="premium_view_unsubscribe">Atcelt abonementu</string>
 </resources>

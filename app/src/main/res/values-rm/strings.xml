@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Translaziun da scherm</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Permissi necessari:\nNotifications</string>
@@ -11,13 +11,13 @@
     <string name="message_permission_overlay_denied">Permissi d’overlay refusà</string>
     <string name="message_permission_overlay_denied_detail">Il permissiun d’overlay n’è betg vegnì dada.\nL\'app vegn terminada.</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token request -->
     <string name="message_media_projection">Permissi necessari:\nEnregistrament da scherm</string>
     <string name="message_media_projection_detail">Per lantschar Translaziun da scherm, sto dar permissiun per registrar il scherm.\n\nL’infurmaziun sin il scherm vegn utilisada mo per translaziun e na vegn betg memorisada u transmessida.</string>
     <string name="message_media_projection_denied">Permissi per registrar il scherm refusà</string>
     <string name="message_media_projection_denied_detail">Il permissiun per registrar il scherm n’è betg vegnì dada.\nL\'app vegn terminada.</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground service start notification -->
     <string name="notification_foreground_service">La funcziun da capturar il scherm vegn utilisada per translaziun.</string>
     <string name="title_start_foreground_service">Servetsch en prim plan lantschà</string>
     <string name="message_start_foreground_service">L’app lantscha in servetsch en prim plan per capturar e translatar il cuntegn dal scherm.\n\nLas maletgs capturads na vegnan betg memorisads ni transmess.</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Rait betg disponibla.\nControllai la connexiun e reemprovai.</string>
     <string name="message_translate_fixedarea_warn">Avis da batteria</string>
     <string name="message_translate_fixedarea_warn_detail">La batteria po sa svidar spert.</string>
-    <string name="message_translate_fixedarea_promotion">Infurmaziuns davart la cumpra dal product</string>
-    <string name="message_translate_fixedarea_promotion_detail">In gentar promemoria davart nossas funcziuns premium vegn a vegnir mussà mintga %1$s minutas.</string>
-    <string name="message_free_trial_ends">Tia emprova gratuita è terminada.</string>
-    <string name="message_free_trial_ends_detail">Vuls guardar in\'annunzia per prolungar l\'emprova gratuita?</string>
-    <string name="message_ad_reward">T\'i retschavì %1$d minutas supplementaras da prova gratuita!</string>
-    <string name="message_ad_reward_detail">Goda tut las funcziuns premium gratuitamain durant las proximas %1$d minutas.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Configuraziuns</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Trav d’uschigliada</string>
     <string name="settings_menu_menubar_transparency">Transparenza da menu</string>
     <string name="settings_menu_menubar_composition">Funcziuns dal menu</string>
-    <string name="settings_menu_cat_ai">Correctur cun AI</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Translaziun</string>
     <string name="settings_menu_translation_transparency">Transparenza translaziun</string>
     <string name="settings_menu_translation_close_delay">Retard da serrar</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">Vuschs TTS</string>
     <string name="settings_menu_tts_rate">Speed TTS</string>
     <string name="settings_menu_cat_about">Davart</string>
-    <string name="settings_menu_on_premium_free_trial">Test Premium activ</string>
-    <string name="settings_menu_premium_free_trial_remain">Restan %1$d minutas</string>
-    <string name="settings_menu_your_premium_benefits">Tes avantatgs</string>
-    <string name="settings_menu_your_premium_benefits_peding">Avantatgs (en spetga)</string>
     <string name="settings_menu_app_version">Versiun app</string>
     <string name="settings_menu_app_version_latest">(Ultima)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Tut senza limitaziuns cun Premium</string>
     <string name="help_text_no_limit_free">Naginas limitaziuns da quantitad ni temp</string>
-    <string name="help_text_no_limit_title">Gudognai senza restricziuns</string>
     <string name="help_text_no_limit_free_title">Gratis senza restricziuns</string>
-    <string name="help_text_get_premium">Obten Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Obten Premium</string>
-    <string name="premium_view_get_premium_purchased">Tes avantatgs Premium</string>
-    <string name="premium_view_get_premium_pending">Tes avantatgs Premium (en spetga)</string>
-    <string name="premium_view_get_premium_not_available">Premium (actualmain betg disponibel)</string>
-    <string name="premium_view_price_format">%1$s/mais • Inclus VAT\n• Annulaziun en mintga mument</string>
-    <string name="premium_view_title">Tut ils funcziunalitads,\nsenza interrupziuns.</string>
-    <string name="premium_view_message">Naginas limitaziuns da temp ni quantitad.\nTut inclus cun Premium.</string>
-    <string name="premium_view_description_azure">Translates languages around the world accurately.</string>
-    <string name="premium_view_description_deepl">Offrescha translaziuns elegantas cun precis significà.</string>
-    <string name="premium_view_description_papago">Papago fa translaziuns automaticas cun IA neurala.</string>
-    <string name="premium_view_description_google">La pli svelta translaziun. Illimitada e gratuita per adina.</string>
-    <string name="premium_view_description_sentence_detection">Utilisai il det per translatar lingias.</string>
-    <string name="premium_view_description_paragraph_detection">Paragraphs vegnan renconuschids automaticamain.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Pudais era tscherner la zona da translatar.</string>
-    <string name="premium_view_description_word_detection">Translaziun pled per pled è adina gratuita ed illimitada.</string>
-    <string name="premium_view_description_fixed_area_detection">Pudais translatar cuntinuaivlamain zonas fixas, sco per exempel sutitels da films.</string>
-    <string name="premium_view_unsubscribe">Terminar l’abunament</string>
 </resources>

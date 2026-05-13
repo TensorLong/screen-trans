@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Tradución de Pantalla</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Permiso necesario:\nNotificación</string>
@@ -11,13 +11,13 @@
     <string name="message_permission_overlay_denied">Permiso para mostrar sobre otras aplicaciones denegado</string>
     <string name="message_permission_overlay_denied_detail">No se concedió el permiso para mostrar sobre otras aplicaciones.\nSalir de la aplicación.</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token request -->
     <string name="message_media_projection">Permiso necesario:\nGrabación de pantalla</string>
     <string name="message_media_projection_detail">Para iniciar Tradutor de Pantalla, necesitas conceder permiso para la grabación de pantalla.\n\nLa información en pantalla es solo para fines de traducción y no se transferirá ni almacenará en otro lugar.</string>
     <string name="message_media_projection_denied">Permiso de grabación de pantalla denegado</string>
     <string name="message_media_projection_denied_detail">No se concedió el permiso de grabación de pantalla.\nSalir de la aplicación.</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground service start notification -->
     <string name="notification_foreground_service">La función de captura de pantalla se está utilizando para trabajos de traducción.</string>
     <string name="title_start_foreground_service">El servicio en primer plano comienza</string>
     <string name="message_start_foreground_service">La aplicación inicia un servicio en primer plano para capturar y traducir el contenido de la pantalla.\n\nLas imágenes capturadas no se guardan ni se transmiten externamente.</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Red no disponible.\nPor favor, verifica e intenta de nuevo.</string>
     <string name="message_translate_fixedarea_warn">Aviso de batería</string>
     <string name="message_translate_fixedarea_warn_detail">A batería pode esgotarse rapidamente.</string>
-    <string name="message_translate_fixedarea_promotion">Información de compra do produto</string>
-    <string name="message_translate_fixedarea_promotion_detail">Aparecerá un recordatorio amigable sobre as nosas funcións premium cada %1$s minutos.</string>
-    <string name="message_free_trial_ends">A túa proba gratuíta rematou.</string>
-    <string name="message_free_trial_ends_detail">Queres ver un anuncio para ampliar a proba gratuíta?</string>
-    <string name="message_ad_reward">Recibiches %1$d minutos adicionais de proba gratuíta!</string>
-    <string name="message_ad_reward_detail">Goza de todas as funcións premium gratis durante os próximos %1$d minutos.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Axustes</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Barra de menú</string>
     <string name="settings_menu_menubar_transparency">Transparencia do menú</string>
     <string name="settings_menu_menubar_composition">Funcións do menú</string>
-    <string name="settings_menu_cat_ai">Corrección con IA</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Tradución</string>
     <string name="settings_menu_translation_transparency">Transparencia da tradución</string>
     <string name="settings_menu_translation_close_delay">Retardo ao pechar</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">Voces TTS</string>
     <string name="settings_menu_tts_rate">Velocidade TTS</string>
     <string name="settings_menu_cat_about">Sobre</string>
-    <string name="settings_menu_on_premium_free_trial">Proba Premium activa</string>
-    <string name="settings_menu_premium_free_trial_remain">Quedan %1$d minutos</string>
-    <string name="settings_menu_your_premium_benefits">As túas vantaxes</string>
-    <string name="settings_menu_your_premium_benefits_peding">Vantaxes (pendente)</string>
     <string name="settings_menu_app_version">Versión da app</string>
     <string name="settings_menu_app_version_latest">(Última)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Todo es ilimitado en la premium</string>
     <string name="help_text_no_limit_free">Sin límite de cantidad, sin límite de período</string>
-    <string name="help_text_no_limit_title">Disfrútalo sin límites</string>
     <string name="help_text_no_limit_free_title">Gratis sin restricción</string>
-    <string name="help_text_get_premium">Obtener Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Obtener Premium</string>
-    <string name="premium_view_get_premium_purchased">Tus beneficios Premium</string>
-    <string name="premium_view_get_premium_pending">Tus beneficios Premium (Pendiente)</string>
-    <string name="premium_view_get_premium_not_available">Obtener Premium (Actualmente no disponible)</string>
-    <string name="premium_view_price_format">%1$s/mes • Incluye IVA\n• Cancela en cualquier momento</string>
-    <string name="premium_view_title">Todas las funciones,\nSin interrupciones.</string>
-    <string name="premium_view_message">Sin límite de cantidad, sin límite de período.\nTodo es ilimitado en la premium</string>
-    <string name="premium_view_description_azure">Traduce con precisión la mayoría de los idiomas del mundo.</string>
-    <string name="premium_view_description_deepl">Ofrecemos traducciones sofisticadas que capturan bien el significado.</string>
-    <string name="premium_view_description_papago">La traducción de Papago traduce automáticamente idiomas de varios países al idioma objetivo a través del algoritmo de traducción automática neuronal.</string>
-    <string name="premium_view_description_google">Ofrecemos la traducción más rápida. Ilimitado, gratis indefinidamente.</string>
-    <string name="premium_view_description_sentence_detection">Usa tus dedos para traducir líneas.</string>
-    <string name="premium_view_description_paragraph_detection">Las unidades de párrafo se reconocen automáticamente.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">También puedes especificar el rango que deseas.</string>
-    <string name="premium_view_description_word_detection">La traducción palabra por palabra siempre es gratuita e ilimitada.</string>
-    <string name="premium_view_description_fixed_area_detection">Podes traducir continuamente áreas fixas, como as subtitulacións das películas.</string>
-    <string name="premium_view_unsubscribe">Cancelar suscripción</string>
 </resources>

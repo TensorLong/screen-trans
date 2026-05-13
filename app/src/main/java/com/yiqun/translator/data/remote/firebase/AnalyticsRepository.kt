@@ -1,0 +1,171 @@
+package com.yiqun.translator.data.remote.firebase
+
+import android.content.Context
+import com.yiqun.translator.BuildConfig
+import com.yiqun.translator.data.local.vision.TextDetectMode
+import com.yiqun.translator.data.remote.translation.Transaction
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.logEvent
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.math.roundToInt
+
+
+object Event {
+    const val SECURE = "secure"
+    const val TRANSLATE = "translate"
+    const val TIME_TAKEN = "time_taken"
+}
+
+object Param {
+    const val SECURE_DETAIL = "detail"
+
+    const val TEXT_DETECT_MODE = "detectMode"
+    const val SOURCE_LANGUAGE_CODE = "sourceCode"
+    const val TARGET_LANGUAGE_CODE = "targetCode"
+    const val DETECTED_LANGUAGE_CODE = "detectedCode"
+    const val TRANSLATION_KIT_TYPE = "kit"
+
+    const val DOCKING_DELAY = "dockDelay"
+    const val DRAG_HANDLE_HAPTIC = "haptic"
+    const val MENU_BAR_TRANSPARENCY = "menuTransparency"
+    const val MENU_BAR_COMPOSITION = "menuComposition"
+    const val TRANSLATION_TRANSPARENCY = "transTransparency"
+    const val TRANSLATION_CLOSE_DELAY = "closeDelay"
+    const val REPLY_TRANSPARENCY = "replyTransparency"
+    const val AUTOMATIC_TRANSLATION_PLAYBACK = "autoTTS"
+    const val TTS_VOICE = "TTSVoice"
+    const val TTS_SPEECH_RATE = "TTSRate"
+
+    const val INSTALL_COUNT = "install_count"
+    const val USAGE_COUNT = "usage_count"
+
+    const val HOURS_TAKEN = "hours_"
+    const val DAYS_TAKEN = "days_"
+}
+
+@Singleton
+class AnalyticsRepository @Inject constructor(@ApplicationContext val context: Context) {
+
+    private val TAG = javaClass.simpleName
+
+    private val firebaseAnalytics: FirebaseAnalytics = com.google.firebase.ktx.Firebase.analytics
+
+    fun secureReport(eventDetail: String) {
+        if (BuildConfig.DEBUG) return
+
+        firebaseAnalytics.logEvent(Event.SECURE) {
+            param(Param.SECURE_DETAIL, eventDetail)
+        }
+        FireDatabase.secureReport(eventDetail)
+    }
+
+    fun screenViewReport(className: String) {
+        if (BuildConfig.DEBUG) return
+
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
+            param(FirebaseAnalytics.Param.SCREEN_CLASS, className)
+        }
+        FireDatabase.screenViewReport(className)
+    }
+
+    fun settingsReport(
+        dockDelay: String,
+        haptic: String,
+        menuTransparency: String,
+        menuComposition: String,
+        transTransparency: String,
+        closeDelay: String,
+        replyTransparency: String,
+        autoTTS: String,
+        TTSVoice: String,
+        TTSRate: String,
+    ) {
+        if (BuildConfig.DEBUG) return
+//        Timber.tag(TAG).i("$dockDelay $haptic $menuTransparency $menuComposition $transTransparency $closeDelay $autoTTS $TTSVoice $TTSRate")
+        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SELECT_ITEM) {
+            param(Param.DOCKING_DELAY, dockDelay)
+            param(Param.DRAG_HANDLE_HAPTIC, haptic)
+            param(Param.MENU_BAR_TRANSPARENCY, menuTransparency)
+            param(Param.MENU_BAR_COMPOSITION, menuComposition)
+            param(Param.TRANSLATION_TRANSPARENCY, transTransparency)
+            param(Param.TRANSLATION_CLOSE_DELAY, closeDelay)
+            param(Param.REPLY_TRANSPARENCY, replyTransparency)
+            param(Param.AUTOMATIC_TRANSLATION_PLAYBACK, autoTTS)
+            param(Param.TTS_VOICE, TTSVoice)
+            param(Param.TTS_SPEECH_RATE, TTSRate)
+        }
+        FireDatabase.settingsReport(
+            dockDelay,
+            haptic,
+            menuTransparency,
+            menuComposition,
+            transTransparency,
+            closeDelay,
+            replyTransparency,
+            autoTTS,
+            TTSRate
+        )
+    }
+
+    fun translationReport(
+        transaction: Transaction,
+        textDetectMode: TextDetectMode?,
+    ) {
+        if (BuildConfig.DEBUG) return
+
+        firebaseAnalytics.logEvent(Event.TRANSLATE) {
+            param(Param.SOURCE_LANGUAGE_CODE, transaction.sourceLanguageCode ?: "unknown")
+            param(Param.TARGET_LANGUAGE_CODE, transaction.targetLanguageCode ?: "unknown")
+            param(Param.TRANSLATION_KIT_TYPE, transaction.translationKitType?.name ?: "unknown")
+            param(Param.TEXT_DETECT_MODE, textDetectMode?.name ?: "unknown")
+            param(Param.DETECTED_LANGUAGE_CODE, transaction.detectedLanguageCode ?: "unknown")
+        }
+        FireDatabase.translationReport(
+            transaction,
+            textDetectMode,
+        )
+    }
+
+    fun replyReport(transaction: Transaction) {
+        if (BuildConfig.DEBUG) return
+
+        firebaseAnalytics.logEvent(Event.TRANSLATE) {
+            param(Param.SOURCE_LANGUAGE_CODE, transaction.sourceLanguageCode ?: "unknown")
+            param(Param.TARGET_LANGUAGE_CODE, transaction.targetLanguageCode ?: "unknown")
+            param(Param.TRANSLATION_KIT_TYPE, transaction.translationKitType?.name ?: "unknown")
+        }
+        FireDatabase.replyReport(transaction)
+    }
+
+    fun hoursTakenReport(usageCount: Int, hour: Int) {
+        if (BuildConfig.DEBUG) return
+
+        firebaseAnalytics.logEvent(Event.TIME_TAKEN) {
+            param("${Param.HOURS_TAKEN}$usageCount", hour.toLong())
+        }
+        FireDatabase.hoursTakenReport(usageCount, hour)
+    }
+
+    fun daysTakenReport(usageCount: Int, day: Int) {
+        if (BuildConfig.DEBUG) return
+
+        firebaseAnalytics.logEvent(Event.TIME_TAKEN) {
+            param("${Param.DAYS_TAKEN}$usageCount", day.toLong())
+        }
+        FireDatabase.daysTakenReport(usageCount, day)
+    }
+
+}
+
+
+
+
+
+
+
+
+
+

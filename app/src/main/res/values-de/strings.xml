@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">Bildschirmübersetzer</string>
+  <string name="app_name">Sense Group Translator</string>
 
   <!-- Notification Permission -->
   <string name="message_permission_notification">Erforderliche Berechtigung:\nBenachrichtigungen</string>
@@ -56,12 +56,6 @@
   <string name="message_network_unavailable_detail">Netzwerk nicht verfügbar.\nBitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.</string>
   <string name="message_translate_fixedarea_warn">Batteriewarnung</string>
   <string name="message_translate_fixedarea_warn_detail">Der Akku kann sich schnell entladen.</string>
-  <string name="message_translate_fixedarea_promotion">Produktkaufinformationen</string>
-  <string name="message_translate_fixedarea_promotion_detail">Eine freundliche Erinnerung an unsere Premiumfunktionen wird alle %1$s Minuten angezeigt.</string>
-  <string name="message_free_trial_ends">Deine kostenlose Testphase ist beendet.</string>
-  <string name="message_free_trial_ends_detail">Möchtest du eine Anzeige ansehen, um die Testphase zu verlängern?</string>
-  <string name="message_ad_reward">Du hast %1$d weitere Minuten der kostenlosen Testversion erhalten!</string>
-  <string name="message_ad_reward_detail">Genieße alle Premium-Funktionen für die nächsten %1$d Minuten kostenlos.</string>
 
   <!-- SettingsActivity -->
   <string name="settings_title">Einstellungen</string>
@@ -71,7 +65,7 @@
   <string name="settings_menu_cat_menubar">Menüleiste</string>
   <string name="settings_menu_menubar_transparency">Menü-Transparenz</string>
   <string name="settings_menu_menubar_composition">Menüfunktionen</string>
-  <string name="settings_menu_cat_ai">KI-Korrektur</string>
+  <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">Übersetzung</string>
   <string name="settings_menu_translation_transparency">Übersetzungs-Transparenz</string>
   <string name="settings_menu_translation_close_delay">Schließverzögerung</string>
@@ -81,37 +75,11 @@
   <string name="settings_menu_tts_voices">TTS-Stimmen</string>
   <string name="settings_menu_tts_rate">TTS-Geschwindigkeit</string>
   <string name="settings_menu_cat_about">Info</string>
-  <string name="settings_menu_on_premium_free_trial">Premium-Testversion aktiv</string>
-  <string name="settings_menu_premium_free_trial_remain">Noch %1$d Minuten</string>
-  <string name="settings_menu_your_premium_benefits">Deine Vorteile</string>
-  <string name="settings_menu_your_premium_benefits_peding">Vorteile (wartend)</string>
   <string name="settings_menu_app_version">App-Version</string>
   <string name="settings_menu_app_version_latest">(Neueste)</string>
 
   <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-  <string name="help_text_no_limit">Mit Premium ist alles unbegrenzt</string>
   <string name="help_text_no_limit_free">Keine Mengen- oder Zeitbegrenzung</string>
-  <string name="help_text_no_limit_title">Ohne Einschränkungen genießen</string>
   <string name="help_text_no_limit_free_title">Kostenlos ohne Begrenzung</string>
-  <string name="help_text_get_premium">Premium holen</string>
 
-  <!-- PremiumView -->
-  <string name="premium_view_get_premium">Premium holen</string>
-  <string name="premium_view_get_premium_purchased">Ihre Premium-Vorteile</string>
-  <string name="premium_view_get_premium_pending">Ihre Premium-Vorteile (Ausstehend)</string>
-  <string name="premium_view_get_premium_not_available">Premium nicht verfügbar</string>
-  <string name="premium_view_price_format">%1$s/Monat • inkl. MwSt.\n• Jederzeit kündbar</string>
-  <string name="premium_view_title">Alle Funktionen,\nKeine Unterbrechungen.</string>
-  <string name="premium_view_message">Keine Mengen- oder Zeitbegrenzung.\nMit Premium ist alles unbegrenzt</string>
-  <string name="premium_view_description_azure">Übersetzt die meisten Sprachen der Welt präzise.</string>
-  <string name="premium_view_description_deepl">Wir bieten anspruchsvolle Übersetzungen mit präzisem Sinnverständnis.</string>
-  <string name="premium_view_description_papago">Papago nutzt neuronale Maschinenübersetzung für automatische Übersetzungen.</string>
-  <string name="premium_view_description_google">Die schnellste Übersetzung. Unbegrenzt, für immer kostenlos.</string>
-  <string name="premium_view_description_sentence_detection">Verwenden Sie Ihre Fingerspitzen, um Zeilen zu übersetzen.</string>
-  <string name="premium_view_description_paragraph_detection">Absätze werden automatisch erkannt.</string>
-  <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-  <string name="premium_view_description_select_detection">Sie können auch den gewünschten Bereich auswählen.</string>
-  <string name="premium_view_description_word_detection">Wort-für-Wort-Übersetzung ist immer kostenlos und unbegrenzt.</string>
-  <string name="premium_view_description_fixed_area_detection">Du kannst feste Bereiche wie Filmuntertitel kontinuierlich übersetzen.</string>
-  <string name="premium_view_unsubscribe">Abo kündigen</string>
 </resources>

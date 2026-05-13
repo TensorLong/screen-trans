@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Screen Översätt</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Nödvändigt tillstånd:\nAviseringar</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Nätverket är inte tillgängligt.\nVänligen kontrollera anslutningen och försök igen.</string>
     <string name="message_translate_fixedarea_warn">Batterivarning</string>
     <string name="message_translate_fixedarea_warn_detail">Batteriet kan laddas ur snabbt.</string>
-    <string name="message_translate_fixedarea_promotion">Produktköpsinformation</string>
-    <string name="message_translate_fixedarea_promotion_detail">En vänlig påminnelse om våra premiumfunktioner visas var %1$s minut.</string>
-    <string name="message_free_trial_ends">Din gratis provperiod har avslutats.</string>
-    <string name="message_free_trial_ends_detail">Vill du titta på en annons för att förlänga provperioden?</string>
-    <string name="message_ad_reward">Du har fått ytterligare %1$d minuters gratis provperiod!</string>
-    <string name="message_ad_reward_detail">Njut av alla premiumfunktioner gratis under de kommande %1$d minuterna.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Inställningar</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Menyrad</string>
     <string name="settings_menu_menubar_transparency">Menyns transparens</string>
     <string name="settings_menu_menubar_composition">Menyns funktioner</string>
-    <string name="settings_menu_cat_ai">AI-korrigering</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Översättning</string>
     <string name="settings_menu_translation_transparency">Översättningens transparens</string>
     <string name="settings_menu_translation_close_delay">Fördröjning vid stängning</string>
@@ -81,39 +75,13 @@
     <string name="settings_menu_tts_voices">TTS röster</string>
     <string name="settings_menu_tts_rate">TTS hastighet</string>
     <string name="settings_menu_cat_about">Om</string>
-    <string name="settings_menu_on_premium_free_trial">Premiumtest pågår</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d minuter kvar</string>
-    <string name="settings_menu_your_premium_benefits">Dina förmåner</string>
-    <string name="settings_menu_your_premium_benefits_peding">Förmåner (väntar)</string>
     <string name="settings_menu_app_version">Appversion</string>
     <string name="settings_menu_app_version_latest">(Senaste)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Allt är obegränsat med Premium</string>
     <string name="help_text_no_limit_free">Ingen gräns för kvantitet eller tid</string>
-    <string name="help_text_no_limit_title">Njut utan begränsningar</string>
     <string name="help_text_no_limit_free_title">Gratis utan begränsningar</string>
-    <string name="help_text_get_premium">Skaffa Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Skaffa Premium</string>
-    <string name="premium_view_get_premium_purchased">Dina Premium-förmåner</string>
-    <string name="premium_view_get_premium_pending">Dina Premium-förmåner (Väntar)</string>
-    <string name="premium_view_get_premium_not_available">Premium är inte tillgängligt för tillfället</string>
-    <string name="premium_view_price_format">%1$s/månad • Inkl. moms\n• Avbryt när du vill</string>
-    <string name="premium_view_title">Alla funktioner,\nInga avbrott.</string>
-    <string name="premium_view_message">Ingen gräns för kvantitet eller tid.\nAllt är tillgängligt med Premium</string>
-    <string name="premium_view_description_azure">Översätter de flesta språk i världen korrekt.</string>
-    <string name="premium_view_description_deepl">Erbjuder exakta och nyanserade översättningar.</string>
-    <string name="premium_view_description_papago">Papago översätter flera språk automatiskt med hjälp av neuronnät.</string>
-    <string name="premium_view_description_google">Snabbaste översättningen. Gratis för alltid utan gräns.</string>
-    <string name="premium_view_description_sentence_detection">Använd ditt finger för att översätta rader.</string>
-    <string name="premium_view_description_paragraph_detection">Stycken identifieras automatiskt.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Du kan också välja det område du vill översätta.</string>
-    <string name="premium_view_description_word_detection">Ord-för-ord-översättning är alltid gratis och obegränsad.</string>
-    <string name="premium_view_description_fixed_area_detection">Du kan kontinuerligt översätta fasta områden, till exempel filmtexter.</string>
-    <string name="premium_view_unsubscribe">Avsluta prenumeration</string>
 </resources>
 
 

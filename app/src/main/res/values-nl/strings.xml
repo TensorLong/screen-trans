@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Scherm vertaling</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Vereiste toestemming:\nMeldingen</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Netwerk niet beschikbaar.\nControleer je verbinding en probeer het opnieuw.</string>
     <string name="message_translate_fixedarea_warn">Batterijwaarschuwing</string>
     <string name="message_translate_fixedarea_warn_detail">De batterij kan snel leeglopen.</string>
-    <string name="message_translate_fixedarea_promotion">Productaankoopinformatie</string>
-    <string name="message_translate_fixedarea_promotion_detail">Een vriendelijke herinnering aan onze premiumfuncties verschijnt elke %1$s minuten.</string>
-    <string name="message_free_trial_ends">Je gratis proefperiode is afgelopen.</string>
-    <string name="message_free_trial_ends_detail">Wil je een advertentie bekijken om de gratis proefperiode te verlengen?</string>
-    <string name="message_ad_reward">Je hebt %1$d extra minuten gratis proef ontvangen!</string>
-    <string name="message_ad_reward_detail">Geniet de komende %1$d minuten gratis van alle premiumfuncties.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Instellingen</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Menubalk</string>
     <string name="settings_menu_menubar_transparency">Menu-transparantie</string>
     <string name="settings_menu_menubar_composition">Menufuncties</string>
-    <string name="settings_menu_cat_ai">AI-correctie</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Vertaling</string>
     <string name="settings_menu_translation_transparency">Transparantie vertaling</string>
     <string name="settings_menu_translation_close_delay">Vertraging sluiten</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">TTS-stemmen</string>
     <string name="settings_menu_tts_rate">TTS-snelheid</string>
     <string name="settings_menu_cat_about">Over</string>
-    <string name="settings_menu_on_premium_free_trial">Premium proef actief</string>
-    <string name="settings_menu_premium_free_trial_remain">Nog %1$d minuten</string>
-    <string name="settings_menu_your_premium_benefits">Jouw voordelen</string>
-    <string name="settings_menu_your_premium_benefits_peding">Voordelen (in behandeling)</string>
     <string name="settings_menu_app_version">App-versie</string>
     <string name="settings_menu_app_version_latest">(Nieuwste)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Alles is onbeperkt met Premium</string>
     <string name="help_text_no_limit_free">Geen hoeveelheidlimiet, geen tijdslimiet</string>
-    <string name="help_text_no_limit_title">Geniet zonder beperkingen</string>
     <string name="help_text_no_limit_free_title">Vrij zonder beperkingen</string>
-    <string name="help_text_get_premium">Premium verkrijgen</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Premium verkrijgen</string>
-    <string name="premium_view_get_premium_purchased">Je Premium-voordelen</string>
-    <string name="premium_view_get_premium_pending">Je Premium-voordelen (in afwachting)</string>
-    <string name="premium_view_get_premium_not_available">Premium verkrijgen (Momenteel niet beschikbaar)</string>
-    <string name="premium_view_price_format">%1$s/maand • Inclusief btw\n• Op elk moment opzegbaar</string>
-    <string name="premium_view_title">Alle functies,\nZonder onderbrekingen.</string>
-    <string name="premium_view_message">Geen hoeveelheidlimiet, geen tijdslimiet.\nAlles is onbeperkt met Premium</string>
-    <string name="premium_view_description_azure">Vertaalt nauwkeurig de meeste talen wereldwijd.</string>
-    <string name="premium_view_description_deepl">Wij bieden verfijnde vertalingen die de betekenis goed overbrengen.</string>
-    <string name="premium_view_description_papago">Papago vertaalt automatisch via neurale machinevertaling talen naar de doeltaal.</string>
-    <string name="premium_view_description_google">Wij bieden de snelste vertaling. Onbeperkt en gratis voor altijd.</string>
-    <string name="premium_view_description_sentence_detection">Vertaal regels met je vingertoppen.</string>
-    <string name="premium_view_description_paragraph_detection">Paragrafen worden automatisch herkend.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Je kunt ook zelf het bereik aangeven.</string>
-    <string name="premium_view_description_word_detection">Woord-voor-woord vertaling is altijd gratis en onbeperkt.</string>
-    <string name="premium_view_description_fixed_area_detection">Je kunt vaste gebieden, zoals filmondertitels, continu vertalen.</string>
-    <string name="premium_view_unsubscribe">Opzeggen</string>
 </resources>

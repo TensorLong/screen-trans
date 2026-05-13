@@ -9,29 +9,22 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
-val admobAppId = if (gradle.startParameter.taskNames.any { it.contains("Debug") }) {
-    "ca-app-pub-3940256099942544~3347511713" // Google's official test AdMob App ID
-} else {
-    "ca-app-pub-xxxxxxxxxxxxxxxx~xxxxxxxxxx"
-}
-
 android {
-    namespace = "com.galaxy.airviewdictionary"
+    namespace = "com.yiqun.translator"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.galaxy.airviewdictionary"
+        applicationId = "com.yiqun.translator"
         minSdk = 23
         targetSdk = 35
         versionCode = 20503
         versionName = "2.5.3"
-        manifestPlaceholders["ADMOB_APP_ID"] = admobAppId
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     bundle {
-        abi { enableSplit = true } // ABI별로 APK를 나누기
-        language { enableSplit = true } // 언어별로 APK를 나누기
-        density { enableSplit = true } // 해상도별로 APK를 나누기
+        abi { enableSplit = true }
+        language { enableSplit = true }
+        density { enableSplit = true }
     }
     signingConfigs {
         create("release") {
@@ -89,8 +82,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.billingclient)
-    implementation(libs.admob)
     implementation(libs.integrity)
     implementation(libs.app.review)
 //    implementation(libs.app.update)

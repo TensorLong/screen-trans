@@ -1,19 +1,19 @@
 <resources>
-  <string name="app_name">屏幕翻译</string>
+  <string name="app_name">意群翻译</string>
 
   <!-- Notification Permission -->
   <string name="message_permission_notification">所需权限：\n通知</string>
-  <string name="message_permission_notification_detail">启动屏幕翻译器需要授予通知权限。</string>
+  <string name="message_permission_notification_detail">启动意群翻译需要授予通知权限。</string>
 
   <!-- Overlay Permission -->
   <string name="message_permission_overlay">所需权限：\n在其他应用上层显示</string>
-  <string name="message_permission_overlay_detail">启动屏幕翻译器需要授予在其他应用上层显示的权限。</string>
+  <string name="message_permission_overlay_detail">启动意群翻译需要授予在其他应用上层显示的权限。</string>
   <string name="message_permission_overlay_denied">悬浮窗权限已被拒绝</string>
   <string name="message_permission_overlay_denied_detail">未授予悬浮窗权限。\n应用将退出。</string>
 
   <!-- MediaProjection token 请求 -->
   <string name="message_media_projection">所需权限：\n屏幕录制</string>
-  <string name="message_media_projection_detail">启动屏幕翻译器需要授予屏幕录制权限。\n\n屏幕内容仅用于翻译，不会被传输或保存到其他地方。</string>
+  <string name="message_media_projection_detail">启动意群翻译需要授予屏幕录制权限。\n\n屏幕内容仅用于翻译，不会被传输或保存到其他地方。</string>
   <string name="message_media_projection_denied">屏幕录制权限被拒绝</string>
   <string name="message_media_projection_denied_detail">未授予屏幕录制权限。\n应用将退出。</string>
 
@@ -56,12 +56,6 @@
   <string name="message_network_unavailable_detail">网络不可用。\n请检查后重试。</string>
   <string name="message_translate_fixedarea_warn">电池警告</string>
   <string name="message_translate_fixedarea_warn_detail">电池可能很快就会耗尽。</string>
-  <string name="message_translate_fixedarea_promotion">产品购买信息</string>
-  <string name="message_translate_fixedarea_promotion_detail">关于我们高级功能的友好提醒将每 %1$s 分钟显示一次。</string>
-  <string name="message_free_trial_ends">您的免费试用已结束。</string>
-  <string name="message_free_trial_ends_detail">要观看广告以延长免费试用时间吗？</string>
-  <string name="message_ad_reward">您已获得额外 %1$d 分钟的免费试用时间！</string>
-  <string name="message_ad_reward_detail">接下来 %1$d 分钟内，所有高级功能都可免费使用。</string>
 
   <!-- SettingsActivity -->
   <string name="settings_title">设置</string>
@@ -71,7 +65,7 @@
   <string name="settings_menu_cat_menubar">菜单栏</string>
   <string name="settings_menu_menubar_transparency">菜单透明度</string>
   <string name="settings_menu_menubar_composition">菜单功能</string>
-  <string name="settings_menu_cat_ai">AI 修正</string>
+  <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">翻译</string>
   <string name="settings_menu_translation_transparency">翻译透明度</string>
   <string name="settings_menu_translation_close_delay">关闭延迟</string>
@@ -81,37 +75,17 @@
   <string name="settings_menu_tts_voices">TTS 声音</string>
   <string name="settings_menu_tts_rate">TTS 语速</string>
   <string name="settings_menu_cat_about">关于</string>
-  <string name="settings_menu_on_premium_free_trial">正在使用Premium免费试用</string>
-  <string name="settings_menu_premium_free_trial_remain">剩余 %1$d 分钟</string>
-  <string name="settings_menu_your_premium_benefits">您的特权</string>
-  <string name="settings_menu_your_premium_benefits_peding">特权（等待中）</string>
   <string name="settings_menu_app_version">应用版本</string>
   <string name="settings_menu_app_version_latest">(最新)</string>
 
   <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-  <string name="help_text_no_limit">高级版功能全部无限制</string>
   <string name="help_text_no_limit_free">无限数量，无时间限制</string>
-  <string name="help_text_no_limit_title">畅享无限体验</string>
   <string name="help_text_no_limit_free_title">永久免费无限制</string>
-  <string name="help_text_get_premium">获取高级版</string>
 
-  <!-- PremiumView -->
-  <string name="premium_view_get_premium">获取高级版</string>
-  <string name="premium_view_get_premium_purchased">您的高级功能</string>
-  <string name="premium_view_get_premium_pending">您的高级功能（待处理）</string>
-  <string name="premium_view_get_premium_not_available">获取高级版（当前不可用）</string>
-  <string name="premium_view_price_format">%1$s/月 • 含增值税\n• 可随时取消</string>
-  <string name="premium_view_title">所有功能，\n无打扰体验。</string>
-  <string name="premium_view_message">无限数量，无时间限制。\n高级版全部无限制</string>
-  <string name="premium_view_description_azure">准确翻译世界大多数语言。</string>
-  <string name="premium_view_description_deepl">提供高质量的翻译，准确传达原意。</string>
-  <string name="premium_view_description_papago">Papago 使用神经网络翻译算法自动将多国语言翻译为目标语言。</string>
-  <string name="premium_view_description_google">最快的翻译，永久免费，无限制。</string>
-  <string name="premium_view_description_sentence_detection">用手指滑动翻译整行文字。</string>
-  <string name="premium_view_description_paragraph_detection">自动识别段落单位。</string>
-  <string name="premium_view_description_sense_group_detection">将句子拆分为语义单元（意群），逐段翻译。指向任意单词即可查看其所在意群的含义。</string>
-  <string name="premium_view_description_select_detection">也可以自行选择需要翻译的区域。</string>
-  <string name="premium_view_description_word_detection">逐词翻译永远免费，无限制。</string>
-  <string name="premium_view_description_fixed_area_detection">您可以持续翻译固定区域，如电影字幕。</string>
-  <string name="premium_view_unsubscribe">取消订阅</string>
+  <string name="feature_view_description_sentence_detection">用手指滑动翻译整行文字。</string>
+  <string name="feature_view_description_paragraph_detection">自动识别段落单位。</string>
+  <string name="feature_view_description_sense_group_detection">将句子拆分为语义单元（意群），逐段翻译。指向任意单词即可查看其所在意群的含义。</string>
+  <string name="feature_view_description_select_detection">也可以自行选择需要翻译的区域。</string>
+  <string name="feature_view_description_word_detection">逐词翻译不限数量、不限时间。</string>
+  <string name="feature_view_description_fixed_area_detection">您可以持续翻译固定区域，如电影字幕。</string>
 </resources>

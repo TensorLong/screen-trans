@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Traduzione dello schermo</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Reikalingas leidimas:\nPranešimai</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Tinklas nepasiekiamas.\nPatikrinkite ir bandykite dar kartą.</string>
     <string name="message_translate_fixedarea_warn">Baterijos įspėjimas</string>
     <string name="message_translate_fixedarea_warn_detail">Baterija gali greitai išsikrauti.</string>
-    <string name="message_translate_fixedarea_promotion">Informacija apie produkto pirkimą</string>
-    <string name="message_translate_fixedarea_promotion_detail">Draugiškas priminimas apie mūsų aukščiausios kokybės funkcijas pasirodys kas %1$s minučių.</string>
-    <string name="message_free_trial_ends">Jūsų nemokamas bandomasis laikotarpis baigėsi.</string>
-    <string name="message_free_trial_ends_detail">Ar norite žiūrėti reklamą, kad pratęstumėte nemokamą bandomąjį laikotarpį?</string>
-    <string name="message_ad_reward">Gavote dar %1$d minučių nemokamos bandomosios versijos!</string>
-    <string name="message_ad_reward_detail">Mėgaukitės visomis premium funkcijomis nemokamai artimiausias %1$d minutes.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Nustatymai</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Meniu juosta</string>
     <string name="settings_menu_menubar_transparency">Meniu skaidrumas</string>
     <string name="settings_menu_menubar_composition">Meniu funkcijos</string>
-    <string name="settings_menu_cat_ai">AI taisymas</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Vertimas</string>
     <string name="settings_menu_translation_transparency">Vertimo skaidrumas</string>
     <string name="settings_menu_translation_close_delay">Uždarymo delsimas</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">TTS balsai</string>
     <string name="settings_menu_tts_rate">TTS greitis</string>
     <string name="settings_menu_cat_about">Apie</string>
-    <string name="settings_menu_on_premium_free_trial">Premium bandomasis veikia</string>
-    <string name="settings_menu_premium_free_trial_remain">Liko %1$d minučių</string>
-    <string name="settings_menu_your_premium_benefits">Jūsų privilegijos</string>
-    <string name="settings_menu_your_premium_benefits_peding">Privilegijos (laukia)</string>
     <string name="settings_menu_app_version">Programos versija</string>
     <string name="settings_menu_app_version_latest">(Naujausia)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Su Premium viskas neribota</string>
     <string name="help_text_no_limit_free">Nėra kiekio ar laiko apribojimų</string>
-    <string name="help_text_no_limit_title">Naudokitės be apribojimų</string>
     <string name="help_text_no_limit_free_title">Nemokamai be apribojimų</string>
-    <string name="help_text_get_premium">Gauti Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Gauti Premium</string>
-    <string name="premium_view_get_premium_purchased">Jūsų Premium privalumai</string>
-    <string name="premium_view_get_premium_pending">Jūsų Premium privalumai (laukia)</string>
-    <string name="premium_view_get_premium_not_available">Premium šiuo metu nepasiekiamas</string>
-    <string name="premium_view_price_format">%1$s/mėn • Su PVM\n• Atšaukti bet kada</string>
-    <string name="premium_view_title">Visos funkcijos,\nBe pertraukų.</string>
-    <string name="premium_view_message">Neribotas kiekis ir laikas.\nViskas įtraukta su Premium</string>
-    <string name="premium_view_description_azure">Tiksliai verčia daugumą pasaulio kalbų.</string>
-    <string name="premium_view_description_deepl">Teikia kokybiškus ir tikslius vertimus.</string>
-    <string name="premium_view_description_papago">Papago naudoja neuroninius tinklus automatiniam kalbų vertimui.</string>
-    <string name="premium_view_description_google">Greitas vertimas. Neribotai, visam laikui nemokamai.</string>
-    <string name="premium_view_description_sentence_detection">Naudokite pirštą eilutėms versti.</string>
-    <string name="premium_view_description_paragraph_detection">Pastraipos aptinkamos automatiškai.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Galite pasirinkti norimą sritį rankiniu būdu.</string>
-    <string name="premium_view_description_word_detection">Vertimas žodis po žodžio visada nemokamas ir neribotas.</string>
-    <string name="premium_view_description_fixed_area_detection">Galite nuolat versti fiksuotas sritis, tokias kaip filmų subtitrai.</string>
-    <string name="premium_view_unsubscribe">Atsisakyti prenumeratos</string>
 </resources>

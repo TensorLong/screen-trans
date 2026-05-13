@@ -1,28 +1,28 @@
-# Screen Translate
+# 意群翻译 / Sense Group Translator
 
-Screen Translate 是一个 Android 悬浮翻译工具：在任意 App 上方显示可拖动光标，实时 OCR 屏幕文字，并把光标指向的内容翻译成目标语言。
+意群翻译是一款 Android 悬浮翻译工具。它通过悬浮指针识别屏幕文字，并围绕“意群”这一最小语义片段提供更贴近上下文的翻译结果。
 
-## 基本功能
+## 核心能力
 
-- 悬浮窗取词：通过系统悬浮窗在当前屏幕上选择需要翻译的文字。
-- 实时屏幕 OCR：使用 Android `MediaProjection` 截屏，并通过 Google ML Kit 识别屏幕文字。
-- 多种识别模式：支持单词、句子、段落、框选区域、固定区域翻译。
+- 悬浮取词：在任意 App 上方移动指针，快速选择需要理解的文字。
+- 屏幕 OCR：使用 MediaProjection 截屏，并通过 Google ML Kit 识别屏幕文本。
+- 多粒度识别：支持单词、句子、意群、段落、框选区域与固定区域翻译。
+- 意群翻译：当指针指向句中某个单词时，AI 会定位该词所在的语义片段，只翻译这个片段。
 - 多翻译引擎：支持 Google、DeepL、Azure、Papago，以及本地 ML Kit 翻译能力。
-- AI 辅助：可使用兼容 OpenAI 的接口进行 OCR 文本纠错和语义处理。
-- 语音朗读：支持 TTS 朗读翻译结果。
-- 大屏/折叠屏适配：项目正在持续改进折叠屏、平板和横竖屏切换体验。
+- 自定义 AI API：内测用户可以配置 API Key、Base URL，并从服务端拉取可用模型后选择使用。
+- 语音朗读：支持通过系统 TTS 朗读翻译结果。
 
-## 当前正在增加的功能：意群翻译
-
-意群翻译会把当前 OCR 识别出的完整句子交给 AI，由 AI 找出光标所指单词所在的最小语义片段，再只翻译这个片段。
-
-目标示例：
+## 意群翻译示例
 
 ```text
 It's an ironic twist-we might all end up as NPCs in this new ecosystem
 ```
 
-当光标指向 `twist` 时，意群应识别为 `ironic twist` 或 `an ironic twist`，而不是没有语义的 `twist-we`。
+当指针指向 `twist` 时，应用会优先识别 `an ironic twist` 或 `ironic twist` 这样的语义片段，而不是孤立翻译单个词或误切为无意义片段。
+
+## 内测阶段说明
+
+当前版本处于内测阶段，所有功能均为免费开放模式。应用内不展示订阅、付费、广告激励或购买页面。
 
 ## 技术栈
 
@@ -32,7 +32,7 @@ It's an ironic twist-we might all end up as NPCs in this new ecosystem
 - Hilt
 - Google ML Kit OCR / Language ID / Translate
 - Retrofit / Gson / kotlinx.serialization
-- Firebase 相关组件
+- Firebase 组件
 
 ## 本地开发
 
@@ -46,7 +46,8 @@ It's an ironic twist-we might all end up as NPCs in this new ecosystem
 
 ```bash
 ./gradlew testDebugUnitTest
+./gradlew lintDebug
 ./gradlew assembleDebug
 ```
 
-调试 AI 功能时，请在 App 设置页填写自己的兼容 OpenAI API 配置。不要把 API key 写入源码、README、日志或 Git 提交。
+调试 AI API 时，请只在应用设置页输入自己的测试凭据。不要把 API Key、Base URL、模型凭据或任何密钥写入源码、README、日志或 Git 提交。

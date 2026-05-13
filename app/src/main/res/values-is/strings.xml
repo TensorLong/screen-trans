@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Skjáþýðing</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Krafist heimildar:\nTilkynningar</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Netið er ekki tiltækt.\nVinsamlegast athugaðu tenginguna og reyndu aftur.</string>
     <string name="message_translate_fixedarea_warn">Viðvörun um rafhlöðu</string>
     <string name="message_translate_fixedarea_warn_detail">Rafhlaðan gæti tæmst hratt.</string>
-    <string name="message_translate_fixedarea_promotion">Upplýsingar um vörukaup</string>
-    <string name="message_translate_fixedarea_promotion_detail">Vinaleg áminning um aukaeiginleika okkar birtist á %1$s mínútna fresti.</string>
-    <string name="message_free_trial_ends">Ókeypis prufuútgáfan þín er lokið.</string>
-    <string name="message_free_trial_ends_detail">Viltu horfa á auglýsingu til að framlengja prufuna?</string>
-    <string name="message_ad_reward">Þú hefur fengið %1$d fleiri mínútur af ókeypis prufu!</string>
-    <string name="message_ad_reward_detail">Njóttu allra úrvals eiginleika ókeypis næstu %1$d mínúturnar.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Stillingar</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Valmyndarslá</string>
     <string name="settings_menu_menubar_transparency">Gegnsæi valmyndar</string>
     <string name="settings_menu_menubar_composition">Valmynda aðgerðir</string>
-    <string name="settings_menu_cat_ai">AI-leiðrétting</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Þýðing</string>
     <string name="settings_menu_translation_transparency">Gegnsæi þýðingar</string>
     <string name="settings_menu_translation_close_delay">Töf við lokun</string>
@@ -81,39 +75,13 @@
     <string name="settings_menu_tts_voices">TTS raddir</string>
     <string name="settings_menu_tts_rate">TTS hraði</string>
     <string name="settings_menu_cat_about">Um forritið</string>
-    <string name="settings_menu_on_premium_free_trial">Premium prufa virk</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d mínútur eftir</string>
-    <string name="settings_menu_your_premium_benefits">Premium fríðindi</string>
-    <string name="settings_menu_your_premium_benefits_peding">Fríðindi (bíður)</string>
     <string name="settings_menu_app_version">Útgáfa apps</string>
     <string name="settings_menu_app_version_latest">(Nýjasta)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Allt er ótakmarkað með Premium</string>
     <string name="help_text_no_limit_free">Engin takmörk á magni eða tíma</string>
-    <string name="help_text_no_limit_title">Njóttu án takmarkana</string>
     <string name="help_text_no_limit_free_title">Ókeypis og án takmarkana</string>
-    <string name="help_text_get_premium">Fáðu Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Fáðu Premium</string>
-    <string name="premium_view_get_premium_purchased">Þín Premium forréttindi</string>
-    <string name="premium_view_get_premium_pending">Þín Premium forréttindi (bíður)</string>
-    <string name="premium_view_get_premium_not_available">Premium er ekki tiltækt eins og er</string>
-    <string name="premium_view_price_format">%1$s/mánuði • með VSK\n• Hægt að segja upp hvenær sem er</string>
-    <string name="premium_view_title">Allir eiginleikar,\nEngin truflun.</string>
-    <string name="premium_view_message">Engin takmörk á magni eða tíma.\nAllt aðgengilegt með Premium</string>
-    <string name="premium_view_description_azure">Þýðir nákvæmlega flest tungumál heims.</string>
-    <string name="premium_view_description_deepl">Veitir vandaðar og merkingarréttar þýðingar.</string>
-    <string name="premium_view_description_papago">Papago þýðir sjálfkrafa milli margra tungumála með taugakerfum.</string>
-    <string name="premium_view_description_google">Hraðasta þýðingin. Ókeypis og ótakmarkað að eilífu.</string>
-    <string name="premium_view_description_sentence_detection">Notaðu puttann til að þýða línur.</string>
-    <string name="premium_view_description_paragraph_detection">Málsgreinar eru greindar sjálfkrafa.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Þú getur líka valið svæðið sem þú vilt.</string>
-    <string name="premium_view_description_word_detection">Orð fyrir orð þýðing er alltaf ókeypis og ótakmörkuð.</string>
-    <string name="premium_view_description_fixed_area_detection">Þú getur þýtt stöðug svæði eins og texta í kvikmyndum.</string>
-    <string name="premium_view_unsubscribe">Hætta við áskrift</string>
 </resources>
 
 

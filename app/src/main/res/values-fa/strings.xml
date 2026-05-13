@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">مترجم صفحه‌نمایش</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">دسترسی لازم:\nاعلان‌ها</string>
@@ -11,13 +11,13 @@
     <string name="message_permission_overlay_denied">دسترسی پوشش‌دهی رد شد</string>
     <string name="message_permission_overlay_denied_detail">دسترسی پوشش‌دهی ارائه نشده است.\nبرنامه بسته خواهد شد.</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token request -->
     <string name="message_media_projection">دسترسی لازم:\nضبط صفحه‌نمایش</string>
     <string name="message_media_projection_detail">برای اجرای مترجم صفحه‌نمایش، باید اجازه ضبط صفحه را بدهید.\n\nاطلاعات صفحه فقط برای اهداف ترجمه استفاده می‌شوند و ذخیره یا منتقل نمی‌شوند.</string>
     <string name="message_media_projection_denied">دسترسی ضبط صفحه رد شد</string>
     <string name="message_media_projection_denied_detail">دسترسی ضبط صفحه ارائه نشده است.\nبرنامه بسته خواهد شد.</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground service start notification -->
     <string name="notification_foreground_service">عملکرد ضبط صفحه برای ترجمه در حال استفاده است.</string>
     <string name="title_start_foreground_service">شروع سرویس پیش‌زمینه</string>
     <string name="message_start_foreground_service">برنامه یک سرویس پیش‌زمینه را برای ضبط و ترجمه محتوای صفحه آغاز می‌کند.\n\nتصاویر ضبط‌شده ذخیره یا به بیرون ارسال نمی‌شوند.</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">شبکه در دسترس نیست.\nلطفاً بررسی کرده و دوباره تلاش کنید.</string>
     <string name="message_translate_fixedarea_warn">هشدار باتری</string>
     <string name="message_translate_fixedarea_warn_detail">ممکن است باتری به‌سرعت خالی شود.</string>
-    <string name="message_translate_fixedarea_promotion">اطلاعات خرید محصول</string>
-    <string name="message_translate_fixedarea_promotion_detail">یادآوری دوستانه‌ای درباره قابلیت‌های ویژه ما هر %1$s دقیقه نمایش داده می‌شود.</string>
-    <string name="message_free_trial_ends">دوره آزمایشی رایگان شما به پایان رسید.</string>
-    <string name="message_free_trial_ends_detail">آیا می‌خواهید برای تمدید دوره آزمایشی یک تبلیغ تماشا کنید؟</string>
-    <string name="message_ad_reward">%1$d دقیقه بیشتر از دوره آزمایشی رایگان دریافت کردید!</string>
-    <string name="message_ad_reward_detail">از همه امکانات ویژه به مدت %1$d دقیقه آینده رایگان استفاده کنید.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">تنظیمات</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">نوار منو</string>
     <string name="settings_menu_menubar_transparency">شفافیت منو</string>
     <string name="settings_menu_menubar_composition">عملکردهای منو</string>
-    <string name="settings_menu_cat_ai">اصلاح با هوش مصنوعی</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ترجمه</string>
     <string name="settings_menu_translation_transparency">شفافیت ترجمه</string>
     <string name="settings_menu_translation_close_delay">تأخیر بستن</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">صداهای TTS</string>
     <string name="settings_menu_tts_rate">سرعت TTS</string>
     <string name="settings_menu_cat_about">درباره</string>
-    <string name="settings_menu_on_premium_free_trial">نسخه آزمایشی فعال است</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d دقیقه باقی‌مانده</string>
-    <string name="settings_menu_your_premium_benefits">مزایای شما</string>
-    <string name="settings_menu_your_premium_benefits_peding">مزایا (در انتظار)</string>
     <string name="settings_menu_app_version">نسخه برنامه</string>
     <string name="settings_menu_app_version_latest">(جدیدترین)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">با پریمیوم، همه چیز نامحدود است</string>
     <string name="help_text_no_limit_free">بدون محدودیت در مقدار یا زمان</string>
-    <string name="help_text_no_limit_title">از آن بدون محدودیت لذت ببرید</string>
     <string name="help_text_no_limit_free_title">رایگان و بدون محدودیت</string>
-    <string name="help_text_get_premium">دریافت پریمیوم</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">دریافت پریمیوم</string>
-    <string name="premium_view_get_premium_purchased">مزایای پریمیوم شما</string>
-    <string name="premium_view_get_premium_pending">مزایای پریمیوم شما (در انتظار)</string>
-    <string name="premium_view_get_premium_not_available">دریافت پریمیوم (در حال حاضر در دسترس نیست)</string>
-    <string name="premium_view_price_format">%1$s/ماه • شامل مالیات\n• قابل لغو در هر زمان</string>
-    <string name="premium_view_title">همه ویژگی‌ها،\nبدون وقفه.</string>
-    <string name="premium_view_message">بدون محدودیت در مقدار یا مدت زمان.\nبا پریمیوم، همه چیز نامحدود است.</string>
-    <string name="premium_view_description_azure">اکثر زبان‌های دنیا را به‌درستی ترجمه می‌کند.</string>
-    <string name="premium_view_description_deepl">ترجمه‌هایی دقیق و با درک معنایی ارائه می‌دهد.</string>
-    <string name="premium_view_description_papago">Papago زبان‌های مختلف را با الگوریتم ترجمه عصبی به زبان مقصد ترجمه می‌کند.</string>
-    <string name="premium_view_description_google">سریع‌ترین ترجمه را ارائه می‌دهد. رایگان و نامحدود برای همیشه.</string>
-    <string name="premium_view_description_sentence_detection">با انگشت خود خطوط را برای ترجمه انتخاب کنید.</string>
-    <string name="premium_view_description_paragraph_detection">واحدهای پاراگراف به‌صورت خودکار شناسایی می‌شوند.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">می‌توانید محدوده دلخواه را نیز انتخاب کنید.</string>
-    <string name="premium_view_description_word_detection">ترجمه کلمه‌به‌کلمه همیشه رایگان و نامحدود است.</string>
-    <string name="premium_view_description_fixed_area_detection">می‌توانید بخش‌های ثابت مانند زیرنویس فیلم را به‌صورت مداوم ترجمه کنید.</string>
-    <string name="premium_view_unsubscribe">لغو اشتراک</string>
 </resources>

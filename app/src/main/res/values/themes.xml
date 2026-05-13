@@ -16,9 +16,9 @@
 
 <resources>
 
-    <style name="Theme.ScreenTranslator" parent="android:Theme.Material.NoActionBar"/>
+    <style name="Theme.SenseGroupTranslator" parent="android:Theme.Material.NoActionBar"/>
 
-    <style name="Theme.ScreenTranslator.Transparent" parent="Theme.ScreenTranslator">
+    <style name="Theme.SenseGroupTranslator.Transparent" parent="Theme.SenseGroupTranslator">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>
@@ -27,12 +27,12 @@
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
-    <style name="Theme.ScreenTranslator.Fullscreen" parent="Theme.ScreenTranslator">
+    <style name="Theme.SenseGroupTranslator.Fullscreen" parent="Theme.SenseGroupTranslator">
         <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowBackground">@null</item>
     </style>
 
-    <style name="Theme.SettingsActivity" parent="Theme.ScreenTranslator">
+    <style name="Theme.SettingsActivity" parent="Theme.SenseGroupTranslator">
     </style>
 
     <style name="Theme.ReplyActivity" parent="Theme.Material3.DayNight.Dialog">
@@ -40,8 +40,8 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:backgroundDimEnabled">false</item>
-        <item name="android:backgroundDimAmount">0.0</item> <!-- 배경 어두운 정도 -->
-        <item name="android:windowMinWidthMajor">100%</item> <!-- 다이얼로그 너비 비율 -->
+        <item name="android:backgroundDimAmount">0.0</item> <!-- Background dim amount -->
+        <item name="android:windowMinWidthMajor">100%</item> <!-- Dialog width ratio -->
         <item name="android:windowMinWidthMinor">100%</item>
     </style>
 

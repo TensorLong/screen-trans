@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">ການແປພາສາໜ້າຈໍ</string>
+  <string name="app_name">Sense Group Translator</string>
 
   <!-- Notification Permission -->
   <string name="message_permission_notification">ການອະນຸຍາດທີ່ຈໍາເປັນ:\nແຈ້ງເຕືອນ</string>
@@ -56,12 +56,6 @@
   <string name="message_network_unavailable_detail">ເຄື່ອຂ່າຍບໍ່ພ້ອມໃຊ້\nກະລຸນາກວດສອບແລະລອງໃໝ່</string>
   <string name="message_translate_fixedarea_warn">ຄໍາເຕືອນແບັດເຕີຣີ</string>
   <string name="message_translate_fixedarea_warn_detail">ແບັດເຕີຣີອາດຈະໝົດໄວ.</string>
-  <string name="message_translate_fixedarea_promotion">ຂໍ້ມູນການຊື້ສິນຄ້າ</string>
-  <string name="message_translate_fixedarea_promotion_detail">ການເຕືອນຢ່າງເປັນມິດກ່ຽວກັບຟັງຊັນພິເສດຂອງພວກເຮົາຈະປາກົດທຸກ %1$s ນາທີ.</string>
-  <string name="message_free_trial_ends">ການທົດລອງຟຣີຂອງທ່ານໄດ້ສິ້ນສຸດແລ້ວ.</string>
-  <string name="message_free_trial_ends_detail">ທ່ານຕ້ອງການເບິ່ງສະຫຼຸບໂຄສະນາເພື່ອຕໍ່ເວລາທົດລອງຟຣີບໍ?</string>
-  <string name="message_ad_reward">ທ່ານໄດ້ຮັບເວລາທົດລອງຟຣີເພີ່ມອີກ %1$d ນາທີ!</string>
-  <string name="message_ad_reward_detail">ໃຊ້ງານທຸກຟັງຊັນພິເສດໄດ້ຟຣີສຳລັບ %1$d ນາທີຖັດໄປນີ້.</string>
 
   <!-- SettingsActivity -->
   <string name="settings_title">ການຕັ້ງຄ່າ</string>
@@ -71,7 +65,7 @@
   <string name="settings_menu_cat_menubar">ແຖບເມນູ</string>
   <string name="settings_menu_menubar_transparency">ຄວາມໂປ່ງໃສເມນູ</string>
   <string name="settings_menu_menubar_composition">ຟັງຊັນເມນູ</string>
-  <string name="settings_menu_cat_ai">ແກ້ໄຂ AI</string>
+  <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">ການແປ</string>
   <string name="settings_menu_translation_transparency">ຄວາມໂປ່ງໃສແປ</string>
   <string name="settings_menu_translation_close_delay">ຊ້າໃນການປິດ</string>
@@ -81,37 +75,11 @@
   <string name="settings_menu_tts_voices">ສຽງ TTS</string>
   <string name="settings_menu_tts_rate">ຄວາມໄວ TTS</string>
   <string name="settings_menu_cat_about">ກ່ຽວກັບ</string>
-  <string name="settings_menu_on_premium_free_trial">ທົດລອງ Premium ກໍາລັງໃຊ້ງານ</string>
-  <string name="settings_menu_premium_free_trial_remain">ຍັງເຫຼືອ %1$d ນາທີ</string>
-  <string name="settings_menu_your_premium_benefits">ສິດປະໂຫຍດຂອງທ່ານ</string>
-  <string name="settings_menu_your_premium_benefits_peding">ປະໂຫຍດ (ລໍຖ້າ)</string>
   <string name="settings_menu_app_version">ເວີຊັນແອັບ</string>
   <string name="settings_menu_app_version_latest">(ລ່າສຸດ)</string>
 
   <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-  <string name="help_text_no_limit">ທຸກຢ່າງແມ່ນບໍ່ຈໍາກັດສໍາລັບ Premium</string>
   <string name="help_text_no_limit_free">ບໍ່ຈໍາກັດຈໍານວນ, ບໍ່ຈໍາກັດເວລາ</string>
-  <string name="help_text_no_limit_title">ໃຊ້ໄດ້ແບບບໍ່ຈໍາກັດ</string>
   <string name="help_text_no_limit_free_title">ຟຣີໄດ້ແບບບໍ່ຈໍາກັດ</string>
-  <string name="help_text_get_premium">ຮັບສິດ Premium</string>
 
-  <!-- PremiumView -->
-  <string name="premium_view_get_premium">ຮັບສິດ Premium</string>
-  <string name="premium_view_get_premium_purchased">ສິດ Premium ຂອງເຈົ້າ</string>
-  <string name="premium_view_get_premium_pending">ສິດ Premium (ລໍຖ້າການຍືນຢັນ)</string>
-  <string name="premium_view_get_premium_not_available">Premium ບໍ່ສາມາດໃຊ້ໄດ້ໃນຕອນນີ້</string>
-  <string name="premium_view_price_format">%1$s/ເດືອນ • ລວມພາສີ\n• ຢຸດໄດ້ທຸກເວລາ</string>
-  <string name="premium_view_title">ທຸກຟັງຊັນ,\nບໍ່ມີຂັດຂ້ອງ</string>
-  <string name="premium_view_message">ບໍ່ຈໍາກັດຈໍານວນ, ບໍ່ຈໍາກັດເວລາ\nPremium ໃຫ້ໃຊ້ໄດ້ທຸກຢ່າງ</string>
-  <string name="premium_view_description_azure">ແປພາສາໄດ້ຖືກຕ້ອງທົ່ວໂລກ</string>
-  <string name="premium_view_description_deepl">ແປໄດ້ລຶກຊຶ້ງ ມີຄວາມໝາຍທີ່ຊັດເຈນ</string>
-  <string name="premium_view_description_papago">Papago ແປອັດຕະໂນມັດໂດຍໃຊ້ AI</string>
-  <string name="premium_view_description_google">ແປໄວທີ່ສຸດ ຟຣີໄດ້ບໍ່ຈໍາກັດ ຕະຫຼອດໄປ</string>
-  <string name="premium_view_description_sentence_detection">ໃຊ້ນິ້ວມືແປຂໍ້ຄວາມແບບແຖວ</string>
-  <string name="premium_view_description_paragraph_detection">ຈັບຂໍ້ຄວາມແບບຍໍ່ໄດ້ອັດຕະໂນມັດ</string>
-  <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-  <string name="premium_view_description_select_detection">ເຈົ້າສາມາດເລືອກຂອບເຂດໄດ້</string>
-  <string name="premium_view_description_word_detection">ແປຄໍາຕໍ່ຄໍາແມ່ນຟຣີແລະບໍ່ຈໍາກັດ</string>
-  <string name="premium_view_description_fixed_area_detection">ທ່ານສາມາດແປພື້ນທີ່ຄົງທີ່ໄດ້ຕະຫຼອດ, ເຊັ່ນ ຄຳບັນຍາຍໃນຮູບເງົາ.</string>
-  <string name="premium_view_unsubscribe">ຢຸດການສະໝັກ</string>
 </resources>

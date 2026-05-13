@@ -1,23 +1,23 @@
 <resources>
-  <string name="app_name">화면 번역</string>
+  <string name="app_name">Sense Group Translator</string>
 
   <!-- Notification Permission -->
   <string name="message_permission_notification">필요한 권한:\n알림</string>
-  <string name="message_permission_notification_detail">스크린 번역기를 실행하려면 알림 권한을 허용해야 합니다.</string>
+  <string name="message_permission_notification_detail">의미 그룹 번역기를 실행하려면 알림 권한을 허용해야 합니다.</string>
 
   <!-- Overlay Permission -->
   <string name="message_permission_overlay">필요한 권한:\n다른 앱 위에 표시</string>
-  <string name="message_permission_overlay_detail">스크린 번역기를 실행하려면 다른 앱 위에 표시 권한을 허용해야 합니다.</string>
+  <string name="message_permission_overlay_detail">의미 그룹 번역기를 실행하려면 다른 앱 위에 표시 권한을 허용해야 합니다.</string>
   <string name="message_permission_overlay_denied">오버레이 권한이 거부됨</string>
   <string name="message_permission_overlay_denied_detail">오버레이 권한이 허용되지 않았습니다.\n앱을 종료합니다.</string>
 
-  <!-- MediaProjection token 요청 -->
+  <!-- MediaProjection token request -->
   <string name="message_media_projection">필요한 권한:\n화면 녹화</string>
-  <string name="message_media_projection_detail">스크린 번역기를 실행하려면 화면 녹화 권한이 필요합니다.\n\n화면의 정보는 번역 목적에만 사용되며 저장되거나 전송되지 않습니다.</string>
+  <string name="message_media_projection_detail">의미 그룹 번역기를 실행하려면 화면 녹화 권한이 필요합니다.\n\n화면의 정보는 번역 목적에만 사용되며 저장되거나 전송되지 않습니다.</string>
   <string name="message_media_projection_denied">화면 녹화 권한이 거부됨</string>
   <string name="message_media_projection_denied_detail">화면 녹화 권한이 허용되지 않았습니다.\n앱을 종료합니다.</string>
 
-  <!-- Foreground Service 시작 알림 -->
+  <!-- Foreground service start notification -->
   <string name="notification_foreground_service">화면 캡처 기능이 번역 작업을 위해 사용 중입니다.</string>
   <string name="title_start_foreground_service">포그라운드 서비스 시작됨</string>
   <string name="message_start_foreground_service">화면 내용을 캡처하고 번역하기 위해 포그라운드 서비스를 시작합니다.\n\n캡처된 이미지는 저장되거나 외부로 전송되지 않습니다.</string>
@@ -56,12 +56,6 @@
   <string name="message_network_unavailable_detail">네트워크에 연결할 수 없습니다.\n연결 상태를 확인 후 다시 시도해 주세요.</string>
   <string name="message_translate_fixedarea_warn">배터리 주의</string>
   <string name="message_translate_fixedarea_warn_detail">배터리가 빠르게 소모될 수 있습니다.</string>
-  <string name="message_translate_fixedarea_promotion">제품 구매 정보</string>
-  <string name="message_translate_fixedarea_promotion_detail">프리미엄 기능에 대한 안내가 %1$s분마다 표시됩니다.</string>
-  <string name="message_free_trial_ends">무료 체험이 종료되었습니다.</string>
-  <string name="message_free_trial_ends_detail">광고를 시청하고 무료체험 시간을 연장할까요?</string>
-  <string name="message_ad_reward">무료 체험 %1$d분이 추가되었습니다!</string>
-  <string name="message_ad_reward_detail">지금부터 %1$d분 동안 모든 프리미엄 기능을 자유롭게 이용하실 수 있습니다.</string>
 
   <!-- SettingsActivity -->
   <string name="settings_title">설정</string>
@@ -71,7 +65,7 @@
   <string name="settings_menu_cat_menubar">메뉴바</string>
   <string name="settings_menu_menubar_transparency">메뉴바 투명도</string>
   <string name="settings_menu_menubar_composition">기능 조합</string>
-  <string name="settings_menu_cat_ai">AI 원문 보정</string>
+  <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">번역</string>
   <string name="settings_menu_translation_transparency">번역창 투명도</string>
   <string name="settings_menu_translation_close_delay">닫기 지연시간</string>
@@ -81,37 +75,11 @@
   <string name="settings_menu_tts_voices">TTS 목소리</string>
   <string name="settings_menu_tts_rate">TTS 속도</string>
   <string name="settings_menu_cat_about">정보</string>
-  <string name="settings_menu_on_premium_free_trial">프리미엄 체험중</string>
-  <string name="settings_menu_premium_free_trial_remain">%1$d분 남음</string>
-  <string name="settings_menu_your_premium_benefits">내 프리미엄 혜택</string>
-  <string name="settings_menu_your_premium_benefits_peding">내 프리미엄 혜택</string>
   <string name="settings_menu_app_version">앱 버전</string>
   <string name="settings_menu_app_version_latest">(최신)</string>
 
   <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-  <string name="help_text_no_limit">프리미엄 이용 시 모든 기능 무제한</string>
   <string name="help_text_no_limit_free">사용량 제한 없음, 기간 제한 없음</string>
-  <string name="help_text_no_limit_title">제한 없이 자유롭게 사용하세요</string>
-  <string name="help_text_no_limit_free_title">광고 없이 무료로!</string>
-  <string name="help_text_get_premium">프리미엄 이용하기</string>
+  <string name="help_text_no_limit_free_title">무료로 제한 없이!</string>
 
-  <!-- PremiumView -->
-  <string name="premium_view_get_premium">프리미엄 이용하기</string>
-  <string name="premium_view_get_premium_purchased">내 프리미엄 혜택</string>
-  <string name="premium_view_get_premium_pending">내 프리미엄 혜택 (대기 중)</string>
-  <string name="premium_view_get_premium_not_available">프리미엄 이용 불가 (현재)</string>
-  <string name="premium_view_price_format">%1$s/월 • VAT 포함\n• 언제든지 해지 가능</string>
-  <string name="premium_view_title">모든 기능,\n광고 없이.</string>
-  <string name="premium_view_message">사용량과 기간에 제한 없이\n프리미엄에서 모두 이용할 수 있어요.</string>
-  <string name="premium_view_description_azure">전 세계 대부분의 언어를 정확히 번역합니다.</string>
-  <string name="premium_view_description_deepl">의미를 잘 살린 고급 번역을 제공합니다.</string>
-  <string name="premium_view_description_papago">Papago는 뉴럴 기계 번역 알고리즘으로 다양한 언어를 자동 번역합니다.</string>
-  <string name="premium_view_description_google">가장 빠른 번역. 무제한, 영원히 무료입니다.</string>
-  <string name="premium_view_description_sentence_detection">손가락으로 줄 단위 번역이 가능합니다.</string>
-  <string name="premium_view_description_paragraph_detection">문단 단위를 자동으로 인식합니다.</string>
-  <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-  <string name="premium_view_description_select_detection">원하는 영역을 직접 지정할 수도 있습니다.</string>
-  <string name="premium_view_description_word_detection">단어 단위 번역은 언제나 무료이며 무제한입니다.</string>
-  <string name="premium_view_description_fixed_area_detection">영화 자막과 같은 고정된 영역을 지속적으로 번역할 수 있습니다.</string>
-  <string name="premium_view_unsubscribe">구독 해지</string>
 </resources>

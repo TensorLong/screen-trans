@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">સ્ક્રીન અનુવાદ</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">જરૂરી પરવાનગી:\nનોટિફિકેશન</string>
@@ -11,13 +11,13 @@
     <string name="message_permission_overlay_denied">ઓવરલે પરવાનગી નકારવામાં આવી</string>
     <string name="message_permission_overlay_denied_detail">ઓવરલે પરવાનગી આપવામાં આવી નથી.\nએપ બંધ કરી દેવામાં આવશે.</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token request -->
     <string name="message_media_projection">જરૂરી પરવાનગી:\nસ્ક્રીન રેકોર્ડિંગ</string>
     <string name="message_media_projection_detail">સ્ક્રીન અનુવાદક શરૂ કરવા માટે, તમારે સ્ક્રીન રેકોર્ડિંગ માટે પરવાનગી આપવી પડશે.\n\nસ્ક્રીન પરની માહિતી માત્ર અનુવાદ માટે ઉપયોગ થાય છે અને અન્યત્ર સંગ્રહિત અથવા ટ્રાન્સફર કરવામાં નથી આવે.</string>
     <string name="message_media_projection_denied">સ્ક્રીન રેકોર્ડિંગ માટેની પરવાનગી નકારી</string>
     <string name="message_media_projection_denied_detail">સ્ક્રીન રેકોર્ડિંગ માટે પરવાનગી આપવામાં આવી નથી.\nએપ બંધ કરી દેવામાં આવશે.</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground service start notification -->
     <string name="notification_foreground_service">અનુવાદ માટે સ્ક્રીન કેપ્ચર કાર્ય ચાલુ છે.</string>
     <string name="title_start_foreground_service">ફોરગ્રાઉન્ડ સર્વિસ શરૂ થઈ</string>
     <string name="message_start_foreground_service">એપ સ્ક્રીન સામગ્રી કેપ્ચર અને અનુવાદ માટે ફોરગ્રાઉન્ડ સર્વિસ શરૂ કરે છે.\n\nકૅપ્ચર થયેલી છબીઓ સાચવવામાં કે મોકલવામાં આવતી નથી.</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">નેટવર્ક ઉપલબ્ધ નથી.\nકૃપા કરીને તપાસો અને ફરી પ્રયાસ કરો.</string>
     <string name="message_translate_fixedarea_warn">બેટરી ચેતવણી</string>
     <string name="message_translate_fixedarea_warn_detail">બેટરી ઝડપથી ખૂટી શકે છે.</string>
-    <string name="message_translate_fixedarea_promotion">ઉત્પાદન ખરીદીની માહિતી</string>
-    <string name="message_translate_fixedarea_promotion_detail">અમારી પ્રીમિયમ સુવિધાઓ વિશે મૈત્રીપૂર્ણ યાદી દરેક %1$s મિનિટે દેખાશે.</string>
-    <string name="message_free_trial_ends">તમારી મફત ટ્રાયલ પૂરી થઈ ગઈ છે.</string>
-    <string name="message_free_trial_ends_detail">મફત ટ્રાયલ વધારવા માટે શું તમે જાહેરાત જુઓ છો?</string>
-    <string name="message_ad_reward">તમને %1$d વધુ મિનિટની મફત ટ્રાયલ મળી છે!</string>
-    <string name="message_ad_reward_detail">આગામી %1$d મિનિટ સુધી તમામ પ્રીમિયમ ફીચર્સ મફત માણો.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">સેટિંગ્સ</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">મેનુ બાર</string>
     <string name="settings_menu_menubar_transparency">મેનુ પારદર્શિતા</string>
     <string name="settings_menu_menubar_composition">મેનુ વિકલ્પો</string>
-    <string name="settings_menu_cat_ai">AI સુધારો</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">અનુવાદ</string>
     <string name="settings_menu_translation_transparency">અનુવાદ પારદર્શિતા</string>
     <string name="settings_menu_translation_close_delay">બંદ વિલંબ</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">TTS અવાજો</string>
     <string name="settings_menu_tts_rate">TTS ઝડપ</string>
     <string name="settings_menu_cat_about">વિશે</string>
-    <string name="settings_menu_on_premium_free_trial">પ્રીમિયમ ટ્રાયલ ચાલુ છે</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d મિનિટ બાકી</string>
-    <string name="settings_menu_your_premium_benefits">તમારા લાભો</string>
-    <string name="settings_menu_your_premium_benefits_peding">લાભો (બાકી)</string>
     <string name="settings_menu_app_version">એપ્લિકેશન સંસ્કરણ</string>
     <string name="settings_menu_app_version_latest">(નવીનતમ)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">પ્રીમિયમ સાથે બધું અનલિમિટેડ છે</string>
     <string name="help_text_no_limit_free">કોઈ જ માત્રા મર્યાદા નથી, કોઈ જ સમય મર્યાદા નથી</string>
-    <string name="help_text_no_limit_title">મર્યાદા વિના આનંદ માણો</string>
     <string name="help_text_no_limit_free_title">મર્યાદા વિના મફતમાં</string>
-    <string name="help_text_get_premium">પ્રીમિયમ મેળવો</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">પ્રીમિયમ મેળવો</string>
-    <string name="premium_view_get_premium_purchased">તમારા પ્રીમિયમ લાભો</string>
-    <string name="premium_view_get_premium_pending">તમારા પ્રીમિયમ લાભો (બાકી છે)</string>
-    <string name="premium_view_get_premium_not_available">પ્રીમિયમ હાલમાં ઉપલબ્ધ નથી</string>
-    <string name="premium_view_price_format">%1$s/મહિનો • VAT શામેલ છે\n• ક્યારેપણ રદ કરી શકો</string>
-    <string name="premium_view_title">બધી વિશેષતાઓ,\nકોઈ અવરોધ વિના.</string>
-    <string name="premium_view_message">કોઈ મર્યાદા નહિ, કોઈ સમયમર્યાદા નહિ.\nપ્રીમિયમ સાથે બધું અનલિમિટેડ છે</string>
-    <string name="premium_view_description_azure">વિશ્વભરના મોટાભાગના ભાષાઓનું સચોટ અનુવાદ આપે છે.</string>
-    <string name="premium_view_description_deepl">અહીં અર્થપૂર્ણ, સુંદર અનુવાદો આપવામાં આવે છે.</string>
-    <string name="premium_view_description_papago">Papago ન્યુરલ મશીન અનુવાદ દ્વારા ભાષાઓને આપમેળે અનુવાદ કરે છે.</string>
-    <string name="premium_view_description_google">અતિ ઝડપથી અનુવાદ કરે છે. અમર્યાદિત અને કાયમ માટે મફત.</string>
-    <string name="premium_view_description_sentence_detection">લાઈનો અનુવાદ કરવા માટે ફિંગરટિપ્સનો ઉપયોગ કરો.</string>
-    <string name="premium_view_description_paragraph_detection">પેરાગ્રાફ યુનિટ આપમેળે ઓળખાય છે.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">તમે પસંદગીઅનુસાર વિસ્તારો નિર્ધારિત કરી શકો છો.</string>
-    <string name="premium_view_description_word_detection">શબ્દ પ્રમાણે અનુવાદ હંમેશા મફત અને અમર્યાદિત છે.</string>
-    <string name="premium_view_description_fixed_area_detection">તમે મૂવીના ઉપશીર્ષકો જેવી નિશ્ચિત વિસ્તારોનું સતત અનુવાદ કરી શકો છો.</string>
-    <string name="premium_view_unsubscribe">સબસ્ક્રિપ્શન બંધ કરો</string>
 </resources>

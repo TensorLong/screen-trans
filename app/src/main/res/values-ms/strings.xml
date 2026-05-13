@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Penterjemah Skrin</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Kebenaran diperlukan:\nNotifikasi</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Rangkaian tidak tersedia.\nSila semak dan cuba semula.</string>
     <string name="message_translate_fixedarea_warn">Amaran bateri</string>
     <string name="message_translate_fixedarea_warn_detail">Bateri mungkin akan cepat habis.</string>
-    <string name="message_translate_fixedarea_promotion">Maklumat pembelian produk</string>
-    <string name="message_translate_fixedarea_promotion_detail">Peringatan mesra mengenai ciri premium kami akan muncul setiap %1$s minit.</string>
-    <string name="message_free_trial_ends">Percubaan percuma anda telah tamat.</string>
-    <string name="message_free_trial_ends_detail">Ingin menonton iklan untuk melanjutkan percubaan percuma?</string>
-    <string name="message_ad_reward">Anda telah menerima %1$d minit percubaan percuma tambahan!</string>
-    <string name="message_ad_reward_detail">Nikmati semua ciri premium secara percuma selama %1$d minit berikutnya.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Tetapan</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Bar menu</string>
     <string name="settings_menu_menubar_transparency">Ketelusan menu</string>
     <string name="settings_menu_menubar_composition">Fungsi menu</string>
-    <string name="settings_menu_cat_ai">Pembetulan AI</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Terjemahan</string>
     <string name="settings_menu_translation_transparency">Ketelusan terjemahan</string>
     <string name="settings_menu_translation_close_delay">Lengah tutup</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">Suara TTS</string>
     <string name="settings_menu_tts_rate">Kelajuan TTS</string>
     <string name="settings_menu_cat_about">Perihal</string>
-    <string name="settings_menu_on_premium_free_trial">Percubaan Premium aktif</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d minit lagi</string>
-    <string name="settings_menu_your_premium_benefits">Faedah anda</string>
-    <string name="settings_menu_your_premium_benefits_peding">Faedah (tertunda)</string>
     <string name="settings_menu_app_version">Versi aplikasi</string>
     <string name="settings_menu_app_version_latest">(Terkini)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Semuanya tanpa had dengan Premium</string>
     <string name="help_text_no_limit_free">Tiada had kuantiti, tiada had masa</string>
-    <string name="help_text_no_limit_title">Nikmati tanpa had</string>
     <string name="help_text_no_limit_free_title">Percuma tanpa sekatan</string>
-    <string name="help_text_get_premium">Dapatkan Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Dapatkan Premium</string>
-    <string name="premium_view_get_premium_purchased">Manfaat Premium anda</string>
-    <string name="premium_view_get_premium_pending">Manfaat Premium anda (Menunggu)</string>
-    <string name="premium_view_get_premium_not_available">Premium tidak tersedia sekarang</string>
-    <string name="premium_view_price_format">%1$s/sebulan • Termasuk Cukai\n• Boleh batal pada bila-bila masa</string>
-    <string name="premium_view_title">Semua ciri,\nTiada gangguan.</string>
-    <string name="premium_view_message">Tiada had kuantiti, tiada had masa.\nSemuanya tersedia dengan Premium</string>
-    <string name="premium_view_description_azure">Menterjemah kebanyakan bahasa dunia dengan tepat.</string>
-    <string name="premium_view_description_deepl">Menyediakan terjemahan yang tepat dan bernuansa.</string>
-    <string name="premium_view_description_papago">Papago menterjemah pelbagai bahasa secara automatik menggunakan teknologi Neural Machine Translation.</string>
-    <string name="premium_view_description_google">Terjemahan terpantas. Percuma dan tanpa had selama-lamanya.</string>
-    <string name="premium_view_description_sentence_detection">Gunakan jari anda untuk menterjemah baris.</string>
-    <string name="premium_view_description_paragraph_detection">Perenggan dikenal pasti secara automatik.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Anda juga boleh memilih kawasan yang anda mahu.</string>
-    <string name="premium_view_description_word_detection">Terjemahan perkataan demi perkataan sentiasa percuma dan tanpa had.</string>
-    <string name="premium_view_description_fixed_area_detection">Anda boleh menterjemah kawasan tetap secara berterusan, seperti sari kata filem.</string>
-    <string name="premium_view_unsubscribe">Batalkan Langganan</string>
 </resources>

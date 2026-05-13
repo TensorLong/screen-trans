@@ -1,23 +1,23 @@
 <resources>
-  <string name="app_name">Ekran Tercümanı</string>
+  <string name="app_name">Sense Group Translator</string>
 
   <!-- Notification Permission -->
   <string name="message_permission_notification">Gerekli izin:\nBildirim</string>
-  <string name="message_permission_notification_detail">Screen Translator uygulamasını başlatmak için bildirim izni vermelisiniz.</string>
+  <string name="message_permission_notification_detail">Sense Group Translator uygulamasını başlatmak için bildirim izni vermelisiniz.</string>
 
   <!-- Overlay Permission -->
   <string name="message_permission_overlay">Gerekli izin:\nDiğer uygulamaların üzerinde göster</string>
-  <string name="message_permission_overlay_detail">Screen Translator uygulamasını başlatmak için diğer uygulamaların üzerinde gösterme izni vermelisiniz.</string>
+  <string name="message_permission_overlay_detail">Sense Group Translator uygulamasını başlatmak için diğer uygulamaların üzerinde gösterme izni vermelisiniz.</string>
   <string name="message_permission_overlay_denied">Yer paylaşımı izni reddedildi</string>
   <string name="message_permission_overlay_denied_detail">Yer paylaşımı izni verilmedi.\nUygulama kapatılıyor.</string>
 
-  <!-- MediaProjection token 요청 -->
+  <!-- MediaProjection token request -->
   <string name="message_media_projection">Gerekli izin:\nEkran Kaydı</string>
-  <string name="message_media_projection_detail">Screen Translator uygulamasını başlatmak için ekran kaydı izni vermelisiniz.\n\nEkrandaki bilgiler yalnızca çeviri amacıyla kullanılacaktır ve başka bir yere aktarılmayacak veya saklanmayacaktır.</string>
+  <string name="message_media_projection_detail">Sense Group Translator uygulamasını başlatmak için ekran kaydı izni vermelisiniz.\n\nEkrandaki bilgiler yalnızca çeviri amacıyla kullanılacaktır ve başka bir yere aktarılmayacak veya saklanmayacaktır.</string>
   <string name="message_media_projection_denied">Ekran Kaydı izni reddedildi</string>
   <string name="message_media_projection_denied_detail">Ekran kaydı izni verilmedi.\nUygulama kapatılıyor.</string>
 
-  <!-- Foreground Service 시작 알림 -->
+  <!-- Foreground service start notification -->
   <string name="notification_foreground_service">Çeviri için ekran görüntüleme özelliği kullanılıyor.</string>
   <string name="title_start_foreground_service">Ön Plan Servisi Başlatıldı</string>
   <string name="message_start_foreground_service">Uygulama ekran içeriğini yakalamak ve çevirmek için bir ön plan servisi başlatır.\n\nYakalanan görüntüler kaydedilmez veya dışa aktarılmaz.</string>
@@ -56,12 +56,6 @@
   <string name="message_network_unavailable_detail">Ağ kullanılamıyor.\nLütfen kontrol edip tekrar deneyin.</string>
   <string name="message_translate_fixedarea_warn">Batarya uyarısı</string>
   <string name="message_translate_fixedarea_warn_detail">Batarya hızlı bir şekilde tükenebilir.</string>
-  <string name="message_translate_fixedarea_promotion">Ürün satın alma bilgisi</string>
-  <string name="message_translate_fixedarea_promotion_detail">Premium özelliklerimizle ilgili dostça bir hatırlatma her %1$s dakikada bir görünecektir.</string>
-  <string name="message_free_trial_ends">Ücretsiz deneme süreniz sona erdi.</string>
-  <string name="message_free_trial_ends_detail">Ücretsiz denemeyi uzatmak için bir reklam izlemek ister misiniz?</string>
-  <string name="message_ad_reward">%1$d dakika daha ücretsiz deneme süresi kazandınız!</string>
-  <string name="message_ad_reward_detail">Sonraki %1$d dakika boyunca tüm premium özelliklerden ücretsiz yararlanın.</string>
 
   <!-- SettingsActivity -->
   <string name="settings_title">Ayarlar</string>
@@ -71,7 +65,7 @@
   <string name="settings_menu_cat_menubar">Menü Çubuğu</string>
   <string name="settings_menu_menubar_transparency">Menü Şeffaflığı</string>
   <string name="settings_menu_menubar_composition">Menü Fonksiyonları</string>
-  <string name="settings_menu_cat_ai">AI Düzenlemesi</string>
+  <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">Çeviri</string>
   <string name="settings_menu_translation_transparency">Çeviri Şeffaflığı</string>
   <string name="settings_menu_translation_close_delay">Kapanma Gecikmesi</string>
@@ -81,37 +75,11 @@
   <string name="settings_menu_tts_voices">TTS Sesleri</string>
   <string name="settings_menu_tts_rate">TTS Hızı</string>
   <string name="settings_menu_cat_about">Hakkında</string>
-  <string name="settings_menu_on_premium_free_trial">Premium deneme aktif</string>
-  <string name="settings_menu_premium_free_trial_remain">%1$d dakika kaldı</string>
-  <string name="settings_menu_your_premium_benefits">Premium Avantajlarınız</string>
-  <string name="settings_menu_your_premium_benefits_peding">Avantajlar (Beklemede)</string>
   <string name="settings_menu_app_version">Uygulama Sürümü</string>
   <string name="settings_menu_app_version_latest">(Son)</string>
 
   <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-  <string name="help_text_no_limit">Premium ile her şey sınırsız</string>
   <string name="help_text_no_limit_free">Miktar veya süre sınırlaması yok</string>
-  <string name="help_text_no_limit_title">Sınırsızca keyfini çıkarın</string>
   <string name="help_text_no_limit_free_title">Sınırsız ve ücretsiz</string>
-  <string name="help_text_get_premium">Premium Al</string>
 
-  <!-- PremiumView -->
-  <string name="premium_view_get_premium">Premium Al</string>
-  <string name="premium_view_get_premium_purchased">Premium Avantajların</string>
-  <string name="premium_view_get_premium_pending">Premium Avantajların (Beklemede)</string>
-  <string name="premium_view_get_premium_not_available">Premium Al (Şu anda mevcut değil)</string>
-  <string name="premium_view_price_format">%1$s/ay • KDV dahil\n• İstediğin zaman iptal et</string>
-  <string name="premium_view_title">Tüm Özellikler,\nKesintisiz Kullanım.</string>
-  <string name="premium_view_message">Miktar sınırı yok, süre sınırı yok.\nPremium ile her şey sınırsız.</string>
-  <string name="premium_view_description_azure">Dünya çapındaki dillerin çoğunu doğru şekilde çevirir.</string>
-  <string name="premium_view_description_deepl">Anlamı iyi yansıtan gelişmiş çeviriler sunarız.</string>
-  <string name="premium_view_description_papago">Papago, sinir ağı algoritmasıyla birçok dili hedef dile otomatik olarak çevirir.</string>
-  <string name="premium_view_description_google">En hızlı çeviri. Sınırsız ve sonsuza dek ücretsiz.</string>
-  <string name="premium_view_description_sentence_detection">Çizgileri çevirmek için parmağınızı kullanın.</string>
-  <string name="premium_view_description_paragraph_detection">Paragraf birimleri otomatik olarak algılanır.</string>
-  <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-  <string name="premium_view_description_select_detection">İstediğiniz alanı manuel olarak seçebilirsiniz.</string>
-  <string name="premium_view_description_word_detection">Kelime bazlı çeviri her zaman ücretsiz ve sınırsızdır.</string>
-  <string name="premium_view_description_fixed_area_detection">Film altyazıları gibi sabit alanları sürekli olarak çevirebilirsiniz.</string>
-  <string name="premium_view_unsubscribe">Aboneliği iptal et</string>
 </resources>

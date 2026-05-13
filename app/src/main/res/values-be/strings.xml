@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Экранны Перакладчык</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Патрабуецца дазвол:\nАпавяшчэнні</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Сетка недаступная.\nПраверце злучэнне і паспрабуйце зноў.</string>
     <string name="message_translate_fixedarea_warn">Папярэджанне аб батарэі</string>
     <string name="message_translate_fixedarea_warn_detail">Батарэя можа хутка разрадзіцца.</string>
-    <string name="message_translate_fixedarea_promotion">Інфармацыя аб куплі прадукту</string>
-    <string name="message_translate_fixedarea_promotion_detail">Прыемнае нагадванне пра нашы прэміум-функцыі будзе з\'яўляцца кожныя %1$s хвілін.</string>
-    <string name="message_free_trial_ends">Ваш бясплатны пробны перыяд скончыўся.</string>
-    <string name="message_free_trial_ends_detail">Жадаеце паглядзець рэкламу, каб працягнуць бясплатны пробны перыяд?</string>
-    <string name="message_ad_reward">Вы атрымалі яшчэ %1$d хвілін бясплатнага пробнага перыяду!</string>
-    <string name="message_ad_reward_detail">Карыстайцеся ўсімі прэміум-функцыямі бясплатна на працягу наступных %1$d хвілін.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Налады</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Панэль меню</string>
     <string name="settings_menu_menubar_transparency">Празрыстасць меню</string>
     <string name="settings_menu_menubar_composition">Функцыі меню</string>
-    <string name="settings_menu_cat_ai">AI-праверка тэксту</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Пераклад</string>
     <string name="settings_menu_translation_transparency">Празрыстасць перакладу</string>
     <string name="settings_menu_translation_close_delay">Затрымка закрыцця</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">Галасы</string>
     <string name="settings_menu_tts_rate">Хуткасць</string>
     <string name="settings_menu_cat_about">Пра праграму</string>
-    <string name="settings_menu_on_premium_free_trial">Premium пробны перыяд</string>
-    <string name="settings_menu_premium_free_trial_remain">Засталося %1$d хвілін</string>
-    <string name="settings_menu_your_premium_benefits">Вашы перавагі</string>
-    <string name="settings_menu_your_premium_benefits_peding">Перавагі (чакае)</string>
     <string name="settings_menu_app_version">Версія праграмы</string>
     <string name="settings_menu_app_version_latest">(Апошняя)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Усё неабмежавана з Premium</string>
     <string name="help_text_no_limit_free">Без абмежаванняў па колькасці або часу</string>
-    <string name="help_text_no_limit_title">Карыстайцеся без абмежаванняў</string>
     <string name="help_text_no_limit_free_title">Бясплатна і без абмежаванняў</string>
-    <string name="help_text_get_premium">Атрымаць Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Атрымаць Premium</string>
-    <string name="premium_view_get_premium_purchased">Вашы перавагі Premium</string>
-    <string name="premium_view_get_premium_pending">Вашы перавагі Premium (чакае)</string>
-    <string name="premium_view_get_premium_not_available">Premium зараз недаступны</string>
-    <string name="premium_view_price_format">%1$s/месяц • Уключае ПДВ\n• Адмена ў любы час</string>
-    <string name="premium_view_title">Усе функцыі,\nБез перапынкаў.</string>
-    <string name="premium_view_message">Няма абмежаванняў па колькасці або часу.\nУсё даступна з Premium</string>
-    <string name="premium_view_description_azure">Дакладна перакладае большасць моў свету.</string>
-    <string name="premium_view_description_deepl">Пераклады з глыбокім сэнсам і высокай якасцю.</string>
-    <string name="premium_view_description_papago">Papago выкарыстоўвае нейроны для аўтаматычнага перакладу моў.</string>
-    <string name="premium_view_description_google">Найхутчэйшы пераклад. Бясплатна і без абмежаванняў назаўжды.</string>
-    <string name="premium_view_description_sentence_detection">Карыстайцеся пальцам для перакладу радкоў.</string>
-    <string name="premium_view_description_paragraph_detection">Абзацы вызначаюцца аўтаматычна.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Вы таксама можаце выбраць жаданую вобласць.</string>
-    <string name="premium_view_description_word_detection">Пераклад па словах заўсёды бясплатны і неабмежаваны.</string>
-    <string name="premium_view_description_fixed_area_detection">Вы можаце бесперапынна перакладаць фіксаваныя вобласці, напрыклад, субцітры фільмаў.</string>
-    <string name="premium_view_unsubscribe">Адмовіцца ад падпіскі</string>
 </resources>

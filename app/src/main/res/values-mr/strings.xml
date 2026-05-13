@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">स्क्रीन अनुवादक</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">आवश्यक परवानगी:\nसूचना</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">नेटवर्क अनुपलब्ध आहे.\nकृपया तपासा आणि पुन्हा प्रयत्न करा.</string>
     <string name="message_translate_fixedarea_warn">बॅटरी सूचना</string>
     <string name="message_translate_fixedarea_warn_detail">बॅटरी लवकर संपू शकते.</string>
-    <string name="message_translate_fixedarea_promotion">उत्पादन खरेदीची माहिती</string>
-    <string name="message_translate_fixedarea_promotion_detail">आमच्या प्रीमियम वैशिष्ट्यांबद्दल एक मैत्रीपूर्ण स्मरणपत्र दर %1$s मिनिटांनी दिसेल.</string>
-    <string name="message_free_trial_ends">तुमची मोफत चाचणी कालावधी संपली आहे.</string>
-    <string name="message_free_trial_ends_detail">फ्री ट्रायल वाढवण्यासाठी जाहिरात पाहू इच्छिता?</string>
-    <string name="message_ad_reward">आपल्याला आणखी %1$d मिनिटांची मोफत ट्रायल मिळाली आहे!</string>
-    <string name="message_ad_reward_detail">आता पुढील %1$d मिनिटांसाठी सर्व प्रीमियम फिचर्स मोफत वापरा.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">सेटिंग्ज</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">मेनू बार</string>
     <string name="settings_menu_menubar_transparency">मेनू पारदर्शकता</string>
     <string name="settings_menu_menubar_composition">मेनू फंक्शन्स</string>
-    <string name="settings_menu_cat_ai">AI सुधारणा</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">भाषांतर</string>
     <string name="settings_menu_translation_transparency">भाषांतर पारदर्शकता</string>
     <string name="settings_menu_translation_close_delay">बंद करण्याची विलंब</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">TTS आवाज</string>
     <string name="settings_menu_tts_rate">TTS गती</string>
     <string name="settings_menu_cat_about">विषयी</string>
-    <string name="settings_menu_on_premium_free_trial">प्रीमियम चाचणी सक्रिय आहे</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d मिनिटे शिल्लक</string>
-    <string name="settings_menu_your_premium_benefits">तुमचे फायदे</string>
-    <string name="settings_menu_your_premium_benefits_peding">फायदे (प्रलंबित)</string>
     <string name="settings_menu_app_version">अ‍ॅप आवृत्ती</string>
     <string name="settings_menu_app_version_latest">(नवीनतम)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Premium मध्ये सर्व काही अमर्यादित आहे</string>
     <string name="help_text_no_limit_free">मर्यादा नाहीत, कालमर्यादा नाहीत</string>
-    <string name="help_text_no_limit_title">अमर्यादित वापर करा</string>
     <string name="help_text_no_limit_free_title">मर्यादेशिवाय मोफत</string>
-    <string name="help_text_get_premium">Premium मिळवा</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Premium मिळवा</string>
-    <string name="premium_view_get_premium_purchased">तुमचे Premium फायदे</string>
-    <string name="premium_view_get_premium_pending">तुमचे Premium फायदे (प्रलंबित)</string>
-    <string name="premium_view_get_premium_not_available">Premium सध्या उपलब्ध नाही</string>
-    <string name="premium_view_price_format">%1$s/महिना • VAT सहित\n• केव्हाही रद्द करा</string>
-    <string name="premium_view_title">सर्व वैशिष्ट्ये,\nकोणत्याही व्यत्ययाशिवाय.</string>
-    <string name="premium_view_message">मर्यादा नाही, कालमर्यादा नाही.\nPremium मध्ये सर्व काही अमर्यादित</string>
-    <string name="premium_view_description_azure">जगभरातील बहुतेक भाषांचे अचूक अनुवाद.</string>
-    <string name="premium_view_description_deepl">अर्थपूर्ण आणि गुणवत्तेचे अनुवाद प्रदान करतो.</string>
-    <string name="premium_view_description_papago">Papago विविध भाषांचे अनुवाद Neuron आधारित पद्धतीने करतो.</string>
-    <string name="premium_view_description_google">सर्वात वेगवान अनुवाद. कायम मोफत आणि अमर्यादित.</string>
-    <string name="premium_view_description_sentence_detection">रेषांवर बोट ठेवून अनुवाद करा.</string>
-    <string name="premium_view_description_paragraph_detection">परिच्छेद आपोआप ओळखले जातात.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">तुम्हाला हवा तो भाग निवडू शकता.</string>
-    <string name="premium_view_description_word_detection">शब्दशः अनुवाद नेहमी मोफत आणि अमर्यादित.</string>
-    <string name="premium_view_description_fixed_area_detection">तुम्ही चित्रपटांच्या सबटायटल्ससारख्या स्थिर भागांचे सतत भाषांतर करू शकता.</string>
-    <string name="premium_view_unsubscribe">सदस्यत्व रद्द करा</string>
 </resources>

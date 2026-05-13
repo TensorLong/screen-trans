@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Skjermoversettelse</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Nødvendig tillatelse:\nVarsler</string>
@@ -11,13 +11,13 @@
     <string name="message_permission_overlay_denied">Overleggstillatelse ble nektet</string>
     <string name="message_permission_overlay_denied_detail">Overleggstillatelse er ikke gitt.\nAppen avsluttes.</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token request -->
     <string name="message_media_projection">Nødvendig tillatelse:\nSkjermopptak</string>
     <string name="message_media_projection_detail">For å starte Skjermoversetter må du gi tillatelse til skjermopptak.\n\nInformasjonen på skjermen brukes kun til oversettelse og lagres eller overføres ikke.</string>
     <string name="message_media_projection_denied">Skjermopptakstillatelse ble nektet</string>
     <string name="message_media_projection_denied_detail">Skjermopptakstillatelse er ikke gitt.\nAppen avsluttes.</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground service start notification -->
     <string name="notification_foreground_service">Skjermopptak brukes for oversettelse.</string>
     <string name="title_start_foreground_service">Forgrunnstjeneste startet</string>
     <string name="message_start_foreground_service">Appen starter en forgrunnstjeneste for å fange og oversette skjerminnhold.\n\nOpptatte bilder lagres ikke eller deles.</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Nettverket er utilgjengelig.\nVennligst sjekk og prøv igjen.</string>
     <string name="message_translate_fixedarea_warn">Batterivarsel</string>
     <string name="message_translate_fixedarea_warn_detail">Batteriet kan bli raskt utladet.</string>
-    <string name="message_translate_fixedarea_promotion">Produktkjøpsinformasjon</string>
-    <string name="message_translate_fixedarea_promotion_detail">En vennlig påminnelse om premiumfunksjonene våre vises hvert %1$s minutt.</string>
-    <string name="message_free_trial_ends">Din gratis prøveperiode er over.</string>
-    <string name="message_free_trial_ends_detail">Vil du se en annonse for å forlenge prøveperioden?</string>
-    <string name="message_ad_reward">Du har mottatt %1$d ekstra minutter med gratis prøveperiode!</string>
-    <string name="message_ad_reward_detail">Nyt alle premium-funksjoner gratis i de neste %1$d minuttene.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Innstillinger</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Menylinje</string>
     <string name="settings_menu_menubar_transparency">Menygjennomsiktighet</string>
     <string name="settings_menu_menubar_composition">Menyfunksjoner</string>
-    <string name="settings_menu_cat_ai">AI-korreksjon</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Oversettelse</string>
     <string name="settings_menu_translation_transparency">Gjennomsiktighet for oversettelse</string>
     <string name="settings_menu_translation_close_delay">Lukkeforsinkelse</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">TTS-stemmer</string>
     <string name="settings_menu_tts_rate">TTS-hastighet</string>
     <string name="settings_menu_cat_about">Om</string>
-    <string name="settings_menu_on_premium_free_trial">Premium prøveperiode aktiv</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d minutter igjen</string>
-    <string name="settings_menu_your_premium_benefits">Dine fordeler</string>
-    <string name="settings_menu_your_premium_benefits_peding">Fordeler (venter)</string>
     <string name="settings_menu_app_version">Appversjon</string>
     <string name="settings_menu_app_version_latest">(Nyeste)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Alt er ubegrenset med Premium</string>
     <string name="help_text_no_limit_free">Ingen mengdebegrensning, ingen tidsbegrensning</string>
-    <string name="help_text_no_limit_title">Bruk det uten begrensning</string>
     <string name="help_text_no_limit_free_title">Gratis uten begrensninger</string>
-    <string name="help_text_get_premium">Få Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Få Premium</string>
-    <string name="premium_view_get_premium_purchased">Dine Premium-fordeler</string>
-    <string name="premium_view_get_premium_pending">Dine Premium-fordeler (venter)</string>
-    <string name="premium_view_get_premium_not_available">Premium (for øyeblikket utilgjengelig)</string>
-    <string name="premium_view_price_format">%1$s/måned • Inkluderer MVA\n• Avslutt når som helst</string>
-    <string name="premium_view_title">Alle funksjoner,\ningen avbrudd.</string>
-    <string name="premium_view_message">Ingen mengde- eller tidsbegrensning.\nAlt er ubegrenset med Premium.</string>
-    <string name="premium_view_description_azure">Presis oversettelse av de fleste språk i verden.</string>
-    <string name="premium_view_description_deepl">Vi tilbyr nøyaktige og meningsfulle oversettelser.</string>
-    <string name="premium_view_description_papago">Papago oversetter automatisk via nevrale maskinoversettelser.</string>
-    <string name="premium_view_description_google">Den raskeste oversettelsen. Ubegrenset og gratis for alltid.</string>
-    <string name="premium_view_description_sentence_detection">Bruk fingrene for å oversette linjer.</string>
-    <string name="premium_view_description_paragraph_detection">Avsnitt gjenkjennes automatisk.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Velg nøyaktig område du vil oversette.</string>
-    <string name="premium_view_description_word_detection">Ord-for-ord oversettelse er alltid gratis og ubegrenset.</string>
-    <string name="premium_view_description_fixed_area_detection">Du kan kontinuerlig oversette faste områder, som filmtekster.</string>
-    <string name="premium_view_unsubscribe">Avslutt abonnement</string>
 </resources>

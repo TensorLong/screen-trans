@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Përkthimi në ekran</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Leje e nevojshme:\nNjoftimet</string>
@@ -11,13 +11,13 @@
     <string name="message_permission_overlay_denied">Leja për mbivendosje u refuzua</string>
     <string name="message_permission_overlay_denied_detail">Leja për mbivendosje nuk u dha.\nAplikacioni do të mbyllet.</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token request -->
     <string name="message_media_projection">Leje e nevojshme:\nRegjistrimi i ekranit</string>
     <string name="message_media_projection_detail">Për të nisur Përkthyesin e Ekranit, duhet të jepni leje për regjistrimin e ekranit.\n\nInformacioni në ekran përdoret vetëm për përkthim dhe nuk ruhet apo dërgohet askund.</string>
     <string name="message_media_projection_denied">Leja për regjistrim të ekranit u refuzua</string>
     <string name="message_media_projection_denied_detail">Leja për regjistrim të ekranit nuk u dha.\nAplikacioni do të mbyllet.</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground service start notification -->
     <string name="notification_foreground_service">Funksioni i kapjes së ekranit po përdoret për përkthim.</string>
     <string name="title_start_foreground_service">Shërbimi në sfond është nisur</string>
     <string name="message_start_foreground_service">Aplikacioni nis një shërbim në sfond për të kapur dhe përkthyer përmbajtjen e ekranit.\n\nImazhet e kapura nuk ruhen dhe nuk transmetohen jashtë.</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Rrjeti nuk është i disponueshëm.\nJu lutem kontrolloni dhe provoni përsëri.</string>
     <string name="message_translate_fixedarea_warn">Paralajmërim për baterinë</string>
     <string name="message_translate_fixedarea_warn_detail">Bateria mund të shkarkohet shpejt.</string>
-    <string name="message_translate_fixedarea_promotion">Informacion mbi blerjen e produktit</string>
-    <string name="message_translate_fixedarea_promotion_detail">Një kujtesë miqësore për veçoritë tona premium do të shfaqet çdo %1$s minuta.</string>
-    <string name="message_free_trial_ends">Prova juaj falas ka përfunduar.</string>
-    <string name="message_free_trial_ends_detail">Dëshironi të shikoni një reklamë për të zgjatur provën falas?</string>
-    <string name="message_ad_reward">Keni marrë %1$d minuta shtesë provë falas!</string>
-    <string name="message_ad_reward_detail">Shijoni të gjitha funksionet premium falas për %1$d minutat e ardhshme.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Cilësimet</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Shirit menu</string>
     <string name="settings_menu_menubar_transparency">Përshkueshmëria e menusë</string>
     <string name="settings_menu_menubar_composition">Funksionet e menusë</string>
-    <string name="settings_menu_cat_ai">Korrigjim AI</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Përkthim</string>
     <string name="settings_menu_translation_transparency">Përshkueshmëria e përkthimit</string>
     <string name="settings_menu_translation_close_delay">Vonese mbylljeje</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">Zëra TTS</string>
     <string name="settings_menu_tts_rate">Shpejtësia TTS</string>
     <string name="settings_menu_cat_about">Rreth</string>
-    <string name="settings_menu_on_premium_free_trial">Provë Premium aktive</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d minuta të mbetura</string>
-    <string name="settings_menu_your_premium_benefits">Përfitimet tuaja</string>
-    <string name="settings_menu_your_premium_benefits_peding">Përfitime (në pritje)</string>
     <string name="settings_menu_app_version">Versioni i aplikacionit</string>
     <string name="settings_menu_app_version_latest">(Më i fundit)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Çdo gjë e pakufizuar me Premium</string>
     <string name="help_text_no_limit_free">Pa kufizime në sasi, pa kufizime në kohë</string>
-    <string name="help_text_no_limit_title">Shijo pa kufizime</string>
     <string name="help_text_no_limit_free_title">Falas pa kufizime</string>
-    <string name="help_text_get_premium">Merr Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Merr Premium</string>
-    <string name="premium_view_get_premium_purchased">Përfitimet tuaja Premium</string>
-    <string name="premium_view_get_premium_pending">Përfitimet tuaja Premium (në pritje)</string>
-    <string name="premium_view_get_premium_not_available">Premium (aktualisht i padisponueshëm)</string>
-    <string name="premium_view_price_format">%1$s/muaj • TVSH e përfshirë\n• Anulo në çdo kohë</string>
-    <string name="premium_view_title">Të gjitha funksionet,\npa ndërprerje.</string>
-    <string name="premium_view_message">Pa kufizime në sasi apo kohë.\nÇdo gjë e përfshirë me Premium.</string>
-    <string name="premium_view_description_azure">Përkthen saktë shumicën e gjuhëve botërore.</string>
-    <string name="premium_view_description_deepl">Përkthime të sakta dhe të rafinuara që ruajnë kuptimin.</string>
-    <string name="premium_view_description_papago">Papago përkthen automatikisht përmes algoritmit të përkthimit me rrjet nervor.</string>
-    <string name="premium_view_description_google">Përkthimi më i shpejtë. Pa kufizime, falas përgjithmonë.</string>
-    <string name="premium_view_description_sentence_detection">Përdor gishtin për të përkthyer rreshta.</string>
-    <string name="premium_view_description_paragraph_detection">Paragrafët njihen automatikisht.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Mund të përzgjedhësh zonën që dëshiron.</string>
-    <string name="premium_view_description_word_detection">Përkthimi fjalë për fjalë është gjithmonë falas dhe i pakufizuar.</string>
-    <string name="premium_view_description_fixed_area_detection">Mund të përktheni vazhdimisht zona fikse, si p.sh. titrat e filmave.</string>
-    <string name="premium_view_unsubscribe">Anulo abonimin</string>
 </resources>

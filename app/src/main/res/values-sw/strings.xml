@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Tafsiri ya skrini</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Ruhusa Inahitajika:\nArifa</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Mtandao haupatikani.\nTafadhali angalia muunganisho na ujaribu tena.</string>
     <string name="message_translate_fixedarea_warn">Onyo la betri</string>
     <string name="message_translate_fixedarea_warn_detail">Betri inaweza kuisha haraka.</string>
-    <string name="message_translate_fixedarea_promotion">Maelezo ya ununuzi wa bidhaa</string>
-    <string name="message_translate_fixedarea_promotion_detail">Kumbusho la kirafiki kuhusu vipengele vya malipo litaonekana kila baada ya dakika %1$s.</string>
-    <string name="message_free_trial_ends">Majaribio yako ya bure yameisha.</string>
-    <string name="message_free_trial_ends_detail">Ungependa kutazama tangazo ili kuongeza muda wa majaribio ya bure?</string>
-    <string name="message_ad_reward">Umepewa dakika %1$d zaidi za jaribio la bure!</string>
-    <string name="message_ad_reward_detail">Furahia vipengele vyote vya premium bila malipo kwa dakika %1$d zijazo.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Mipangilio</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Bari ya Menyu</string>
     <string name="settings_menu_menubar_transparency">Uwazi wa Menyu</string>
     <string name="settings_menu_menubar_composition">Kazi za Menyu</string>
-    <string name="settings_menu_cat_ai">Hasa ya AI</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Tafsiri</string>
     <string name="settings_menu_translation_transparency">Uwazi wa Tafsiri</string>
     <string name="settings_menu_translation_close_delay">Ucheleweshaji wa Kufunga</string>
@@ -81,39 +75,13 @@
     <string name="settings_menu_tts_voices">Sauti za TTS</string>
     <string name="settings_menu_tts_rate">Kasi ya TTS</string>
     <string name="settings_menu_cat_about">Kuhusu</string>
-    <string name="settings_menu_on_premium_free_trial">Majaribio ya Premium</string>
-    <string name="settings_menu_premium_free_trial_remain">Zimesalia %1$d dakika</string>
-    <string name="settings_menu_your_premium_benefits">Faida zako</string>
-    <string name="settings_menu_your_premium_benefits_peding">Faida (zinangojea)</string>
     <string name="settings_menu_app_version">Toleo la programu</string>
     <string name="settings_menu_app_version_latest">(Zaidi mpya)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Kila kitu hakina kikomo ukiwa na Premium</string>
     <string name="help_text_no_limit_free">Hakuna kikomo cha idadi au muda</string>
-    <string name="help_text_no_limit_title">Furahia bila kikomo</string>
     <string name="help_text_no_limit_free_title">Bure bila vizuizi</string>
-    <string name="help_text_get_premium">Pata Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Pata Premium</string>
-    <string name="premium_view_get_premium_purchased">Faida Zako za Premium</string>
-    <string name="premium_view_get_premium_pending">Faida Zako za Premium (Inasubiri)</string>
-    <string name="premium_view_get_premium_not_available">Premium haipatikani kwa sasa</string>
-    <string name="premium_view_price_format">%1$s/kwa mwezi • Pamoja na VAT\n• Ghairi wakati wowote</string>
-    <string name="premium_view_title">Vipengele Vyote,\nBila Mwitikio.</string>
-    <string name="premium_view_message">Hakuna kikomo cha kiasi au muda.\nKila kitu kiko wazi ukiwa na Premium</string>
-    <string name="premium_view_description_azure">Tafsiri sahihi kwa lugha nyingi duniani.</string>
-    <string name="premium_view_description_deepl">Hutoa tafsiri ya undani yenye maana sahihi.</string>
-    <string name="premium_view_description_papago">Papago hutafsiri moja kwa moja lugha nyingi kwa kutumia Neural Machine Translation.</string>
-    <string name="premium_view_description_google">Tafsiri ya haraka zaidi. Bila kikomo, bila malipo milele.</string>
-    <string name="premium_view_description_sentence_detection">Tumia kidole chako kutafsiri mistari.</string>
-    <string name="premium_view_description_paragraph_detection">Aya hutambuliwa kiotomatiki.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Unaweza pia kuchagua eneo unalotaka.</string>
-    <string name="premium_view_description_word_detection">Tafsiri ya neno kwa neno ni bure na haina kikomo kila wakati.</string>
-    <string name="premium_view_description_fixed_area_detection">Unaweza kutafsiri maeneo yaliyowekwa, kama vile manukuu ya filamu, kwa kuendelea.</string>
-    <string name="premium_view_unsubscribe">Ghairi Usajili</string>
 </resources>
 
 

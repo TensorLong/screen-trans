@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Traducció de pantalla</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Permís necessari:\nNotificacions</string>
@@ -11,13 +11,13 @@
     <string name="message_permission_overlay_denied">Permís de superposició denegat</string>
     <string name="message_permission_overlay_denied_detail">No s\'ha concedit el permís de superposició.\nL\'aplicació es tancarà.</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token request -->
     <string name="message_media_projection">Permís necessari:\nGravació de pantalla</string>
     <string name="message_media_projection_detail">Per iniciar el Traductor de Pantalla, cal atorgar permís per gravar la pantalla.\n\nLa informació capturada només s\'utilitzarà per traducció i no es guardarà ni es compartirà.</string>
     <string name="message_media_projection_denied">Permís de gravació de pantalla denegat</string>
     <string name="message_media_projection_denied_detail">No s\'ha concedit el permís de gravació de pantalla.\nL\'aplicació es tancarà.</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground service start notification -->
     <string name="notification_foreground_service">La funció de captura de pantalla s’està utilitzant per a la traducció.</string>
     <string name="title_start_foreground_service">Servei en primer pla iniciat</string>
     <string name="message_start_foreground_service">L\'aplicació inicia un servei en primer pla per capturar i traduir el contingut de la pantalla.\n\nLes imatges capturades no es guarden ni es transfereixen.</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">No hi ha connexió a la xarxa.\nComproveu-ho i torneu-ho a intentar.</string>
     <string name="message_translate_fixedarea_warn">Avís de bateria</string>
     <string name="message_translate_fixedarea_warn_detail">La bateria es pot descarregar ràpidament.</string>
-    <string name="message_translate_fixedarea_promotion">Informació de compra del producte</string>
-    <string name="message_translate_fixedarea_promotion_detail">Apareixerà un recordatori amable sobre les nostres funcions premium cada %1$s minuts.</string>
-    <string name="message_free_trial_ends">La prova gratuïta ha finalitzat.</string>
-    <string name="message_free_trial_ends_detail">Vols veure un anunci per allargar la prova gratuïta?</string>
-    <string name="message_ad_reward">Has rebut %1$d minuts més de prova gratuïta!</string>
-    <string name="message_ad_reward_detail">Gaudeix de totes les funcions premium gratuïtament durant els propers %1$d minuts.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Configuració</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Barra de menú</string>
     <string name="settings_menu_menubar_transparency">Transparència del menú</string>
     <string name="settings_menu_menubar_composition">Funcions del menú</string>
-    <string name="settings_menu_cat_ai">Correcció amb IA</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Traducció</string>
     <string name="settings_menu_translation_transparency">Transparència traducció</string>
     <string name="settings_menu_translation_close_delay">Retard de tancament</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">Veus TTS</string>
     <string name="settings_menu_tts_rate">Velocitat TTS</string>
     <string name="settings_menu_cat_about">Quant a</string>
-    <string name="settings_menu_on_premium_free_trial">Prova Premium activa</string>
-    <string name="settings_menu_premium_free_trial_remain">Queden %1$d minuts</string>
-    <string name="settings_menu_your_premium_benefits">Avantatges Premium</string>
-    <string name="settings_menu_your_premium_benefits_peding">Avantatges (pendent)</string>
     <string name="settings_menu_app_version">Versió de l\'app</string>
     <string name="settings_menu_app_version_latest">(Última)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Tot il·limitat amb Premium</string>
     <string name="help_text_no_limit_free">Sense límit de quantitat ni de temps</string>
-    <string name="help_text_no_limit_title">Gaudeix sense límits</string>
     <string name="help_text_no_limit_free_title">Gratuït i sense restriccions</string>
-    <string name="help_text_get_premium">Obtenir Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Obtenir Premium</string>
-    <string name="premium_view_get_premium_purchased">Els teus avantatges Premium</string>
-    <string name="premium_view_get_premium_pending">Els teus avantatges Premium (pendent)</string>
-    <string name="premium_view_get_premium_not_available">Premium (actualment no disponible)</string>
-    <string name="premium_view_price_format">%1$s/mes • IVA inclòs\n• Cancel·la quan vulguis</string>
-    <string name="premium_view_title">Totes les funcions,\nSense interrupcions.</string>
-    <string name="premium_view_message">Sense límits de quantitat ni temps.\nTot és il·limitat amb Premium</string>
-    <string name="premium_view_description_azure">Traducció precisa de la majoria de llengües del món.</string>
-    <string name="premium_view_description_deepl">Oferim traduccions sofisticades que respecten el significat original.</string>
-    <string name="premium_view_description_papago">Papago tradueix automàticament diversos idiomes utilitzant un algorisme de traducció neuronal.</string>
-    <string name="premium_view_description_google">La traducció més ràpida. Gratuïta i il·limitada per sempre.</string>
-    <string name="premium_view_description_sentence_detection">Tradueix línies amb el teu dit.</string>
-    <string name="premium_view_description_paragraph_detection">Els paràgrafs es reconeixen automàticament.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">També pots seleccionar l’àrea que vulguis.</string>
-    <string name="premium_view_description_word_detection">La traducció per paraules és sempre gratuïta i il·limitada.</string>
-    <string name="premium_view_description_fixed_area_detection">Pots traduir contínuament àrees fixes, com els subtítols de pel·lícules.</string>
-    <string name="premium_view_unsubscribe">Cancel·lar subscripció</string>
 </resources>

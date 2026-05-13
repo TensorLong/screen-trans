@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">اسکرین مترجم</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">درکار اجازت:\nاطلاعات</string>
@@ -11,13 +11,13 @@
     <string name="message_permission_overlay_denied">اوورلے کی اجازت مسترد کر دی گئی</string>
     <string name="message_permission_overlay_denied_detail">اوورلے کی اجازت نہیں دی گئی۔\nایپ بند کی جا رہی ہے۔</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token request -->
     <string name="message_media_projection">درکار اجازت:\nاسکرین ریکارڈنگ</string>
     <string name="message_media_projection_detail">اسکرین مترجم شروع کرنے کے لیے، اسکرین ریکارڈ کرنے کی اجازت دینا ضروری ہے۔\n\nاسکرین پر موجود معلومات صرف ترجمے کے لیے استعمال ہوں گی اور کہیں محفوظ یا منتقل نہیں کی جائیں گی۔</string>
     <string name="message_media_projection_denied">اسکرین ریکارڈنگ کی اجازت مسترد کر دی گئی</string>
     <string name="message_media_projection_denied_detail">اسکرین ریکارڈنگ کی اجازت نہیں دی گئی۔\nایپ بند کی جا رہی ہے۔</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground service start notification -->
     <string name="notification_foreground_service">ترجمے کے لیے اسکرین کیپچر فنکشن استعمال کیا جا رہا ہے۔</string>
     <string name="title_start_foreground_service">فور گراؤنڈ سروس شروع ہو گئی</string>
     <string name="message_start_foreground_service">ایپ اسکرین کا مواد کیپچر اور ترجمہ کرنے کے لیے فور گراؤنڈ سروس شروع کرتی ہے۔\n\nکیپچر کردہ تصاویر کو محفوظ یا بیرونی طور پر بھیجا نہیں جائے گا۔</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">نیٹ ورک دستیاب نہیں ہے۔\nبراہ کرم چیک کریں اور دوبارہ کوشش کریں۔</string>
     <string name="message_translate_fixedarea_warn">بیٹری کی تنبیہ</string>
     <string name="message_translate_fixedarea_warn_detail">بیٹری تیزی سے ختم ہو سکتی ہے۔</string>
-    <string name="message_translate_fixedarea_promotion">مصنوعات کی خریداری کی معلومات</string>
-    <string name="message_translate_fixedarea_promotion_detail">ہماری پریمیم خصوصیات کے بارے میں ایک دوستانہ یاد دہانی ہر %1$s منٹ میں ظاہر ہوگی۔</string>
-    <string name="message_free_trial_ends">آپ کی مفت آزمائشی مدت ختم ہو گئی ہے۔</string>
-    <string name="message_free_trial_ends_detail">کیا آپ آزمائشی وقت بڑھانے کے لیے اشتہار دیکھنا چاہتے ہیں؟</string>
-    <string name="message_ad_reward">آپ کو مزید %1$d منٹ کی مفت آزمائش ملی ہے!</string>
-    <string name="message_ad_reward_detail">اب اگلے %1$d منٹ تک تمام پریمیم خصوصیات مفت میں استعمال کریں۔</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">سیٹنگز</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">مینو بار</string>
     <string name="settings_menu_menubar_transparency">مینو کی شفافیت</string>
     <string name="settings_menu_menubar_composition">مینو کی خصوصیات</string>
-    <string name="settings_menu_cat_ai">AI اصلاحات</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ترجمہ</string>
     <string name="settings_menu_translation_transparency">ترجمہ کی شفافیت</string>
     <string name="settings_menu_translation_close_delay">بند کرنے کی تاخیر</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">TTS آوازیں</string>
     <string name="settings_menu_tts_rate">TTS کی رفتار</string>
     <string name="settings_menu_cat_about">کے بارے میں</string>
-    <string name="settings_menu_on_premium_free_trial">پریمیم آزمائش فعال</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d منٹ باقی</string>
-    <string name="settings_menu_your_premium_benefits">آپ کے فوائد</string>
-    <string name="settings_menu_your_premium_benefits_peding">فوائد (انتظار میں)</string>
     <string name="settings_menu_app_version">ایپ کا ورژن</string>
     <string name="settings_menu_app_version_latest">(تازہ ترین)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">پریمیم کے ساتھ سب کچھ لامحدود ہے</string>
     <string name="help_text_no_limit_free">نہ مقدار کی حد، نہ وقت کی</string>
-    <string name="help_text_no_limit_title">بغیر کسی حد کے استعمال کریں</string>
     <string name="help_text_no_limit_free_title">مکمل طور پر مفت، بغیر کسی حد کے</string>
-    <string name="help_text_get_premium">پریمیم حاصل کریں</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">پریمیم حاصل کریں</string>
-    <string name="premium_view_get_premium_purchased">آپ کے پریمیم فوائد</string>
-    <string name="premium_view_get_premium_pending">آپ کے پریمیم فوائد (زیر التوا)</string>
-    <string name="premium_view_get_premium_not_available">پریمیم (فی الحال دستیاب نہیں)</string>
-    <string name="premium_view_price_format">%1$s/ماہ • VAT شامل ہے\n• کسی بھی وقت منسوخ کریں</string>
-    <string name="premium_view_title">تمام فیچرز،\nبغیر کسی مداخلت کے۔</string>
-    <string name="premium_view_message">نہ مقدار کی حد، نہ وقت کی۔\nپریمیم میں سب کچھ لامحدود ہے۔</string>
-    <string name="premium_view_description_azure">دنیا بھر کی بیشتر زبانوں کا درست ترجمہ کرتا ہے۔</string>
-    <string name="premium_view_description_deepl">معنی خیز اور درست ترجمے فراہم کرتا ہے۔</string>
-    <string name="premium_view_description_papago">Papago نیورل مشین ترجمہ کے ذریعے خودکار ترجمہ فراہم کرتا ہے۔</string>
-    <string name="premium_view_description_google">تیز ترین ترجمہ۔ ہمیشہ کے لیے مفت اور لامحدود۔</string>
-    <string name="premium_view_description_sentence_detection">لکیریں ترجمہ کرنے کے لیے اپنی انگلی استعمال کریں۔</string>
-    <string name="premium_view_description_paragraph_detection">پیراگراف خود بخود شناخت کیے جاتے ہیں۔</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">آپ مخصوص علاقہ بھی منتخب کر سکتے ہیں۔</string>
-    <string name="premium_view_description_word_detection">لفظ بہ لفظ ترجمہ ہمیشہ مفت اور لامحدود ہے۔</string>
-    <string name="premium_view_description_fixed_area_detection">آپ مقررہ علاقوں کا مسلسل ترجمہ کر سکتے ہیں، جیسے فلموں کے سب ٹائٹلز۔</string>
-    <string name="premium_view_unsubscribe">سبسکرپشن منسوخ کریں</string>
 </resources>

@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Screen Translator"
+rootProject.name = "Sense Group Translator"
 include(":app")

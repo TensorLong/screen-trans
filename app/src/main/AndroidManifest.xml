@@ -2,11 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- 통신 -->
+    <!-- Network -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- 오버레이 -->
+    <!-- Overlay -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
@@ -29,7 +29,7 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.ScreenTranslator"
+        android:theme="@style/Theme.SenseGroupTranslator"
         android:usesCleartextTraffic="true"
         tools:targetApi="tiramisu">
 
@@ -48,7 +48,7 @@
             android:excludeFromRecents="true"
             android:exported="true"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.ScreenTranslator.Transparent"
+            android:theme="@style/Theme.SenseGroupTranslator.Transparent"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -62,14 +62,14 @@
             android:excludeFromRecents="true"
             android:exported="false"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.ScreenTranslator.Transparent" />
+            android:theme="@style/Theme.SenseGroupTranslator.Transparent" />
 
         <activity
             android:name=".ui.screen.permissions.ScreenCapturePermissionRequesterActivity"
             android:excludeFromRecents="true"
             android:exported="false"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.ScreenTranslator.Transparent" />
+            android:theme="@style/Theme.SenseGroupTranslator.Transparent" />
 
         <activity
             android:name=".ui.screen.main.SettingsActivity"
@@ -106,7 +106,7 @@
             android:excludeFromRecents="true"
             android:exported="false"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.ScreenTranslator.Fullscreen" />
+            android:theme="@style/Theme.SenseGroupTranslator.Fullscreen" />
 
         <activity
             android:name=".ui.screen.test.TestVisionTextActivity"
@@ -114,7 +114,7 @@
             android:excludeFromRecents="true"
             android:exported="false"
             android:launchMode="singleTop"
-            android:theme="@style/Theme.ScreenTranslator.Fullscreen" />
+            android:theme="@style/Theme.SenseGroupTranslator.Fullscreen" />
 
         <!-- Automatically download the text recognition model after app install. -->
         <meta-data
@@ -124,27 +124,6 @@
         <meta-data
             android:name="google_analytics_default_allow_analytics_storage"
             android:value="true" />
-        <meta-data
-            android:name="google_analytics_default_allow_ad_storage"
-            android:value="true" />
-        <meta-data
-            android:name="google_analytics_default_allow_ad_user_data"
-            android:value="true" />
-        <meta-data
-            android:name="google_analytics_default_allow_ad_personalization_signals"
-            android:value="true" />
-
-<!--        <meta-data-->
-<!--            android:name="com.google.android.gms.ads.APPLICATION_ID"-->
-<!--            android:value="ca-app-pub-xxxxxxxxxxxxxxxx~xxxxxxxxxx"/>-->
-
-<!--        <meta-data-->
-<!--            android:name="com.google.android.gms.ads.APPLICATION_ID"-->
-<!--            android:value="" />--> <!-- TODO: Set your AdMob App ID -->
-
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="${ADMOB_APP_ID}" />
 
     </application>
 

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Zaslonski prevod</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Zahtevano dovoljenje:\nObvestila</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Omrežje ni na voljo.\nPreverite povezavo in poskusite znova.</string>
     <string name="message_translate_fixedarea_warn">Opozorilo o bateriji</string>
     <string name="message_translate_fixedarea_warn_detail">Baterija se lahko hitro izprazni.</string>
-    <string name="message_translate_fixedarea_promotion">Informacije o nakupu izdelka</string>
-    <string name="message_translate_fixedarea_promotion_detail">Prijazen opomnik o naših premium funkcijah se bo prikazal vsakih %1$s minut.</string>
-    <string name="message_free_trial_ends">Vaše brezplačno preizkusno obdobje je poteklo.</string>
-    <string name="message_free_trial_ends_detail">Želite ogled oglasa za podaljšanje preizkusnega obdobja?</string>
-    <string name="message_ad_reward">Prejeli ste še %1$d minut brezplačnega preizkusa!</string>
-    <string name="message_ad_reward_detail">Vse premium funkcije lahko naslednjih %1$d minut uporabljate brezplačno.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Nastavitve</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Meni vrstica</string>
     <string name="settings_menu_menubar_transparency">Prosojnost menija</string>
     <string name="settings_menu_menubar_composition">Funkcije menija</string>
-    <string name="settings_menu_cat_ai">AI popravek</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Prevod</string>
     <string name="settings_menu_translation_transparency">Prosojnost prevoda</string>
     <string name="settings_menu_translation_close_delay">Zakasnitev zapiranja</string>
@@ -81,39 +75,13 @@
     <string name="settings_menu_tts_voices">TTS glasovi</string>
     <string name="settings_menu_tts_rate">Hitrost TTS</string>
     <string name="settings_menu_cat_about">O aplikaciji</string>
-    <string name="settings_menu_on_premium_free_trial">Preizkus Premium aktiven</string>
-    <string name="settings_menu_premium_free_trial_remain">Še %1$d minut</string>
-    <string name="settings_menu_your_premium_benefits">Tvoje koristi</string>
-    <string name="settings_menu_your_premium_benefits_peding">Koristi (čakajo)</string>
     <string name="settings_menu_app_version">Različica aplikacije</string>
     <string name="settings_menu_app_version_latest">(Najnovejša)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Vse je neomejeno s Premium</string>
     <string name="help_text_no_limit_free">Brez omejitev količine ali časa</string>
-    <string name="help_text_no_limit_title">Uživajte brez omejitev</string>
     <string name="help_text_no_limit_free_title">Brezplačno in brez omejitev</string>
-    <string name="help_text_get_premium">Pridobi Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Pridobi Premium</string>
-    <string name="premium_view_get_premium_purchased">Vaše ugodnosti Premium</string>
-    <string name="premium_view_get_premium_pending">Vaše ugodnosti Premium (V obdelavi)</string>
-    <string name="premium_view_get_premium_not_available">Premium trenutno ni na voljo</string>
-    <string name="premium_view_price_format">%1$s/mesec • Vključuje DDV\n• Prekličite kadarkoli</string>
-    <string name="premium_view_title">Vse funkcije,\nBrez prekinitev.</string>
-    <string name="premium_view_message">Brez omejitev količine ali časa.\nVse je vključeno s Premium</string>
-    <string name="premium_view_description_azure">Točen prevod večine svetovnih jezikov.</string>
-    <string name="premium_view_description_deepl">Napredni prevodi, ki zajamejo pomen.</string>
-    <string name="premium_view_description_papago">Papago samodejno prevaja več jezikov z nevronskimi mrežami.</string>
-    <string name="premium_view_description_google">Najhitrejši prevod. Vedno brezplačno in neomejeno.</string>
-    <string name="premium_view_description_sentence_detection">Uporabite prst za prevod vrstic.</string>
-    <string name="premium_view_description_paragraph_detection">Odstavki se zaznajo samodejno.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Lahko izberete območje za prevod.</string>
-    <string name="premium_view_description_word_detection">Prevajanje po besedah je vedno brezplačno in neomejeno.</string>
-    <string name="premium_view_description_fixed_area_detection">Nenehno lahko prevajate fiksna območja, kot so podnapisi v filmih.</string>
-    <string name="premium_view_unsubscribe">Prekliči naročnino</string>
 </resources>
 
 

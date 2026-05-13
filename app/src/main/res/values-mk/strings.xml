@@ -1,23 +1,23 @@
 <resources>
-  <string name="app_name">Экран аудармасы</string>
+  <string name="app_name">Sense Group Translator</string>
 
   <!-- Notification Permission -->
   <string name="message_permission_notification">Потребна дозвола:\nИзвестувања</string>
-  <string name="message_permission_notification_detail">За да го стартувате Screen Translator, мора да дозволите известувања.</string>
+  <string name="message_permission_notification_detail">За да го стартувате Sense Group Translator, мора да дозволите известувања.</string>
 
   <!-- Overlay Permission -->
   <string name="message_permission_overlay">Потребна дозвола:\nПрикажување над други апликации</string>
-  <string name="message_permission_overlay_detail">За да го стартувате Screen Translator, мора да дозволите прикажување над други апликации.</string>
+  <string name="message_permission_overlay_detail">За да го стартувате Sense Group Translator, мора да дозволите прикажување над други апликации.</string>
   <string name="message_permission_overlay_denied">Дозволата за преклопување е одбиена</string>
   <string name="message_permission_overlay_denied_detail">Дозволата за преклопување не е доделена.\nАпликацијата ќе се затвори.</string>
 
-  <!-- MediaProjection token 요청 -->
+  <!-- MediaProjection token request -->
   <string name="message_media_projection">Потребна дозвола:\nСнимање на екранот</string>
-  <string name="message_media_projection_detail">За да го стартувате Screen Translator, мора да дозволите снимање на екранот.\n\nИнформациите од екранот се користат само за преведување и нема да бидат зачувани или префрлени на друго место.</string>
+  <string name="message_media_projection_detail">За да го стартувате Sense Group Translator, мора да дозволите снимање на екранот.\n\nИнформациите од екранот се користат само за преведување и нема да бидат зачувани или префрлени на друго место.</string>
   <string name="message_media_projection_denied">Одбиена дозвола за снимање на екранот</string>
   <string name="message_media_projection_denied_detail">Дозволата за снимање на екранот не е доделена.\nАпликацијата ќе се затвори.</string>
 
-  <!-- Foreground Service 시작 알림 -->
+  <!-- Foreground service start notification -->
   <string name="notification_foreground_service">Функцијата за снимање на екранот се користи за превод.</string>
   <string name="title_start_foreground_service">Се стартува Foreground Service</string>
   <string name="message_start_foreground_service">Апликацијата стартува Foreground Service за да го снима и преведува содржината од екранот.\n\nСнимените слики не се зачувуваат ниту се испраќаат надворешно.</string>
@@ -56,12 +56,6 @@
   <string name="message_network_unavailable_detail">Мрежата не е достапна.\nПроверете и обидете се повторно.</string>
   <string name="message_translate_fixedarea_warn">Предупредување за батеријата</string>
   <string name="message_translate_fixedarea_warn_detail">Батеријата може брзо да се испразни.</string>
-  <string name="message_translate_fixedarea_promotion">Информации за купување на производот</string>
-  <string name="message_translate_fixedarea_promotion_detail">Ќе се појавува пријателски потсетник за нашите премиум функции на секои %1$s минути.</string>
-  <string name="message_free_trial_ends">Вашиот бесплатен пробен период заврши.</string>
-  <string name="message_free_trial_ends_detail">Дали сакате да гледате реклама за да го продолжите пробниот период?</string>
-  <string name="message_ad_reward">Добијте уште %1$d минути бесплатен пробен период!</string>
-  <string name="message_ad_reward_detail">Уживајте во сите премиум функции бесплатно во следните %1$d минути.</string>
 
   <!-- SettingsActivity -->
   <string name="settings_title">Поставки</string>
@@ -71,7 +65,7 @@
   <string name="settings_menu_cat_menubar">Мени лента</string>
   <string name="settings_menu_menubar_transparency">Прозирност на менито</string>
   <string name="settings_menu_menubar_composition">Функции на менито</string>
-  <string name="settings_menu_cat_ai">AI корекција</string>
+  <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">Превод</string>
   <string name="settings_menu_translation_transparency">Прозирност на преводот</string>
   <string name="settings_menu_translation_close_delay">Кашнење при затворање</string>
@@ -81,38 +75,12 @@
   <string name="settings_menu_tts_voices">TTS гласови</string>
   <string name="settings_menu_tts_rate">TTS брзина</string>
   <string name="settings_menu_cat_about">За апликацијата</string>
-  <string name="settings_menu_on_premium_free_trial">Premium проба е активна</string>
-  <string name="settings_menu_premium_free_trial_remain">Остануваат %1$d минути</string>
-  <string name="settings_menu_your_premium_benefits">Твои поволности</string>
-  <string name="settings_menu_your_premium_benefits_peding">Поволности (во тек)</string>
   <string name="settings_menu_app_version">Верзија на апликацијата</string>
   <string name="settings_menu_app_version_latest">(Најнова)</string>
 
 
   <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-  <string name="help_text_no_limit">Сè е неограничено со премиум</string>
   <string name="help_text_no_limit_free">Без ограничување на количина, без временско ограничување</string>
-  <string name="help_text_no_limit_title">Уживајте без ограничувања</string>
   <string name="help_text_no_limit_free_title">Бесплатно и без ограничувања</string>
-  <string name="help_text_get_premium">Набави Premium</string>
 
-  <!-- PremiumView -->
-  <string name="premium_view_get_premium">Набави Premium</string>
-  <string name="premium_view_get_premium_purchased">Вашите Premium придобивки</string>
-  <string name="premium_view_get_premium_pending">Вашите Premium придобивки (во очекување)</string>
-  <string name="premium_view_get_premium_not_available">Premium (моментално недостапен)</string>
-  <string name="premium_view_price_format">%1$s/месец • Вклучува ДДВ\n• Откажи во секое време</string>
-  <string name="premium_view_title">Сите функции,\nбез прекини.</string>
-  <string name="premium_view_message">Без ограничувања на количина или време.\nСè е неограничено со Premium</string>
-  <string name="premium_view_description_azure">Прецизен превод на повеќето јазици низ светот.</string>
-  <string name="premium_view_description_deepl">Обезбедуваме софистицирани и значајни преводи.</string>
-  <string name="premium_view_description_papago">Papago автоматски преведува со помош на невронска машинска технологија.</string>
-  <string name="premium_view_description_google">Најбрз превод. Неограничен и засекогаш бесплатен.</string>
-  <string name="premium_view_description_sentence_detection">Преведувајте со допир по редови.</string>
-  <string name="premium_view_description_paragraph_detection">Параграфите се препознаваат автоматски.</string>
-  <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-  <string name="premium_view_description_select_detection">Можете да изберете точен опсег.</string>
-  <string name="premium_view_description_word_detection">Превод по збор секогаш е бесплатен и неограничен.</string>
-  <string name="premium_view_description_fixed_area_detection">Можете постојано да преведувате фиксни области, како што се филмските преводи.</string>
-  <string name="premium_view_unsubscribe">Откажи претплата</string>
 </resources>

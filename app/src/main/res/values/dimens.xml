@@ -22,33 +22,33 @@
     <dimen name="target_handle_pointer_thumb_space">18dp</dimen>
     <dimen name="target_handle_thumb_dimen">50dp</dimen>
 
-    <!-- 포인터 멈춤 으로 인정되는 거리 마진 -->
+    <!-- Distance margin treated as pointer stopped -->
     <dimen name="targethandle_view_pointer_stopped_distance">6dp</dimen>
 
-    <!-- paragraph 와 paragraph frame 사이 마진 -->
+    <!-- Margin between paragraph and paragraph frame -->
     <dimen name="visiontext_view_paragraph_frame_margin">4dp</dimen>
 
-    <!-- 스크린과 TranslationView 사이 최소 마진 -->
+    <!-- Minimum margin between screen and TranslationView -->
     <dimen name="translation_view_screen_min_margin">12dp</dimen>
-    <!-- TranslationView 의 shadow 두께 -->
+    <!-- TranslationView shadow thickness -->
     <dimen name="translation_view_shadow_padding">6dp</dimen>
-    <!-- TranslationView 와 content 패딩 -->
+    <!-- Padding between TranslationView and content -->
     <dimen name="translation_view_content_padding">8dp</dimen>
-    <!-- TranslationView 최소 너비 -->
+    <!-- Minimum TranslationView width -->
     <dimen name="translation_view_min_width">190dp</dimen>
-    <!-- TranslationView 아래 부분(엔진로고, 복사아이콘) 높이 -->
+    <!-- TranslationView bottom area height for engine logo and copy icon -->
     <dimen name="translation_view_bottom_menu_height">32dp</dimen>
-    <!-- VisionText 상하 여백 -->
+    <!-- VisionText vertical margin -->
     <dimen name="translation_view_vision_text_v_margin">2dp</dimen>
 
-    <!-- Settings 메뉴 텍스트 사이즈 -->
+    <!-- Settings menu text size -->
     <dimen name="settings_menu_text_size">18sp</dimen>
-    <!-- Settings 메뉴 sub텍스트 사이즈 -->
+    <!-- Settings menu subtext size -->
     <dimen name="settings_menu_subtext_size">14sp</dimen>
 
-    <!-- Area Selection 최소 너비 -->
+    <!-- Minimum area selection width -->
     <dimen name="area_selection_min_width">30dp</dimen>
-    <!-- Area Selection 최소 높이 -->
+    <!-- Minimum area selection height -->
     <dimen name="area_selection_min_height">20dp</dimen>
 
 

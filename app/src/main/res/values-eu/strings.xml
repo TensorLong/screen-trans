@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Pantaila Itzultzailea</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Beharrezko baimena:\nJakinarazpenak</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Sarea ez dago erabilgarri.\nEgiaztatu eta saiatu berriro.</string>
     <string name="message_translate_fixedarea_warn">Bateriaren abisua</string>
     <string name="message_translate_fixedarea_warn_detail">Bateria azkar agortu daiteke.</string>
-    <string name="message_translate_fixedarea_promotion">Produktuaren erosketa-informazioa</string>
-    <string name="message_translate_fixedarea_promotion_detail">Gure funtzio premiumei buruzko oroigarri atsegin bat agertuko da %1$s minuturo.</string>
-    <string name="message_free_trial_ends">Doako proba amaitu da.</string>
-    <string name="message_free_trial_ends_detail">Doako proba luzatzeko iragarki bat ikusi nahi duzu?</string>
-    <string name="message_ad_reward">%1$d minutu gehiago lortu dituzu doako proban!</string>
-    <string name="message_ad_reward_detail">Goza itzazu premium funtzio guztiak hurrengo %1$d minutuz doan.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Ezarpenak</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">Menu-barra</string>
     <string name="settings_menu_menubar_transparency">Menuaren gardentasuna</string>
     <string name="settings_menu_menubar_composition">Menu-funtzioak</string>
-    <string name="settings_menu_cat_ai">AI zuzenketa</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Itzulpena</string>
     <string name="settings_menu_translation_transparency">Itzulpenaren gardentasuna</string>
     <string name="settings_menu_translation_close_delay">Itxiera atzerapena</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">TTS ahotsak</string>
     <string name="settings_menu_tts_rate">TTS abiadura</string>
     <string name="settings_menu_cat_about">Honi buruz</string>
-    <string name="settings_menu_on_premium_free_trial">Premium proba aktibo</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d minutu falta</string>
-    <string name="settings_menu_your_premium_benefits">Zure onurak</string>
-    <string name="settings_menu_your_premium_benefits_peding">Onurak (zain)</string>
     <string name="settings_menu_app_version">App bertsioa</string>
     <string name="settings_menu_app_version_latest">(Azkena)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Premiumekin dena da mugagabe</string>
     <string name="help_text_no_limit_free">Ez dago kopuru edo denbora-mugarik</string>
-    <string name="help_text_no_limit_title">Erabili mugarik gabe</string>
     <string name="help_text_no_limit_free_title">Doan eta mugarik gabe</string>
-    <string name="help_text_get_premium">Lortu Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Lortu Premium</string>
-    <string name="premium_view_get_premium_purchased">Zure Premium abantailak</string>
-    <string name="premium_view_get_premium_pending">Zure Premium abantailak (zain)</string>
-    <string name="premium_view_get_premium_not_available">Premium ez dago eskuragarri une honetan</string>
-    <string name="premium_view_price_format">%1$s/hilabete • BEZa barne\n• Ezeztatu edozein unetan</string>
-    <string name="premium_view_title">Ezaugarri guztiak,\nEtenik gabe.</string>
-    <string name="premium_view_message">Ez dago kopuru edo denbora-mugarik.\nPremiumekin dena da mugagabe</string>
-    <string name="premium_view_description_azure">Munduko hizkuntza gehienak zehaztasunez itzultzen ditu.</string>
-    <string name="premium_view_description_deepl">Esanahia hobeto adierazten duten itzulpen sofistikatuak eskaintzen ditu.</string>
-    <string name="premium_view_description_papago">Papagok hizkuntza anitzak automatikoki itzultzen ditu sare neuronal bidez.</string>
-    <string name="premium_view_description_google">Itzulpenik azkarrena. Mugagabe eta betiko doan.</string>
-    <string name="premium_view_description_sentence_detection">Erabili zure hatza lerroak itzultzeko.</string>
-    <string name="premium_view_description_paragraph_detection">Paragrafoak automatikoki detektatzen dira.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">Aukeratu nahi duzun eremua ere zehatz dezakezu.</string>
-    <string name="premium_view_description_word_detection">Hitzetik-hitzera itzulpena beti da doakoa eta mugagabea.</string>
-    <string name="premium_view_description_fixed_area_detection">Azpitituluak bezala, eremu finkoak etengabe itzuli ditzakezu.</string>
-    <string name="premium_view_unsubscribe">Harpidetza bertan behera utzi</string>
 </resources>

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">កម្មវិធីបកប្រែអេក្រង់</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">ការអនុញ្ញាតដែលទាមទារ៖\nការជូនដំណឹង</string>
@@ -11,13 +11,13 @@
     <string name="message_permission_overlay_denied">ការអនុញ្ញាត Overlay ត្រូវបានបដិសេធ</string>
     <string name="message_permission_overlay_denied_detail">មិនបានអនុញ្ញាត Overlay ទេ។\nកម្មវិធីនឹងបញ្ចប់។</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token request -->
     <string name="message_media_projection">ការអនុញ្ញាតដែលទាមទារ៖\nកត់ត្រាអេក្រង់</string>
     <string name="message_media_projection_detail">ដើម្បីដំណើរការកម្មវិធីបកប្រែអេក្រង់ អ្នកត្រូវអនុញ្ញាតការកត់ត្រាអេក្រង់។\n\nព័ត៌មានលើអេក្រង់ត្រូវបានប្រើសម្រាប់បកប្រែប៉ុណ្ណោះ ហើយវាមិនត្រូវបានរក្សាទុក ឬផ្ញើទៅកន្លែងផ្សេងទេ។</string>
     <string name="message_media_projection_denied">ការអនុញ្ញាតកត់ត្រាអេក្រង់ត្រូវបានបដិសេធ</string>
     <string name="message_media_projection_denied_detail">មិនបានអនុញ្ញាតការកត់ត្រាអេក្រង់ទេ។\nកម្មវិធីនឹងបញ្ចប់។</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground service start notification -->
     <string name="notification_foreground_service">មុខងារ ការចាប់អេក្រង់ កំពុងត្រូវបានប្រើសម្រាប់ការបកប្រែ។</string>
     <string name="title_start_foreground_service">បានចាប់ផ្ដើមសេវាកម្មនៅផ្នែកមុខ</string>
     <string name="message_start_foreground_service">កម្មវិធីបានចាប់ផ្ដើមសេវាកម្មនៅផ្នែកមុខដើម្បីចាប់ និងបកប្រែមាតិកាអេក្រង់។\n\nរូបភាពដែលបានចាប់មិនត្រូវបានរក្សាទុក ឬបញ្ជូនចេញក្រៅឡើយ។</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">បណ្ដាញមិនអាចប្រើបាន។\nសូមពិនិត្យនិងព្យាយាមម្តងទៀត។</string>
     <string name="message_translate_fixedarea_warn">ការព្រមានអំពីថ្ម</string>
     <string name="message_translate_fixedarea_warn_detail">ថ្មអាចផុតដោយលឿន។</string>
-    <string name="message_translate_fixedarea_promotion">ព័ត៌មានអំពីការទិញផលិតផល</string>
-    <string name="message_translate_fixedarea_promotion_detail">ការរំលឹកយ៉ាងរួសរាយអំពីលក្ខណៈពិសេសពិសេសរបស់យើងនឹងបង្ហាញរៀងរាល់ %1$s នាទី។</string>
-    <string name="message_free_trial_ends">ការសាកល្បងដោយឥតគិតថ្លៃរបស់អ្នកបានបញ្ចប់ហើយ។</string>
-    <string name="message_free_trial_ends_detail">តើអ្នកចង់មើលពាណិជ្ជកម្មដើម្បីបន្ថែមពេលសាកល្បងទេ?</string>
-    <string name="message_ad_reward">អ្នកបានទទួលរយៈពេលសាកល្បងឥតគិតថ្លៃបន្ថែម %1$d នាទី!</string>
-    <string name="message_ad_reward_detail">រីករាយនឹងលក្ខណៈពិសេសទាំងអស់ដោយឥតគិតថ្លៃសម្រាប់ %1$d នាទីបន្ទាប់។</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">ការកំណត់</string>
@@ -71,7 +65,7 @@
     <string name="settings_menu_cat_menubar">របារមេនុយ</string>
     <string name="settings_menu_menubar_transparency">តម្លាភាពមេនុយ</string>
     <string name="settings_menu_menubar_composition">មុខងារមេនុយ</string>
-    <string name="settings_menu_cat_ai">ការកែដោយ AI</string>
+    <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ការបកប្រែ</string>
     <string name="settings_menu_translation_transparency">តម្លាភាពបកប្រែ</string>
     <string name="settings_menu_translation_close_delay">ពេលយឺតបិទ</string>
@@ -81,37 +75,11 @@
     <string name="settings_menu_tts_voices">សំឡេង TTS</string>
     <string name="settings_menu_tts_rate">ល្បឿន TTS</string>
     <string name="settings_menu_cat_about">អំពី</string>
-    <string name="settings_menu_on_premium_free_trial">សាកល្បង Premium ដំណើរការ</string>
-    <string name="settings_menu_premium_free_trial_remain">នៅសល់ %1$d នាទី</string>
-    <string name="settings_menu_your_premium_benefits">អត្ថប្រយោជន៍របស់អ្នក</string>
-    <string name="settings_menu_your_premium_benefits_peding">អត្ថប្រយោជន៍ (រងចាំ)</string>
     <string name="settings_menu_app_version">ជំនាន់កម្មវិធី</string>
     <string name="settings_menu_app_version_latest">(ចុងក្រោយ)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">ទាំងអស់គឺមិនមានដែនកំណត់នៅក្នុង Premium</string>
     <string name="help_text_no_limit_free">គ្មានដែនកំណត់ទឹកប្រាក់ គ្មានដែនកំណត់ពេលវេលា</string>
-    <string name="help_text_no_limit_title">រីករាយដោយគ្មានដែនកំណត់</string>
     <string name="help_text_no_limit_free_title">ឥតគិតថ្លៃដោយគ្មានដែនកំណត់</string>
-    <string name="help_text_get_premium">ទទួលបាន Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">ទទួលបាន Premium</string>
-    <string name="premium_view_get_premium_purchased">អត្ថប្រយោជន៍ Premium របស់អ្នក</string>
-    <string name="premium_view_get_premium_pending">អត្ថប្រយោជន៍ Premium របស់អ្នក (កំពុងរង់ចាំ)</string>
-    <string name="premium_view_get_premium_not_available">Premium (មិនមានក្នុងពេលបច្ចុប្បន្ន)</string>
-    <string name="premium_view_price_format">%1$s/ខែ • រួមបញ្ចូលពន្ធ\n• បោះបង់ពេលណាក៏បាន</string>
-    <string name="premium_view_title">គ្រប់មុខងារ,\nគ្មានការរំខាន។</string>
-    <string name="premium_view_message">គ្មានដែនកំណត់ទឹកប្រាក់ គ្មានដែនកំណត់ពេលវេលា។\nទាំងអស់គឺមិនមានដែនកំណត់នៅក្នុង Premium</string>
-    <string name="premium_view_description_azure">បកប្រែភាសាច្រើននៅជុំវិញពិភពលោកយ៉ាងត្រឹមត្រូវ។</string>
-    <string name="premium_view_description_deepl">ផ្តល់នូវការបកប្រែដ៏ច្បាស់លាស់ និងចង់បញ្ជាក់ន័យ។</string>
-    <string name="premium_view_description_papago">Papago បកប្រែភាសាជាច្រើនទៅភាសាគោលដោយប្រើ algorithm NMT។</string>
-    <string name="premium_view_description_google">ការបកប្រែឆាប់បំផុត។ ឥតគិតថ្លៃ និងមិនមានដែនកំណត់។</string>
-    <string name="premium_view_description_sentence_detection">បកប្រែលើបន្ទាត់ដោយប្រើម្រាមដៃ។</string>
-    <string name="premium_view_description_paragraph_detection">កថាខណ្ឌត្រូវបានស្វ័យប្រវត្តិក្នុងការទទួលស្គាល់។</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">អ្នកអាចជ្រើសរើសតំបន់ដែលចង់បកប្រែបានផងដែរ។</string>
-    <string name="premium_view_description_word_detection">ការបកប្រែពាក្យតែងតែឥតគិតថ្លៃ និងមិនមានដែនកំណត់។</string>
-    <string name="premium_view_description_fixed_area_detection">អ្នកអាចបកប្រែតំបន់ថេរដូចជាចំណងជើងរបស់ភាពយន្តបានជាប់ជានិច្ច។</string>
-    <string name="premium_view_unsubscribe">បោះបង់ការជាវ</string>
 </resources>

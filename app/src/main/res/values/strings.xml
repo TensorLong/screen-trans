@@ -1,23 +1,23 @@
 <resources>
-    <string name="app_name">Screen translation</string>
+    <string name="app_name">Sense Group Translator</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Required permission :\nNotification</string>
-    <string name="message_permission_notification_detail">To launch Screen Translator, you need to grant permission to notification.</string>
+    <string name="message_permission_notification_detail">To launch Sense Group Translator, you need to grant notification permission.</string>
 
     <!-- Overlay Permission -->
     <string name="message_permission_overlay">Required permission :\nDisplay over other apps</string>
-    <string name="message_permission_overlay_detail">To launch Screen Translator, you need to grant permission to display on top of other apps.</string>
+    <string name="message_permission_overlay_detail">To launch Sense Group Translator, you need to allow display over other apps.</string>
     <string name="message_permission_overlay_denied">Overlay permission denied</string>
     <string name="message_permission_overlay_denied_detail">The overlay permission is not granted.\nExit the app.</string>
 
-    <!-- MediaProjection token 요청 -->
+    <!-- MediaProjection token -->
     <string name="message_media_projection">Required permission :\nScreen Recording</string>
-    <string name="message_media_projection_detail">To launch Screen Translator, you need to grant permission to screen recording.\n\nThe information on the screen is for translation purposes only and will not be transferred or stored elsewhere.</string>
+    <string name="message_media_projection_detail">To launch Sense Group Translator, you need to grant screen recording permission.\n\nScreen content is used only for translation and is not stored or transferred elsewhere.</string>
     <string name="message_media_projection_denied">Screen Recording permission denied</string>
     <string name="message_media_projection_denied_detail">The Screen Recording permission is not granted.\nExit the app.</string>
 
-    <!-- Foreground Service 시작 알림 -->
+    <!-- Foreground Service notification -->
     <string name="notification_foreground_service">The screen capture function is being used for translation work.</string>
     <string name="title_start_foreground_service">Foreground Service starts</string>
     <string name="message_start_foreground_service">The app starts a Foreground Service to capture and translate screen content.\n\nCaptured images are not saved or transmitted externally.</string>
@@ -56,12 +56,6 @@
     <string name="message_network_unavailable_detail">Network unavailable.\nPlease check and try again.</string>
     <string name="message_translate_fixedarea_warn">Battery caution</string>
     <string name="message_translate_fixedarea_warn_detail">The battery may drain quickly.</string>
-    <string name="message_translate_fixedarea_promotion">Product purchase information</string>
-    <string name="message_translate_fixedarea_promotion_detail">A friendly reminder about our premium features will pop up every %1$s minutes.</string>
-    <string name="message_free_trial_ends">Your free trial has ended.</string>
-    <string name="message_free_trial_ends_detail">Would you like to watch an ad to extend your free trial time?</string>
-    <string name="message_ad_reward">You have received %1$d more minutes of free trial!</string>
-    <string name="message_ad_reward_detail">Enjoy all premium features free for the next %1$d minutes.</string>
 
     <!-- SettingsActivity -->
     <string name="settings_title">Settings</string>
@@ -71,24 +65,34 @@
     <string name="settings_menu_cat_menubar">Menu Bar</string>
     <string name="settings_menu_menubar_transparency">Menu Bar Transparency</string>
     <string name="settings_menu_menubar_composition">Menu Functions</string>
-    <string name="settings_menu_cat_ai">AI-based Text Correction</string>
-    <string name="settings_menu_openai_api_key">OpenAI API Key</string>
-    <string name="settings_menu_openai_api_key_set">Set</string>
-    <string name="settings_menu_openai_api_key_not_set">Not set</string>
-    <string name="settings_menu_openai_api_key_hint">sk-...</string>
-    <string name="settings_menu_openai_api_key_helper">Get your key at https://platform.openai.com/api-keys</string>
-    <string name="settings_menu_openai_api_key_note">Internal testing — do not share this device.</string>
-    <string name="settings_menu_openai_api_key_save">Save</string>
-    <string name="settings_menu_openai_api_key_cancel">Cancel</string>
-    <string name="settings_menu_openai_api_key_clear">Clear</string>
-    <string name="settings_menu_openai_api_key_saved">OpenAI API key saved</string>
-    <string name="settings_menu_openai_api_key_cleared">OpenAI API key cleared</string>
-    <string name="settings_menu_openai_base_url">Base URL (optional)</string>
-    <string name="settings_menu_openai_base_url_hint">https://api.openai.com/</string>
-    <string name="settings_menu_openai_base_url_helper">Leave empty to use the official OpenAI endpoint. Set this if you use an OpenAI-compatible third-party API; v1/chat/completions will be appended.</string>
-    <string name="settings_menu_openai_model">Model (optional)</string>
-    <string name="settings_menu_openai_model_hint">gpt-4o-mini</string>
-    <string name="settings_menu_openai_model_helper">Leave empty to use gpt-4o-mini. Override if your proxy routes a different model name (e.g. gpt-5.4-mini, gpt-4o).</string>
+    <string name="settings_menu_cat_ai">AI API</string>
+    <string name="settings_menu_ai_api_settings">AI API Settings</string>
+    <string name="settings_menu_ai_api_key_label">API Key</string>
+    <string name="settings_menu_ai_api_set">Set</string>
+    <string name="settings_menu_ai_api_not_set">Not set</string>
+    <string name="settings_menu_ai_api_key_hint">Enter your API key</string>
+    <string name="settings_menu_ai_api_key_helper">Use an API provider that supports chat completions and model listing.</string>
+    <string name="settings_menu_ai_api_note">Internal beta: credentials are stored on this device.</string>
+    <string name="settings_menu_ai_api_save">Save</string>
+    <string name="settings_menu_ai_api_cancel">Cancel</string>
+    <string name="settings_menu_ai_api_clear">Clear</string>
+    <string name="settings_menu_ai_api_saved">AI API settings saved</string>
+    <string name="settings_menu_ai_api_cleared">AI API settings incomplete</string>
+    <string name="settings_menu_ai_api_base_url">Base URL</string>
+    <string name="settings_menu_ai_api_base_url_hint">https://api.example.com/</string>
+    <string name="settings_menu_ai_api_base_url_helper">The app appends /v1/chat/completions for tests and /v1/models for model discovery.</string>
+    <string name="settings_menu_ai_api_model">Model</string>
+    <string name="settings_menu_ai_api_model_hint">model-id</string>
+    <string name="settings_menu_ai_api_model_helper">Fetch models from your provider or enter a model manually.</string>
+    <string name="settings_menu_ai_api_fetch_models">Fetch models</string>
+    <string name="settings_menu_ai_api_fetching_models">Fetching models…</string>
+    <string name="settings_menu_ai_api_models_loaded">%1$d models loaded</string>
+    <string name="settings_menu_ai_api_no_models">No models returned</string>
+    <string name="settings_menu_ai_api_models_failed">Failed to fetch models</string>
+    <string name="settings_menu_ai_api_test">Test</string>
+    <string name="settings_menu_ai_api_testing">Testing selected model…</string>
+    <string name="settings_menu_ai_api_test_succeeded">Test succeeded: %1$s</string>
+    <string name="settings_menu_ai_api_test_failed">Test failed</string>
     <string name="settings_menu_cat_translation">Translation</string>
     <string name="settings_menu_translation_transparency">Translation Transparency</string>
     <string name="settings_menu_translation_close_delay">Translation Close Delay</string>
@@ -98,37 +102,17 @@
     <string name="settings_menu_tts_voices">TTS Voice</string>
     <string name="settings_menu_tts_rate">TTS Speed</string>
     <string name="settings_menu_cat_about">About</string>
-    <string name="settings_menu_on_premium_free_trial">Currently on Premium free trial</string>
-    <string name="settings_menu_premium_free_trial_remain">%1$d minutes left</string>
-    <string name="settings_menu_your_premium_benefits">Your Premium Benefits</string>
-    <string name="settings_menu_your_premium_benefits_peding">Your Premium Benefits</string>
     <string name="settings_menu_app_version">App Version</string>
     <string name="settings_menu_app_version_latest">(Latest)</string>
 
     <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-    <string name="help_text_no_limit">Everything is unlimited at the premium</string>
     <string name="help_text_no_limit_free">No quantity limit, no period limit</string>
-    <string name="help_text_no_limit_title">Enjoy it without limit</string>
     <string name="help_text_no_limit_free_title">Free without restriction</string>
-    <string name="help_text_get_premium">Get Premium</string>
 
-    <!-- PremiumView -->
-    <string name="premium_view_get_premium">Get Premium</string>
-    <string name="premium_view_get_premium_purchased">Your Premium Benefits</string>
-    <string name="premium_view_get_premium_pending">Your Premium Benefits(Pending)</string>
-    <string name="premium_view_get_premium_not_available">Get Premium (Current not available)</string>
-    <string name="premium_view_price_format">%1$s/month • Includes VAT\n• Cancel anytime</string>
-    <string name="premium_view_title">All Features,\nNo interruptions.</string>
-    <string name="premium_view_message">No quantity limit, no period limit.\nEverything is unlimited at the premium</string>
-    <string name="premium_view_description_azure">Accurately translates most languages around the world.</string>
-    <string name="premium_view_description_deepl">We provide sophisticated translations that capture the meaning well.</string>
-    <string name="premium_view_description_papago">Papago Translation automatically translates languages from multiple countries into the target language through the Neural Machine Translation algorithm.</string>
-    <string name="premium_view_description_google">We provide the fastest translation. Unlimited, free indefinitely.</string>
-    <string name="premium_view_description_sentence_detection">Use your fingertips to translate lines.</string>
-    <string name="premium_view_description_paragraph_detection">Paragraph units are automatically recognized.</string>
-    <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-    <string name="premium_view_description_select_detection">You can also specify the range you want.</string>
-    <string name="premium_view_description_word_detection">Word-by-word translation is always free and unlimited.</string>
-    <string name="premium_view_description_fixed_area_detection">You can continuously translate fixed areas, such as movie subtitles.</string>
-    <string name="premium_view_unsubscribe">Unsubscribe</string>
+    <string name="feature_view_description_sentence_detection">Use your fingertips to translate lines.</string>
+    <string name="feature_view_description_paragraph_detection">Paragraph units are automatically recognized.</string>
+    <string name="feature_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
+    <string name="feature_view_description_select_detection">You can also specify the range you want.</string>
+    <string name="feature_view_description_word_detection">Word-by-word translation is unlimited during the internal beta.</string>
+    <string name="feature_view_description_fixed_area_detection">You can continuously translate fixed areas, such as movie subtitles.</string>
 </resources>

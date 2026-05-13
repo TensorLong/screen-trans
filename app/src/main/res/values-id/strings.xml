@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">Terjemahan layar</string>
+  <string name="app_name">Sense Group Translator</string>
 
   <!-- Notification Permission -->
   <string name="message_permission_notification">Izin yang dibutuhkan:\nNotifikasi</string>
@@ -11,13 +11,13 @@
   <string name="message_permission_overlay_denied">Izin overlay ditolak</string>
   <string name="message_permission_overlay_denied_detail">Izin overlay tidak diberikan.\nAplikasi akan ditutup.</string>
 
-  <!-- MediaProjection token 요청 -->
+  <!-- MediaProjection token request -->
   <string name="message_media_projection">Izin yang dibutuhkan:\nPerekaman layar</string>
   <string name="message_media_projection_detail">Untuk menjalankan Penerjemah Layar, Anda perlu memberikan izin perekaman layar.\n\nInformasi di layar hanya digunakan untuk keperluan terjemahan dan tidak akan disimpan atau dikirim ke mana pun.</string>
   <string name="message_media_projection_denied">Izin perekaman layar ditolak</string>
   <string name="message_media_projection_denied_detail">Izin perekaman layar tidak diberikan.\nAplikasi akan ditutup.</string>
 
-  <!-- Foreground Service 시작 알림 -->
+  <!-- Foreground service start notification -->
   <string name="notification_foreground_service">Fungsi tangkap layar sedang digunakan untuk keperluan penerjemahan.</string>
   <string name="title_start_foreground_service">Layanan Latar Depan dimulai</string>
   <string name="message_start_foreground_service">Aplikasi memulai Layanan Latar Depan untuk menangkap dan menerjemahkan konten layar.\n\nGambar yang ditangkap tidak disimpan atau dikirim ke luar.</string>
@@ -56,12 +56,6 @@
   <string name="message_network_unavailable_detail">Jaringan tidak tersedia.\nPeriksa dan coba lagi.</string>
   <string name="message_translate_fixedarea_warn">Peringatan baterai</string>
   <string name="message_translate_fixedarea_warn_detail">Baterai mungkin cepat habis.</string>
-  <string name="message_translate_fixedarea_promotion">Informasi pembelian produk</string>
-  <string name="message_translate_fixedarea_promotion_detail">Pengingat ramah tentang fitur premium kami akan muncul setiap %1$s menit.</string>
-  <string name="message_free_trial_ends">Masa uji coba gratis Anda telah berakhir.</string>
-  <string name="message_free_trial_ends_detail">Ingin menonton iklan untuk memperpanjang uji coba gratis?</string>
-  <string name="message_ad_reward">Anda menerima %1$d menit tambahan uji coba gratis!</string>
-  <string name="message_ad_reward_detail">Nikmati semua fitur premium secara gratis selama %1$d menit ke depan.</string>
 
   <!-- SettingsActivity -->
   <string name="settings_title">Pengaturan</string>
@@ -71,7 +65,7 @@
   <string name="settings_menu_cat_menubar">Bilah menu</string>
   <string name="settings_menu_menubar_transparency">Transparansi menu</string>
   <string name="settings_menu_menubar_composition">Fungsi menu</string>
-  <string name="settings_menu_cat_ai">Koreksi AI</string>
+  <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">Terjemahan</string>
   <string name="settings_menu_translation_transparency">Transparansi terjemahan</string>
   <string name="settings_menu_translation_close_delay">Tunda penutupan</string>
@@ -81,37 +75,11 @@
   <string name="settings_menu_tts_voices">Suara TTS</string>
   <string name="settings_menu_tts_rate">Kecepatan TTS</string>
   <string name="settings_menu_cat_about">Tentang</string>
-  <string name="settings_menu_on_premium_free_trial">Trial Premium aktif</string>
-  <string name="settings_menu_premium_free_trial_remain">Sisa %1$d menit</string>
-  <string name="settings_menu_your_premium_benefits">Manfaat Premium Anda</string>
-  <string name="settings_menu_your_premium_benefits_peding">Manfaat (tertunda)</string>
   <string name="settings_menu_app_version">Versi aplikasi</string>
   <string name="settings_menu_app_version_latest">(Terbaru)</string>
 
   <!-- HelpTextDetectModeView, HelpTranslationKitView -->
-  <string name="help_text_no_limit">Semuanya tidak terbatas dengan Premium</string>
   <string name="help_text_no_limit_free">Tanpa batas jumlah, tanpa batas waktu</string>
-  <string name="help_text_no_limit_title">Nikmati tanpa batas</string>
   <string name="help_text_no_limit_free_title">Gratis tanpa batasan</string>
-  <string name="help_text_get_premium">Dapatkan Premium</string>
 
-  <!-- PremiumView -->
-  <string name="premium_view_get_premium">Dapatkan Premium</string>
-  <string name="premium_view_get_premium_purchased">Keuntungan Premium Anda</string>
-  <string name="premium_view_get_premium_pending">Keuntungan Premium Anda (Menunggu)</string>
-  <string name="premium_view_get_premium_not_available">Dapatkan Premium (Saat ini tidak tersedia)</string>
-  <string name="premium_view_price_format">%1$s/bulan • Termasuk PPN\n• Batalkan kapan saja</string>
-  <string name="premium_view_title">Semua fitur,\nTanpa gangguan.</string>
-  <string name="premium_view_message">Tanpa batas jumlah, tanpa batas waktu.\nSemuanya tidak terbatas dengan Premium</string>
-  <string name="premium_view_description_azure">Menerjemahkan sebagian besar bahasa di dunia secara akurat.</string>
-  <string name="premium_view_description_deepl">Kami menyediakan terjemahan canggih yang menangkap makna dengan baik.</string>
-  <string name="premium_view_description_papago">Papago menerjemahkan bahasa dari berbagai negara ke dalam bahasa target melalui algoritme Neural Machine Translation.</string>
-  <string name="premium_view_description_google">Kami menyediakan terjemahan tercepat. Tak terbatas, gratis selamanya.</string>
-  <string name="premium_view_description_sentence_detection">Gunakan jari Anda untuk menerjemahkan baris.</string>
-  <string name="premium_view_description_paragraph_detection">Unit paragraf dikenali secara otomatis.</string>
-  <string name="premium_view_description_sense_group_detection">Splits a sentence into semantic chunks (sense groups) and translates each. Tap any word to see the meaning of the chunk it belongs to.</string>
-  <string name="premium_view_description_select_detection">Anda juga dapat menentukan area yang ingin diterjemahkan.</string>
-  <string name="premium_view_description_word_detection">Terjemahan kata per kata selalu gratis dan tanpa batas.</string>
-  <string name="premium_view_description_fixed_area_detection">Anda dapat menerjemahkan area tetap secara terus-menerus, seperti subtitle film.</string>
-  <string name="premium_view_unsubscribe">Batalkan Langganan</string>
 </resources>
