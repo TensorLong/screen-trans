@@ -12,10 +12,11 @@ data class PointerOffset(
     val x: Int,
     val y: Int,
 ) {
-    fun encode(): String = "$x,$y"
+    fun encode(): String = "${Companion.TARGET_FROM_HANDLE_PREFIX}$x,$y"
 
     companion object {
         val DEFAULT = PointerOffset(0, 0)
+        private const val TARGET_FROM_HANDLE_PREFIX = "target-from-handle:"
 
         fun fromTargetAndPointerCenters(
             targetCenterX: Int,
@@ -45,11 +46,32 @@ data class PointerOffset(
             defaultValue: PointerOffset = DEFAULT,
         ): PointerOffset {
             if (value.isNullOrBlank()) return defaultValue
-            val parts = value.split(",")
+            val rawValue = value.removePrefix(TARGET_FROM_HANDLE_PREFIX)
+            val parts = rawValue.split(",")
             if (parts.size != 2) return defaultValue
             val x = parts[0].trim().toIntOrNull() ?: return defaultValue
             val y = parts[1].trim().toIntOrNull() ?: return defaultValue
             return PointerOffset(x, y)
+        }
+
+        fun decodeTargetFromHandle(
+            value: String?,
+            defaultValue: PointerOffset,
+        ): PointerOffset {
+            if (value.isNullOrBlank()) return defaultValue
+            if (value.startsWith(TARGET_FROM_HANDLE_PREFIX)) {
+                return decode(value, defaultValue)
+            }
+
+            val legacyOffset = decode(value, DEFAULT)
+            // v2.7.2 saved unversioned target-from-handle values; migrate only legacy values that would hide the icon behind the handle.
+            if (legacyOffset.y <= defaultValue.y) {
+                return legacyOffset
+            }
+            return PointerOffset(
+                x = defaultValue.x + legacyOffset.x,
+                y = defaultValue.y + legacyOffset.y,
+            )
         }
     }
 }
@@ -80,6 +102,18 @@ object PointerCoordinateMapper {
     ): Point {
         val (x, y) = toOcrPoint(visualPointerPoint.x, visualPointerPoint.y, offset)
         return Point(x, y)
+    }
+}
+
+object PointerIconPlacement {
+    fun targetIconOffset(
+        edgeCorrectionX: Int,
+        edgeCorrectionY: Int,
+        targetFromHandleOffset: PointerOffset,
+        defaultTargetFromHandleOffset: PointerOffset,
+    ): Pair<Int, Int> {
+        return edgeCorrectionX + targetFromHandleOffset.x - defaultTargetFromHandleOffset.x to
+                edgeCorrectionY + targetFromHandleOffset.y - defaultTargetFromHandleOffset.y
     }
 }
 

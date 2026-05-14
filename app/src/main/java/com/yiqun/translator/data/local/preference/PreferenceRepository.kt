@@ -166,11 +166,11 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
     }
 
     val pointerLeftOffsetFlow: Flow<PointerOffset> = preferenceFlow.map { preferences ->
-        PointerOffset.decode(preferences[POINTER_LEFT_OFFSET], defaultPointerOffset)
+        PointerOffset.decodeTargetFromHandle(preferences[POINTER_LEFT_OFFSET], defaultPointerOffset)
     }
 
     val pointerRightOffsetFlow: Flow<PointerOffset> = preferenceFlow.map { preferences ->
-        PointerOffset.decode(preferences[POINTER_RIGHT_OFFSET], defaultPointerOffset)
+        PointerOffset.decodeTargetFromHandle(preferences[POINTER_RIGHT_OFFSET], defaultPointerOffset)
     }
 
     val dualPointerEnabledFlow: Flow<Boolean> = preferenceFlow.map { preferences ->

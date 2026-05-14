@@ -48,6 +48,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.dynamicanimation.animation.FloatValueHolder
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
@@ -192,8 +193,12 @@ class TargetHandleView private constructor(
         val menuOperatingState by MenuBarView.operatingStateFlow.collectAsStateWithLifecycle()
         val pointerOffsetX by pointerOffsetXState.collectAsStateWithLifecycle()
         val pointerOffsetY by pointerOffsetYState.collectAsStateWithLifecycle()
-        val targetIconOffsetX = pointerOffsetX + targetFromHandleOffset.x - defaultTargetFromHandleOffset.x
-        val targetIconOffsetY = pointerOffsetY + targetFromHandleOffset.y - defaultTargetFromHandleOffset.y
+        val (targetIconOffsetX, targetIconOffsetY) = PointerIconPlacement.targetIconOffset(
+            edgeCorrectionX = pointerOffsetX,
+            edgeCorrectionY = pointerOffsetY,
+            targetFromHandleOffset = targetFromHandleOffset,
+            defaultTargetFromHandleOffset = defaultTargetFromHandleOffset,
+        )
         val translationState by viewModel.translationFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
             initialValue = null
@@ -272,7 +277,8 @@ class TargetHandleView private constructor(
             Box(
                 modifier = Modifier
                     .size(dimensionResource(id = R.dimen.target_pointer_dimen))
-                    .offset { IntOffset(targetIconOffsetX, targetIconOffsetY) },
+                    .offset { IntOffset(targetIconOffsetX, targetIconOffsetY) }
+                    .zIndex(1f),
                 contentAlignment = Alignment.Center
             ) {
                 if (translateStatus == TranslateStatus.Requested && textDetectMode != TextDetectMode.SELECT) {

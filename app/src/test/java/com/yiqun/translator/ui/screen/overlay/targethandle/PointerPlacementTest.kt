@@ -78,7 +78,39 @@ class PointerPlacementTest {
     fun pointerOffsetRoundTripsThroughPreferenceValue() {
         val offset = PointerOffset(x = -18, y = 27)
 
-        assertEquals(offset, PointerOffset.decode(offset.encode()))
+        assertEquals(offset, PointerOffset.decodeTargetFromHandle(offset.encode(), PointerOffset(x = 0, y = -65)))
+    }
+
+    @Test
+    fun legacyStoredDefaultOffsetMigratesToVisibleTargetIconPosition() {
+        val defaultOffset = PointerOffset(x = 0, y = -65)
+        val migratedOffset = PointerOffset.decodeTargetFromHandle("0,0", defaultOffset)
+
+        assertEquals(defaultOffset, migratedOffset)
+        assertEquals(
+            0 to 0,
+            PointerIconPlacement.targetIconOffset(
+                edgeCorrectionX = 0,
+                edgeCorrectionY = 0,
+                targetFromHandleOffset = migratedOffset,
+                defaultTargetFromHandleOffset = defaultOffset,
+            )
+        )
+    }
+
+    @Test
+    fun versionedTargetFromHandleOffsetIsNotMigratedAgain() {
+        val defaultOffset = PointerOffset(x = 0, y = -65)
+        val savedOffset = PointerOffset(x = 6, y = -72)
+
+        assertEquals(savedOffset, PointerOffset.decodeTargetFromHandle(savedOffset.encode(), defaultOffset))
+    }
+
+    @Test
+    fun unversionedTargetFromHandleOffsetThatKeepsIconVisibleIsNotMigratedAgain() {
+        val defaultOffset = PointerOffset(x = 0, y = -65)
+
+        assertEquals(defaultOffset, PointerOffset.decodeTargetFromHandle("0,-65", defaultOffset))
     }
 
     @Test
