@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.SignalWifiStatusbarConnectedNoInte
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntOffset
@@ -129,6 +131,12 @@ class TargetHandleView private constructor(
 
     private var viewHeight = 0
 
+    private var handleWidth = 0
+
+    private var handleCenterX = 0
+
+    private var handleCenterY = 0
+
     private var pointerDimen = 0
 
     private var pointerThumbSpace = 0
@@ -143,6 +151,7 @@ class TargetHandleView private constructor(
 
     override val composable: @Composable () -> Unit = @Composable {
         val context = LocalContext.current
+        val density = LocalDensity.current
         val lifecycleOwner = LocalLifecycleOwner.current
         val screenInfo: ScreenInfo = ScreenInfoHolder.get()
         val isDarkMode = isSystemInDarkTheme()
@@ -193,12 +202,16 @@ class TargetHandleView private constructor(
         val menuOperatingState by MenuBarView.operatingStateFlow.collectAsStateWithLifecycle()
         val pointerOffsetX by pointerOffsetXState.collectAsStateWithLifecycle()
         val pointerOffsetY by pointerOffsetYState.collectAsStateWithLifecycle()
-        val (targetIconOffsetX, targetIconOffsetY) = PointerIconPlacement.targetIconOffset(
-            edgeCorrectionX = pointerOffsetX,
-            edgeCorrectionY = pointerOffsetY,
-            targetFromHandleOffset = targetFromHandleOffset,
-            defaultTargetFromHandleOffset = defaultTargetFromHandleOffset,
-        )
+        val overlayLayout = remember(pointerDimen, handleWidth, targetFromHandleOffset) {
+            PointerOverlayLayout.fromTargetFromHandleOffset(
+                pointerDimen = pointerDimen,
+                handleWidth = handleWidth,
+                targetFromHandleOffset = targetFromHandleOffset,
+            )
+        }
+        SideEffect {
+            updateOverlayLayout(context, overlayLayout)
+        }
         val translationState by viewModel.translationFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
             initialValue = null
@@ -265,19 +278,22 @@ class TargetHandleView private constructor(
             }
         }
 
-        Column(
+        Box(
             modifier = Modifier
-                .wrapContentSize()
 //                .background(Color.Cyan)
                 .alpha(if (captureStatus == CaptureStatus.Requested || (textDetectMode == TextDetectMode.FIXED_AREA && fixedAreaViewState == FixedAreaView.State.Translating)) 0.01f else 1.0f)
-                .width(dimensionResource(id = R.dimen.target_handle_width))
-                .height(dimensionResource(id = R.dimen.target_handle_height)),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .width(with(density) { overlayLayout.width.toDp() })
+                .height(with(density) { overlayLayout.height.toDp() }),
         ) {
             Box(
                 modifier = Modifier
                     .size(dimensionResource(id = R.dimen.target_pointer_dimen))
-                    .offset { IntOffset(targetIconOffsetX, targetIconOffsetY) }
+                    .offset {
+                        IntOffset(
+                            overlayLayout.targetIconTopLeftX + pointerOffsetX,
+                            overlayLayout.targetIconTopLeftY + pointerOffsetY,
+                        )
+                    }
                     .zIndex(1f),
                 contentAlignment = Alignment.Center
             ) {
@@ -306,11 +322,14 @@ class TargetHandleView private constructor(
                     } else null
                 )
             }
-            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.target_handle_pointer_thumb_space)))
             Box(
                 modifier = Modifier
 //                .background(Color.Blue)
-                    .size(dimensionResource(id = R.dimen.target_handle_width)),
+                    .size(dimensionResource(id = R.dimen.target_handle_width))
+                    .offset {
+                        val (x, y) = overlayLayout.handleTopLeft
+                        IntOffset(x, y)
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 val alpha by rememberInfiniteTransition(label = "service live anim").animateFloat(
@@ -430,8 +449,8 @@ class TargetHandleView private constructor(
                         val loc = IntArray(2)
                         view?.getLocationOnScreen(loc)
 
-                        val centerX = loc[0] + viewWidth / 2
-                        val adjustionPositionWidth = viewWidth * 6 / 10
+                        val centerX = loc[0] + handleCenterX
+                        val adjustionPositionWidth = handleWidth * 6 / 10
 
                         val _screenStartAdjustionPosition = adjustionPositionWidth
                         val _screenEndAdjustionPosition = screenInfo.width - adjustionPositionWidth
@@ -450,8 +469,8 @@ class TargetHandleView private constructor(
                         val _pointerOffsetY = if (bottomLeft > _screenBottomStart) (bottomLeft - _screenBottomStart) / 2 else 0
                         pointerOffsetYState.value = _pointerOffsetY
 
-                        val x = layoutParams.x + viewWidth / 2 + _pointerOffsetX
-                        val y = layoutParams.y + pointerDimen + pointerThumbSpace + viewWidth / 2 + _pointerOffsetY
+                        val x = layoutParams.x + handleCenterX + _pointerOffsetX
+                        val y = layoutParams.y + handleCenterY + _pointerOffsetY
                         viewModel.updatePointerPosition(pointerSide, Point(x, y))
                     }
 
@@ -468,13 +487,55 @@ class TargetHandleView private constructor(
         castWithMode(applicationContext, false)
     }
 
+    private fun updateOverlayLayout(
+        context: Context,
+        overlayLayout: PointerOverlayLayout,
+    ) {
+        if (
+            viewWidth == overlayLayout.width
+            && viewHeight == overlayLayout.height
+            && handleCenterX == overlayLayout.handleCenterX
+            && handleCenterY == overlayLayout.handleCenterY
+        ) {
+            return
+        }
+
+        val preserveHandlePosition = ::layoutParams.isInitialized && isRunning.get()
+        val oldHandleX = if (preserveHandlePosition) layoutParams.x + handleCenterX else 0
+        val oldHandleY = if (preserveHandlePosition) layoutParams.y + handleCenterY else 0
+
+        viewWidth = overlayLayout.width
+        viewHeight = overlayLayout.height
+        handleCenterX = overlayLayout.handleCenterX
+        handleCenterY = overlayLayout.handleCenterY
+
+        if (preserveHandlePosition) {
+            layoutParams.x = oldHandleX - handleCenterX
+            layoutParams.y = oldHandleY - handleCenterY
+            updateLayout(context)
+        }
+    }
+
     suspend fun castWithMode(applicationContext: Context, dualPointerMode: Boolean) {
         this.dualPointerMode = dualPointerMode
         val screenInfo: ScreenInfo = ScreenInfoHolder.get()
-        viewWidth = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_width)
-        viewHeight = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_height)
+        handleWidth = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_width)
         pointerDimen = applicationContext.resources.getDimensionPixelSize(R.dimen.target_pointer_dimen)
         pointerThumbSpace = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_pointer_thumb_space)
+        val defaultTargetFromHandleOffset = PointerOffset.defaultTargetFromHandleOffset(
+            pointerDimen = pointerDimen,
+            handleWidth = handleWidth,
+            pointerThumbSpace = pointerThumbSpace,
+        )
+        val overlayLayout = PointerOverlayLayout.fromTargetFromHandleOffset(
+            pointerDimen = pointerDimen,
+            handleWidth = handleWidth,
+            targetFromHandleOffset = defaultTargetFromHandleOffset,
+        )
+        viewWidth = overlayLayout.width
+        viewHeight = overlayLayout.height
+        handleCenterX = overlayLayout.handleCenterX
+        handleCenterY = overlayLayout.handleCenterY
 //        Timber.tag(TAG).d("viewWidth $viewWidth")
 //        Timber.tag(TAG).d("viewHeight $viewHeight")
 //        Timber.tag(TAG).d("pointerDimen $pointerDimen")
@@ -514,14 +575,15 @@ class TargetHandleView private constructor(
     }
 
     private fun startX(screenInfo: ScreenInfo): Int {
-        val x = if (!dualPointerMode) {
-            screenInfo.width / 2 - viewWidth / 2
+        val handleX = if (!dualPointerMode) {
+            screenInfo.width / 2
         } else {
             when (pointerSide) {
-                PointerSide.LEFT -> screenInfo.width / 4 - viewWidth / 2
-                PointerSide.RIGHT -> screenInfo.width * 3 / 4 - viewWidth / 2
+                PointerSide.LEFT -> screenInfo.width / 4
+                PointerSide.RIGHT -> screenInfo.width * 3 / 4
             }
         }
+        val x = handleX - handleCenterX
         return x.coerceIn(0, (screenInfo.width - viewWidth).coerceAtLeast(0))
     }
 

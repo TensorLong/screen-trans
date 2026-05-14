@@ -114,6 +114,48 @@ class PointerPlacementTest {
     }
 
     @Test
+    fun fixedOverlayReproducesCustomizedTargetIconClipping() {
+        val defaultOffset = PointerOffset(x = 0, y = -65)
+        val customizedOffset = PointerOffset(x = 0, y = -95)
+        val (_, targetIconOffsetY) = PointerIconPlacement.targetIconOffset(
+            edgeCorrectionX = 0,
+            edgeCorrectionY = 0,
+            targetFromHandleOffset = customizedOffset,
+            defaultTargetFromHandleOffset = defaultOffset,
+        )
+
+        assertTrue(targetIconOffsetY < 0)
+    }
+
+    @Test
+    fun overlayLayoutKeepsTargetIconVisibleAfterCustomizedDistance() {
+        val layout = PointerOverlayLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 0, y = -95),
+        )
+
+        assertEquals(70, layout.width)
+        assertEquals(142, layout.height)
+        assertEquals(23 to 0, layout.targetIconTopLeft)
+        assertEquals(35 to 107, layout.handleCenter)
+    }
+
+    @Test
+    fun overlayLayoutKeepsHorizontallyCustomizedTargetIconVisible() {
+        val layout = PointerOverlayLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 60, y = -65),
+        )
+
+        assertEquals(107, layout.width)
+        assertEquals(112, layout.height)
+        assertEquals(83 to 0, layout.targetIconTopLeft)
+        assertEquals(35 to 77, layout.handleCenter)
+    }
+
+    @Test
     fun pointerDisplayPolicyDefaultsToDualPointerOnlyOnLargeDevices() {
         assertFalse(
             PointerDisplayPolicy.defaultDualPointerEnabled(

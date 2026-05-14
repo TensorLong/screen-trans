@@ -117,6 +117,50 @@ object PointerIconPlacement {
     }
 }
 
+data class PointerOverlayLayout(
+    val width: Int,
+    val height: Int,
+    val handleCenterX: Int,
+    val handleCenterY: Int,
+    val targetIconTopLeftX: Int,
+    val targetIconTopLeftY: Int,
+    val handleWidth: Int,
+) {
+    val handleCenter: Pair<Int, Int>
+        get() = handleCenterX to handleCenterY
+
+    val handleTopLeft: Pair<Int, Int>
+        get() = handleCenterX - handleWidth / 2 to handleCenterY - handleWidth / 2
+
+    val targetIconTopLeft: Pair<Int, Int>
+        get() = targetIconTopLeftX to targetIconTopLeftY
+
+    companion object {
+        fun fromTargetFromHandleOffset(
+            pointerDimen: Int,
+            handleWidth: Int,
+            targetFromHandleOffset: PointerOffset,
+        ): PointerOverlayLayout {
+            val pointerHalf = pointerDimen / 2
+            val handleHalf = handleWidth / 2
+            val left = minOf(-handleHalf, targetFromHandleOffset.x - pointerHalf)
+            val top = minOf(-handleHalf, targetFromHandleOffset.y - pointerHalf)
+            val right = maxOf(handleWidth - handleHalf, targetFromHandleOffset.x - pointerHalf + pointerDimen)
+            val bottom = maxOf(handleWidth - handleHalf, targetFromHandleOffset.y - pointerHalf + pointerDimen)
+
+            return PointerOverlayLayout(
+                width = right - left,
+                height = bottom - top,
+                handleCenterX = -left,
+                handleCenterY = -top,
+                targetIconTopLeftX = targetFromHandleOffset.x - pointerHalf - left,
+                targetIconTopLeftY = targetFromHandleOffset.y - pointerHalf - top,
+                handleWidth = handleWidth,
+            )
+        }
+    }
+}
+
 enum class DeviceFormFactor {
     PHONE,
     FOLDABLE,
