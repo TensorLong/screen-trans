@@ -63,8 +63,9 @@
     <string name="settings_menu_pointer_distance">Pointer Distance</string>
     <string name="settings_menu_pointer_distance_single">Single</string>
     <string name="settings_menu_pointer_distance_dual">Left / Right</string>
-    <string name="settings_menu_pointer_distance_helper">Drag the pointer around the sample OCR frame. Test uses the temporary position; Save makes it permanent.</string>
+    <string name="settings_menu_pointer_distance_helper">The OCR target stays fixed on the sample text. Drag the Pointer circle to set its distance from the target; Save makes it permanent.</string>
     <string name="settings_menu_pointer_distance_sample">Sample text for pointer testing</string>
+    <string name="settings_menu_pointer_distance_preview">Preview: the highlighted box is the target selected from this Pointer distance.</string>
     <string name="settings_menu_pointer_distance_reset">Reset</string>
     <string name="settings_menu_dual_pointer">Dual Pointer</string>
     <string name="settings_menu_pointer_single">Pointer</string>

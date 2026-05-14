@@ -36,6 +36,26 @@ class PointerPlacementTest {
     }
 
     @Test
+    fun pointerOffsetRepresentsPointerCenterToTargetBoxCenter() {
+        val offset = PointerOffset.fromTargetAndPointerCenters(
+            targetCenterX = 100,
+            targetCenterY = 80,
+            pointerCenterX = 70,
+            pointerCenterY = 110,
+        )
+
+        assertEquals(PointerOffset(x = 30, y = -30), offset)
+        assertEquals(
+            100 to 80,
+            PointerCoordinateMapper.toOcrPoint(
+                visualPointerX = 70,
+                visualPointerY = 110,
+                offset = offset,
+            )
+        )
+    }
+
+    @Test
     fun pointerOffsetRoundTripsThroughPreferenceValue() {
         val offset = PointerOffset(x = -18, y = 27)
 

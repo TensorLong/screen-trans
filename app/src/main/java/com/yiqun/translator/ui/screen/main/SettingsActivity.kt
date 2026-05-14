@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.StrictMode
 import android.os.StrictMode.ThreadPolicy
 import android.view.WindowInsets
+import androidx.activity.compose.BackHandler
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -21,6 +22,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -71,11 +73,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -127,14 +131,17 @@ import com.yiqun.translator.ui.screen.overlay.languagelist.LanguageListView
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuBar
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuBarView
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuConfig
+import com.yiqun.translator.ui.screen.overlay.menubar.SettingsSurface
 import com.yiqun.translator.ui.screen.overlay.settings.HelpTextDetectModeView
 import com.yiqun.translator.ui.screen.overlay.settings.HelpTranslationKitView
 import com.yiqun.translator.ui.screen.overlay.settings.SliderDialogView
 import com.yiqun.translator.ui.screen.overlay.targethandle.DeviceFormFactorResolver
-import com.yiqun.translator.ui.screen.overlay.targethandle.PointerCoordinateMapper
 import com.yiqun.translator.ui.screen.overlay.targethandle.PointerDisplayPolicy
 import com.yiqun.translator.ui.screen.overlay.targethandle.PointerOffset
+import com.yiqun.translator.ui.screen.overlay.targethandle.PointerSide
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleView
+import com.yiqun.translator.ui.screen.overlay.translation.TranslationView
+import com.yiqun.translator.ui.screen.overlay.visiontext.VisionTextView
 import com.yiqun.translator.ui.screen.overlay.voicelist.VoiceListView
 import com.yiqun.translator.ui.screen.permissions.ScreenCapturePermissionRequesterActivity
 import com.yiqun.translator.ui.theme.SenseGroupTranslatorTheme
@@ -172,6 +179,8 @@ class SettingsActivity : AVDActivity() {
 
         val aiApiSettingsDialogLiveStateFlow = MutableStateFlow(false)
 
+        val settingsSurfaceFlow = MutableStateFlow(SettingsSurface.HOME)
+
         val menuBarViewSettlePositionFlow = MutableStateFlow<Point?>(null)
     }
 
@@ -188,6 +197,7 @@ class SettingsActivity : AVDActivity() {
         super.onCreate(savedInstanceState)
 
         ScreenInfoHolder.collectAndStoreScreenInfo(this)
+        settingsSurfaceFlow.value = SettingsSurface.HOME
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             val policy = ThreadPolicy.Builder().permitAll().build()
@@ -468,8 +478,29 @@ class SettingsActivity : AVDActivity() {
         var aiApiKeyIsSet by remember {
             mutableStateOf(ApiKeyInfo.chatgptKeyAvailable(context))
         }
-        LaunchedEffect(showAiApiSettingsDialog) {
+        LaunchedEffect(showPointerCalibration, showAiApiSettingsDialog) {
+            settingsSurfaceFlow.value = when {
+                showPointerCalibration -> SettingsSurface.POINTER_DISTANCE
+                showAiApiSettingsDialog -> SettingsSurface.AI_API
+                else -> SettingsSurface.HOME
+            }
             aiApiSettingsDialogLiveStateFlow.value = showAiApiSettingsDialog
+        }
+        var pointerCalibrationWasOpen by remember { mutableStateOf(false) }
+        LaunchedEffect(showPointerCalibration) {
+            if (showPointerCalibration) {
+                pointerCalibrationWasOpen = true
+                closeTranslation()
+                TargetHandleView.clearAll()
+                VisionTextView.INSTANCE.clear()
+                TranslationView.INSTANCE.clear()
+            } else if (pointerCalibrationWasOpen) {
+                TargetHandleView.castConfigured(
+                    applicationContext = applicationContext,
+                    dualPointerMode = dualPointerEnabled
+                )
+                pointerCalibrationWasOpen = false
+            }
         }
 
         // Automatic translation playback
@@ -1444,6 +1475,9 @@ class SettingsActivity : AVDActivity() {
         }
 
         if (showPointerCalibration) {
+            BackHandler {
+                showPointerCalibration = false
+            }
             PointerDistanceCalibrationView(
                 leftOffset = pointerLeftOffset,
                 rightOffset = pointerRightOffset,
@@ -1456,9 +1490,6 @@ class SettingsActivity : AVDActivity() {
                     closeTranslation()
                     viewModel.updatePointerOffset(left, right)
                     showPointerCalibration = false
-                },
-                onTest = { point ->
-                    runTranslation(point, TextDetectMode.SENTENCE)
                 },
             )
         }
@@ -1497,14 +1528,19 @@ class SettingsActivity : AVDActivity() {
         dualPointerEnabled: Boolean,
         onDismissRequest: () -> Unit,
         onConfirm: (PointerOffset, PointerOffset) -> Unit,
-        onTest: (Point) -> Unit,
     ) {
         var currentLeftOffset by remember(leftOffset) { mutableStateOf(leftOffset) }
         var currentRightOffset by remember(rightOffset) { mutableStateOf(rightOffset) }
+        var activeSide by remember(dualPointerEnabled) { mutableStateOf(PointerSide.LEFT) }
+        var previewTick by remember { mutableStateOf(0) }
         val isDarkMode = isSystemInDarkTheme()
         val backgroundColor = if (isDarkMode) Color(0xFF101012) else Color(0xFFf8f8fb)
         val contentColor = if (isDarkMode) Color(0xFFfcfcfc) else Color(0xFF010000)
         val subContentColor = if (isDarkMode) Color(0xFFc8c8cc) else Color(0xFF626265)
+        val activeOffset = when (activeSide) {
+            PointerSide.LEFT -> currentLeftOffset
+            PointerSide.RIGHT -> currentRightOffset
+        }
 
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -1532,44 +1568,61 @@ class SettingsActivity : AVDActivity() {
                         color = subContentColor,
                         style = MaterialTheme.typography.bodyMedium
                     )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    PointerCalibrationTarget(
-                        modifier = Modifier.weight(1f),
-                        label = if (dualPointerEnabled) getString(R.string.settings_menu_pointer_left) else getString(R.string.settings_menu_pointer_single),
-                        offset = currentLeftOffset,
-                        onOffsetChange = { currentLeftOffset = it },
-                        onTest = { anchor ->
-                            val (x, y) = PointerCoordinateMapper.toOcrPoint(
-                                visualPointerX = anchor.x - currentLeftOffset.x,
-                                visualPointerY = anchor.y - currentLeftOffset.y,
-                                offset = currentLeftOffset
-                            )
-                            onTest(Point(x, y))
-                        },
-                    )
                     if (dualPointerEnabled) {
-                        PointerCalibrationTarget(
-                            modifier = Modifier.weight(1f),
-                            label = getString(R.string.settings_menu_pointer_right),
-                            offset = currentRightOffset,
-                            onOffsetChange = { currentRightOffset = it },
-                            onTest = { anchor ->
-                                val (x, y) = PointerCoordinateMapper.toOcrPoint(
-                                    visualPointerX = anchor.x - currentRightOffset.x,
-                                    visualPointerY = anchor.y - currentRightOffset.y,
-                                    offset = currentRightOffset
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    activeSide = PointerSide.LEFT
+                                    previewTick = 0
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (activeSide == PointerSide.LEFT) Color(0xFF446987) else Color(0xFF777777)
                                 )
-                                onTest(Point(x, y))
-                            },
-                        )
+                            ) {
+                                Text(getString(R.string.settings_menu_pointer_left))
+                            }
+                            Button(
+                                modifier = Modifier.weight(1f),
+                                onClick = {
+                                    activeSide = PointerSide.RIGHT
+                                    previewTick = 0
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (activeSide == PointerSide.RIGHT) Color(0xFF446987) else Color(0xFF777777)
+                                )
+                            ) {
+                                Text(getString(R.string.settings_menu_pointer_right))
+                            }
+                        }
                     }
                 }
+
+                PointerCalibrationTarget(
+                    modifier = Modifier.fillMaxWidth(),
+                    label = if (dualPointerEnabled) {
+                        when (activeSide) {
+                            PointerSide.LEFT -> getString(R.string.settings_menu_pointer_left)
+                            PointerSide.RIGHT -> getString(R.string.settings_menu_pointer_right)
+                        }
+                    } else {
+                        getString(R.string.settings_menu_pointer_single)
+                    },
+                    offset = activeOffset,
+                    previewTick = previewTick,
+                    onOffsetChange = { offset ->
+                        previewTick = 0
+                        when (activeSide) {
+                            PointerSide.LEFT -> currentLeftOffset = offset
+                            PointerSide.RIGHT -> currentRightOffset = offset
+                        }
+                    },
+                    onPreview = { previewTick++ },
+                )
 
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -1582,8 +1635,11 @@ class SettingsActivity : AVDActivity() {
                         Button(
                             modifier = Modifier.weight(1f),
                             onClick = {
-                                currentLeftOffset = PointerOffset.DEFAULT
-                                currentRightOffset = PointerOffset.DEFAULT
+                                previewTick = 0
+                                when (activeSide) {
+                                    PointerSide.LEFT -> currentLeftOffset = PointerOffset.DEFAULT
+                                    PointerSide.RIGHT -> currentRightOffset = PointerOffset.DEFAULT
+                                }
                             },
                         ) {
                             Text(getString(R.string.settings_menu_pointer_distance_reset))
@@ -1612,13 +1668,15 @@ class SettingsActivity : AVDActivity() {
         modifier: Modifier = Modifier,
         label: String,
         offset: PointerOffset,
+        previewTick: Int,
         onOffsetChange: (PointerOffset) -> Unit,
-        onTest: (Point) -> Unit,
+        onPreview: () -> Unit,
     ) {
-        var anchorPoint by remember { mutableStateOf(Point(0, 0)) }
         val isDarkMode = isSystemInDarkTheme()
         val borderColor = if (isDarkMode) Color(0xFF6a91b2) else Color(0xFF446987)
         val textColor = if (isDarkMode) Color(0xFFfcfcfc) else Color(0xFF010000)
+        val previewVisible = previewTick > 0
+        val latestOffset by rememberUpdatedState(offset)
 
         Column(
             modifier = modifier,
@@ -1640,14 +1698,36 @@ class SettingsActivity : AVDActivity() {
                     ),
                 contentAlignment = Alignment.Center
             ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val targetCenter = Offset(size.width / 2f, size.height / 2f)
+                    val pointerCenter = Offset(
+                        x = targetCenter.x - offset.x,
+                        y = targetCenter.y - offset.y,
+                    )
+                    drawLine(
+                        color = borderColor.copy(alpha = 0.65f),
+                        start = pointerCenter,
+                        end = targetCenter,
+                        strokeWidth = 3f,
+                    )
+                    drawCircle(
+                        color = borderColor.copy(alpha = 0.28f),
+                        radius = 8f,
+                        center = targetCenter,
+                    )
+                }
                 Box(
                     modifier = Modifier
-                        .border(1.5.dp, borderColor, RoundedCornerShape(10.dp))
+                        .border(
+                            width = if (previewVisible) 3.dp else 1.5.dp,
+                            color = if (previewVisible) Color(0xFF48baef) else borderColor,
+                            shape = RoundedCornerShape(10.dp)
+                        )
                         .padding(12.dp)
-                        .onGloballyPositioned { coordinates ->
-                            val center = coordinates.boundsInWindow().center
-                            anchorPoint = Point(center.x.roundToInt(), center.y.roundToInt())
-                        },
+                        .background(
+                            color = if (previewVisible) Color(0x3348baef) else Color.Transparent,
+                            shape = RoundedCornerShape(10.dp)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -1662,12 +1742,12 @@ class SettingsActivity : AVDActivity() {
                     modifier = Modifier
                         .size(34.dp)
                         .offset { androidx.compose.ui.unit.IntOffset(-offset.x, -offset.y) }
-                        .pointerInput(offset) {
+                        .pointerInput(Unit) {
                             detectDragGestures { _, dragAmount ->
                                 onOffsetChange(
                                     PointerOffset(
-                                        x = offset.x - dragAmount.x.roundToInt(),
-                                        y = offset.y - dragAmount.y.roundToInt(),
+                                        x = latestOffset.x - dragAmount.x.roundToInt(),
+                                        y = latestOffset.y - dragAmount.y.roundToInt(),
                                     )
                                 )
                             }
@@ -1676,9 +1756,17 @@ class SettingsActivity : AVDActivity() {
             }
             Spacer(modifier = Modifier.height(10.dp))
             Button(
-                onClick = { onTest(anchorPoint) },
+                onClick = onPreview,
             ) {
                 Text(getString(R.string.settings_menu_ai_api_test))
+            }
+            if (previewVisible) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = getString(R.string.settings_menu_pointer_distance_preview),
+                    color = textColor,
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
     }

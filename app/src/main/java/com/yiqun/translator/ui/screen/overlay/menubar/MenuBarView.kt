@@ -142,7 +142,11 @@ class MenuBarView private constructor() : OverlayView() {
             val targetHandleMotionEventState by targetHandleViewModel.motionEventFlow.collectAsStateWithLifecycle()
 
             val settingsActivityLiveState by SettingsActivity.liveStateFlow.collectAsStateWithLifecycle()
-            val aiApiSettingsDialogLiveState by SettingsActivity.aiApiSettingsDialogLiveStateFlow.collectAsStateWithLifecycle()
+            val settingsSurface by SettingsActivity.settingsSurfaceFlow.collectAsStateWithLifecycle()
+            val settingsHomeMenuVisible = MenuBarVisibilityPolicy.visibleInSettings(
+                activityLive = settingsActivityLiveState,
+                surface = settingsSurface,
+            )
 
             // Drag handle dock state
             val dragHandleDockState by targetHandleViewModel.dockStateFlow.collectAsStateWithLifecycle()
@@ -159,7 +163,7 @@ class MenuBarView private constructor() : OverlayView() {
                 captureStatus,
                 targetHandleMotionEventState,
                 settingsActivityLiveState,
-                aiApiSettingsDialogLiveState,
+                settingsSurface,
                 dragHandleDockState,
                 textDetectMode,
                 fixedAreaViewState
@@ -167,8 +171,7 @@ class MenuBarView private constructor() : OverlayView() {
 
                 view?.let {
                     val menuVisible = when {
-                        aiApiSettingsDialogLiveState -> false
-                        settingsActivityLiveState -> true
+                        settingsActivityLiveState -> settingsHomeMenuVisible
                         captureStatus != CaptureStatus.Requested
                                 && targetHandleMotionEventState != MotionEvent.ACTION_MOVE
                                 && (!dragHandleDockState || menuBarDragState.value == MenuBarDragStates.Handling)
@@ -226,14 +229,14 @@ class MenuBarView private constructor() : OverlayView() {
             val sliderDialogLiveState by SliderDialogView.liveStateFlow.collectAsStateWithLifecycle()
 
             val alpha = when {
-                !settingsActivityLiveState -> menuBarTransparency
+                !settingsHomeMenuVisible -> menuBarTransparency
                 !sliderDialogLiveState -> 1.0f
                 menuBarVisibility -> menuBarTransparency
                 else -> 0.0f
             }
 
             val menuConfig = when {
-                settingsActivityLiveState || captureStatus == CaptureStatus.PermissionRequested -> MenuConfig.WHOLE
+                settingsHomeMenuVisible || captureStatus == CaptureStatus.PermissionRequested -> MenuConfig.WHOLE
                 else -> menuBarConfig
             }
 
@@ -274,7 +277,7 @@ class MenuBarView private constructor() : OverlayView() {
             val menuBarViewSettlePosition by SettingsActivity.menuBarViewSettlePositionFlow.collectAsStateWithLifecycle()
             menuBarViewSettlePosition?.let { newPosition ->
                 Timber.tag(TAG).d("newPosition $newPosition settingsActivityLiveState $settingsActivityLiveState")
-                if (settingsActivityLiveState) {
+                if (settingsHomeMenuVisible) {
                     updateLayout(context, newPosition.x, newPosition.y)
                 }
             }
@@ -362,7 +365,7 @@ class MenuBarView private constructor() : OverlayView() {
                     settingsButtonVisible = !settingsActivityLiveState,
                 )
 
-                if (settingsActivityLiveState) {
+                if (settingsHomeMenuVisible) {
                     Box(
                         modifier = Modifier
                             .size(26.dp)

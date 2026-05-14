@@ -17,6 +17,18 @@ data class PointerOffset(
     companion object {
         val DEFAULT = PointerOffset(0, 0)
 
+        fun fromTargetAndPointerCenters(
+            targetCenterX: Int,
+            targetCenterY: Int,
+            pointerCenterX: Int,
+            pointerCenterY: Int,
+        ): PointerOffset {
+            return PointerOffset(
+                x = targetCenterX - pointerCenterX,
+                y = targetCenterY - pointerCenterY,
+            )
+        }
+
         fun decode(value: String?): PointerOffset {
             if (value.isNullOrBlank()) return DEFAULT
             val parts = value.split(",")
