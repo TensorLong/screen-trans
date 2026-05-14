@@ -24,6 +24,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.util.Collections
+import java.util.IdentityHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -31,6 +33,12 @@ import kotlin.math.abs
 import kotlin.math.min
 import kotlin.properties.Delegates
 
+private const val TRACE_VISION_LOGS = false
+
+enum class AutoRecognitionPolicy {
+    FULL,
+    LATIN_FIRST,
+}
 
 @Singleton
 class VisionRepository @Inject constructor() {
@@ -88,26 +96,17 @@ class VisionRepository @Inject constructor() {
         sourceLanguageCode: String,
         coordinateOffsetX: Int = 0,
         coordinateOffsetY: Int = 0,
+        autoRecognitionPolicy: AutoRecognitionPolicy = AutoRecognitionPolicy.FULL,
     ): VisionResponse = coroutineScope {
         Timber.tag(TAG).i("#### request() ####  $sourceLanguageCode")
         val inputImage: InputImage = InputImage.fromBitmap(bitmap, 0)
 
         try {
-            val deferredResults: List<Deferred<Text?>> = getRecognizers(sourceLanguageCode).map { recognizer ->
-                async {
-                    try {
-                        Timber.tag(TAG).d("recognizer.detectorType : ${recognizer.type}")
-                        val text: Text = recognizer.process(inputImage)
-                        Timber.tag(TAG).d("_processSuspend text : ${text.text}")
-                        text
-                    } catch (e: Exception) {
-                        Timber.tag(TAG).e("Error processing text recognition: ${e.message}")
-                        null
-                    }
-                }
-            }
-
-            val processResults: List<Text?> = deferredResults.awaitAll()
+            val processResults: List<Text?> = processRecognizers(
+                inputImage = inputImage,
+                sourceLanguageCode = sourceLanguageCode,
+                autoRecognitionPolicy = autoRecognitionPolicy,
+            )
 
             val text = processResults.maxByOrNull { text ->
                 text?.textBlocks?.sumOf { block ->
@@ -121,7 +120,7 @@ class VisionRepository @Inject constructor() {
                 var _sourceLanguageCode = sourceLanguageCode
                 if (sourceLanguageCode == "auto") {
                     _sourceLanguageCode = identifyLanguage(text.text)
-                    Timber.tag(TAG).i("_sourceLanguageCode : $_sourceLanguageCode")
+                    if (TRACE_VISION_LOGS) Timber.tag(TAG).i("_sourceLanguageCode : $_sourceLanguageCode")
                 }
 
                 val isVerticalWriting = detectVerticalWriting(text)
@@ -133,7 +132,7 @@ class VisionRepository @Inject constructor() {
                 }
             }
 
-            VisionResponse.Success(Transaction(bitmap, text, detectedLanguageCode, analyzedParagraphs))
+            VisionResponse.Success(Transaction(text, detectedLanguageCode, analyzedParagraphs))
         } catch (e: Exception) {
             Timber.tag(TAG).e("Exception message: ${e.message}")
             Timber.tag(TAG).e("Stack trace:")
@@ -180,6 +179,34 @@ class VisionRepository @Inject constructor() {
         }
     }
 
+    private suspend fun processRecognizers(
+        inputImage: InputImage,
+        sourceLanguageCode: String,
+        autoRecognitionPolicy: AutoRecognitionPolicy,
+    ): List<Text?> = coroutineScope {
+        val recognizers = if (sourceLanguageCode == "auto" && autoRecognitionPolicy == AutoRecognitionPolicy.LATIN_FIRST) {
+            listOf(textRecognitionClient)
+        } else {
+            getRecognizers(sourceLanguageCode)
+        }
+
+        val deferredResults: List<Deferred<Text?>> = recognizers.map { recognizer ->
+            async {
+                try {
+                    if (TRACE_VISION_LOGS) Timber.tag(TAG).d("recognizer.detectorType : ${recognizer.type}")
+                    val text: Text = recognizer.process(inputImage)
+                    if (TRACE_VISION_LOGS) Timber.tag(TAG).d("_processSuspend text : ${text.text}")
+                    text
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e("Error processing text recognition: ${e.message}")
+                    null
+                }
+            }
+        }
+
+        deferredResults.awaitAll()
+    }
+
     private suspend fun identifyLanguage(text: String): String = suspendCancellableCoroutine { continuation ->
         val languageIdentifier = LanguageIdentification.getClient()
         languageIdentifier.identifyLanguage(text)
@@ -202,41 +229,53 @@ class VisionRepository @Inject constructor() {
         coordinateOffsetX: Int,
         coordinateOffsetY: Int,
     ): List<Paragraph> {
-        Timber.tag(TAG).i("#### textToParagraphs() ####  ${"\n" + text.text}")
+        if (TRACE_VISION_LOGS) Timber.tag(TAG).i("#### textToParagraphs() ####  ${"\n" + text.text}")
         setReferenceConstantValue(false, sourceLanguageCode)
 
         val elements: List<Text.Element> = convertTextLinesToTextElements(text.textBlocks.flatMap { textBlock -> textBlock.lines }, writingDirection)
 
-        elements.forEach {
-            Timber.tag(TAG).i("element : ${it.boundingBox} ${it.text} ${(it.boundingBox!!.width().toDouble() / it.boundingBox!!.height())._cutDecimal()}")
+        if (TRACE_VISION_LOGS) {
+            elements.forEach {
+                Timber.tag(TAG).i("element : ${it.boundingBox} ${it.text} ${(it.boundingBox!!.width().toDouble() / it.boundingBox!!.height())._cutDecimal()}")
+            }
         }
 
         val words: List<Word> = convertTextElementsToWords(bitmap, elements, writingDirection, coordinateOffsetX, coordinateOffsetY)
 
         val lines: List<Line> = groupWordsIntoLines(bitmap, words, writingDirection, coordinateOffsetX, coordinateOffsetY)
 
-        lines.forEach { Timber.tag(TAG).i("groupWordsIntoLines result : ${it.boundingBox}, ${it.representation}, ${it.words}") }
+        if (TRACE_VISION_LOGS) {
+            lines.forEach { Timber.tag(TAG).i("groupWordsIntoLines result : ${it.boundingBox}, ${it.representation}, ${it.words}") }
+        }
 
         var paragraphs: List<Paragraph> = groupLinesIntoParagraphs(lines, writingDirection)
 
-        paragraphs.forEach { Timber.tag(TAG).i("groupLinesIntoParagraphs result : ${it.hasParallelLines} ${it.boundingBox} ${it.representation}") }
+        if (TRACE_VISION_LOGS) {
+            paragraphs.forEach { Timber.tag(TAG).i("groupLinesIntoParagraphs result : ${it.hasParallelLines} ${it.boundingBox} ${it.representation}") }
+        }
 
         /**
          */
         paragraphs = paragraphs.flatMap { paragraph ->
             val splitParagraphs = detectAndSplitParagraphs(paragraph, writingDirection)
-            splitParagraphs.forEach {
-                Timber.tag(TAG).d("detectAndSplitParagraphs ${it.boundingBox} ${it.representation} ")
+            if (TRACE_VISION_LOGS) {
+                splitParagraphs.forEach {
+                    Timber.tag(TAG).d("detectAndSplitParagraphs ${it.boundingBox} ${it.representation} ")
+                }
             }
             val clusterParagraphs = correctDetectAndSplitParagraphs(splitParagraphs, writingDirection)
-            clusterParagraphs.forEach {
-                Timber.tag(TAG).d("correctDetectAndSplitParagraphs ${it.boundingBox} ${it.representation} ")
+            if (TRACE_VISION_LOGS) {
+                clusterParagraphs.forEach {
+                    Timber.tag(TAG).d("correctDetectAndSplitParagraphs ${it.boundingBox} ${it.representation} ")
+                }
             }
             clusterParagraphs
         }
 
-        paragraphs.forEach {
-            Timber.tag(TAG).i("paragraphs ${it.boundingBox} ${it.representation} ")
+        if (TRACE_VISION_LOGS) {
+            paragraphs.forEach {
+                Timber.tag(TAG).i("paragraphs ${it.boundingBox} ${it.representation} ")
+            }
         }
 
         return paragraphs
@@ -253,7 +292,7 @@ class VisionRepository @Inject constructor() {
         coordinateOffsetX: Int,
         coordinateOffsetY: Int,
     ): List<Paragraph> {
-        Timber.tag(TAG).i("#### textToVerticalParagraphs() ####  ${"\n" + text.text}")
+        if (TRACE_VISION_LOGS) Timber.tag(TAG).i("#### textToVerticalParagraphs() ####  ${"\n" + text.text}")
 
         val textLines: List<Text.Line> =
             text.textBlocks
@@ -266,7 +305,7 @@ class VisionRepository @Inject constructor() {
                     }
                 )
 
-        textLines.forEach { Timber.tag(TAG).i("textLine : ${it.boundingBox}, ${it.text}") }
+        if (TRACE_VISION_LOGS) textLines.forEach { Timber.tag(TAG).i("textLine : ${it.boundingBox}, ${it.text}") }
 
         val verticalLines = mutableListOf<Line>()
         val horizontalTextLines = mutableListOf<Text.Line>()
@@ -287,14 +326,18 @@ class VisionRepository @Inject constructor() {
         /** ####################################### verticalParagraphs ###################################### */
         setReferenceConstantValue(true, sourceLanguageCode)
         var verticalParagraphs: MutableList<Paragraph> = groupLinesIntoParagraphs(verticalLines, writingDirection).toMutableList()
-        verticalParagraphs.forEach { Timber.tag(TAG).i("groupLinesIntoParagraphs result : ${it.boundingBox} ${it.representation}") }
+        if (TRACE_VISION_LOGS) {
+            verticalParagraphs.forEach { Timber.tag(TAG).i("groupLinesIntoParagraphs result : ${it.boundingBox} ${it.representation}") }
+        }
 
         /**
          */
         verticalParagraphs = verticalParagraphs.flatMap { paragraph ->
             val splitParagraphs = detectAndSplitParagraphs(paragraph, writingDirection)
-            splitParagraphs.forEach {
-                Timber.tag(TAG).d("detectAndSplitParagraphs ${it.boundingBox} ${it.representation} ")
+            if (TRACE_VISION_LOGS) {
+                splitParagraphs.forEach {
+                    Timber.tag(TAG).d("detectAndSplitParagraphs ${it.boundingBox} ${it.representation} ")
+                }
             }
             splitParagraphs
         }.toMutableList()
@@ -308,18 +351,24 @@ class VisionRepository @Inject constructor() {
         var horizontalParagraphs: List<Paragraph> = groupLinesIntoParagraphs(lines, horizontalWritingDirection)
         horizontalParagraphs = horizontalParagraphs.flatMap { paragraph ->
             val splitParagraphs = detectAndSplitParagraphs(paragraph, horizontalWritingDirection)
-            splitParagraphs.forEach {
-                Timber.tag(TAG).d("detectAndSplitParagraphs ${it.boundingBox} ${it.representation} ")
+            if (TRACE_VISION_LOGS) {
+                splitParagraphs.forEach {
+                    Timber.tag(TAG).d("detectAndSplitParagraphs ${it.boundingBox} ${it.representation} ")
+                }
             }
             val clusterParagraphs = correctDetectAndSplitParagraphs(splitParagraphs, horizontalWritingDirection)
-            clusterParagraphs.forEach {
-                Timber.tag(TAG).d("correctDetectAndSplitParagraphs ${it.boundingBox} ${it.representation} ")
+            if (TRACE_VISION_LOGS) {
+                clusterParagraphs.forEach {
+                    Timber.tag(TAG).d("correctDetectAndSplitParagraphs ${it.boundingBox} ${it.representation} ")
+                }
             }
             clusterParagraphs
         }
 
-        verticalParagraphs.forEach { Timber.tag(TAG).i("verticalParagraphs : ${it.boundingBox} ${it.representation}") }
-        horizontalParagraphs.forEach { Timber.tag(TAG).i("horizontalParagraphs : ${it.boundingBox} ${it.representation}") }
+        if (TRACE_VISION_LOGS) {
+            verticalParagraphs.forEach { Timber.tag(TAG).i("verticalParagraphs : ${it.boundingBox} ${it.representation}") }
+            horizontalParagraphs.forEach { Timber.tag(TAG).i("horizontalParagraphs : ${it.boundingBox} ${it.representation}") }
+        }
 
         verticalParagraphs.addAll(horizontalParagraphs)
 
@@ -467,43 +516,49 @@ class VisionRepository @Inject constructor() {
 
                         // [condition 0-0]
                         if (axisFontHeightSimilarityRatio >= WORD_AXIS_FONT_HEIGHT_SIMILARITY_MINIMUM_RATIO) { // 0.85
-                            Timber.tag(TAG).d(
-                                "groupWordsIntoLines add 0-0 : "
-                                        + "${writeDirectionDistance._cutDecimal()}, "
-                                        + "${averageFontHeight._cutDecimal()}, "
-                                        + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
-                                        + "${axisSimilarityRatio._cutDecimal()}, "
-                                        + "${fontHeightSimilarityRatio._cutDecimal()}, "
-                                        + "${axisFontHeightSimilarityRatio._cutDecimal()}, "
-                                        + "${line.representation}(${line.boundingBox}) + ${word.representation}(${word.boundingBox})"
-                            )
+                            if (TRACE_VISION_LOGS) {
+                                Timber.tag(TAG).d(
+                                    "groupWordsIntoLines add 0-0 : "
+                                            + "${writeDirectionDistance._cutDecimal()}, "
+                                            + "${averageFontHeight._cutDecimal()}, "
+                                            + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
+                                            + "${axisSimilarityRatio._cutDecimal()}, "
+                                            + "${fontHeightSimilarityRatio._cutDecimal()}, "
+                                            + "${axisFontHeightSimilarityRatio._cutDecimal()}, "
+                                            + "${line.representation}(${line.boundingBox}) + ${word.representation}(${word.boundingBox})"
+                                )
+                            }
                             line.addWord(word)
                             addedToLine = true
                             break
                         }
                         // [condition 0-1]
                         else {
-                            Timber.tag(TAG).v(
-                                "groupWordsIntoLines drop 0-1 : "
-                                        + "${writeDirectionDistance._cutDecimal()}, "
-                                        + "${averageFontHeight._cutDecimal()}, "
-                                        + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
-                                        + "${axisSimilarityRatio._cutDecimal()}, "
-                                        + "${fontHeightSimilarityRatio._cutDecimal()}, "
-                                        + "${axisFontHeightSimilarityRatio._cutDecimal()}, "
-                                        + "${line.representation}(${line.boundingBox}) + ${word.representation}(${word.boundingBox})"
-                            )
+                            if (TRACE_VISION_LOGS) {
+                                Timber.tag(TAG).v(
+                                    "groupWordsIntoLines drop 0-1 : "
+                                            + "${writeDirectionDistance._cutDecimal()}, "
+                                            + "${averageFontHeight._cutDecimal()}, "
+                                            + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
+                                            + "${axisSimilarityRatio._cutDecimal()}, "
+                                            + "${fontHeightSimilarityRatio._cutDecimal()}, "
+                                            + "${axisFontHeightSimilarityRatio._cutDecimal()}, "
+                                            + "${line.representation}(${line.boundingBox}) + ${word.representation}(${word.boundingBox})"
+                                )
+                            }
                         }
                     }
                     // [condition 1]
                     else {
-                        Timber.tag(TAG).v(
-                            "groupWordsIntoLines drop 1 : "
-                                    + "${writeDirectionDistance._cutDecimal()}, "
-                                    + "${averageFontHeight._cutDecimal()}, "
-                                    + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
-                                    + "${line.representation}(${line.boundingBox}) + ${word.representation}(${word.boundingBox})"
-                        )
+                        if (TRACE_VISION_LOGS) {
+                            Timber.tag(TAG).v(
+                                "groupWordsIntoLines drop 1 : "
+                                        + "${writeDirectionDistance._cutDecimal()}, "
+                                        + "${averageFontHeight._cutDecimal()}, "
+                                        + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
+                                        + "${line.representation}(${line.boundingBox}) + ${word.representation}(${word.boundingBox})"
+                            )
+                        }
                     }
                 }
 
@@ -523,11 +578,12 @@ class VisionRepository @Inject constructor() {
      */
     private fun groupLinesIntoParagraphs(lines: List<Line>, writingDirection: WritingDirection): List<Paragraph> {
         val paragraphs = mutableListOf<Paragraph>()
+        val assignedLines = Collections.newSetFromMap(IdentityHashMap<Line, Boolean>())
 
         lines
             .sortedWith(VisionSingleLineText.getComparator(writingDirection))
             .forEach { line ->
-                if (line in paragraphs.flatMap { it.lines }) return@forEach
+                if (line in assignedLines) return@forEach
 
                 var addedToParagraph = false
 
@@ -537,15 +593,18 @@ class VisionRepository @Inject constructor() {
                     val isLineReturnDirectionOverlaps = line.isLineReturnDirectionOverlaps(paragraph)
 
                     if (isWriteDirectionOverlaps && isLineReturnDirectionOverlaps) {
-                        Timber.tag(TAG).d(
-                            "groupLinesIntoParagraphs add 0 : "
-                                    + "${paragraph.boundingBox}, "
-                                    + "${paragraph.representation}(${paragraph.height}), "
-                                    + "${line.boundingBox}, "
-                                    + "${line.representation}(${line.height})"
-                        )
+                        if (TRACE_VISION_LOGS) {
+                            Timber.tag(TAG).d(
+                                "groupLinesIntoParagraphs add 0 : "
+                                        + "${paragraph.boundingBox}, "
+                                        + "${paragraph.representation}(${paragraph.height}), "
+                                        + "${line.boundingBox}, "
+                                        + "${line.representation}(${line.height})"
+                            )
+                        }
 
-                        paragraph.lines.add(line)
+                        paragraph.addLine(line)
+                        assignedLines.add(line)
                         addedToParagraph = true
                         break
                     }
@@ -567,12 +626,14 @@ class VisionRepository @Inject constructor() {
                             if (writeDirectionOverlapRatio >= LINE_WRITE_DIRECTION_OVERLAP_MINIMUM_RATIO) {
                                 val colorSimilarity = closestLine.getColorSimilarity(line)
 
-                                Timber.tag(TAG).d(
-                                    "${String.format("#%08X", closestLine.fontColor)} "
-                                            + "${String.format("#%08X", closestLine.backgroundColor)} "
-                                            + "${String.format("#%08X", line.fontColor)} "
-                                            + "${String.format("#%08X", line.backgroundColor)} "
-                                )
+                                if (TRACE_VISION_LOGS) {
+                                    Timber.tag(TAG).d(
+                                        "${String.format("#%08X", closestLine.fontColor)} "
+                                                + "${String.format("#%08X", closestLine.backgroundColor)} "
+                                                + "${String.format("#%08X", line.fontColor)} "
+                                                + "${String.format("#%08X", line.backgroundColor)} "
+                                    )
+                                }
 
                                 val lineSpacingAffinity = min(1.0, 1.0 / (lineSpacing.toDouble() / averageFontHeight))
 
@@ -580,38 +641,45 @@ class VisionRepository @Inject constructor() {
 
                                 // [condition 0-0-0-0] 
                                 if (fontHeightColorLineSpacingAffinity >= LINE_FONT_HEIGHT_COLOR_SPACING_AFFINITY_LIMIT) {
-                                    Timber.tag(TAG).d(
-                                        "groupLinesIntoParagraphs add 0-0-0-0 : "
-                                                + "${fontHeightSimilarityRatio._cutDecimal()}, "
-                                                + "${colorSimilarity._cutDecimal()}, "
-                                                + "${lineSpacingAffinity._cutDecimal()}, "
-                                                + "*${fontHeightColorLineSpacingAffinity._cutDecimal()}, "
-                                                + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height})"
-                                    )
-                                    paragraph.lines.add(line)
+                                    if (TRACE_VISION_LOGS) {
+                                        Timber.tag(TAG).d(
+                                            "groupLinesIntoParagraphs add 0-0-0-0 : "
+                                                    + "${fontHeightSimilarityRatio._cutDecimal()}, "
+                                                    + "${colorSimilarity._cutDecimal()}, "
+                                                    + "${lineSpacingAffinity._cutDecimal()}, "
+                                                    + "*${fontHeightColorLineSpacingAffinity._cutDecimal()}, "
+                                                    + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height})"
+                                        )
+                                    }
+                                    paragraph.addLine(line)
+                                    assignedLines.add(line)
                                     addedToParagraph = true
                                     break
                                 }
                                 // [condition 0-0-0-1] 
                                 else {
-                                    Timber.tag(TAG).v(
-                                        "groupLinesIntoParagraphs drop 0-0-0-1 : "
-                                                + "${fontHeightSimilarityRatio._cutDecimal()}, "
-                                                + "${colorSimilarity._cutDecimal()}, "
-                                                + "${lineSpacingAffinity._cutDecimal()}, "
-                                                + "*${fontHeightColorLineSpacingAffinity._cutDecimal()}, "
-                                                + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height})"
-                                    )
+                                    if (TRACE_VISION_LOGS) {
+                                        Timber.tag(TAG).v(
+                                            "groupLinesIntoParagraphs drop 0-0-0-1 : "
+                                                    + "${fontHeightSimilarityRatio._cutDecimal()}, "
+                                                    + "${colorSimilarity._cutDecimal()}, "
+                                                    + "${lineSpacingAffinity._cutDecimal()}, "
+                                                    + "*${fontHeightColorLineSpacingAffinity._cutDecimal()}, "
+                                                    + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height})"
+                                        )
+                                    }
                                 }
                             }
                             // [condition 0-0-1] 
                             else {
-                                Timber.tag(TAG).v(
-                                    "groupLinesIntoParagraphs drop 0-0-1 : "
-                                            + "${fontHeightSimilarityRatio._cutDecimal()}, "
-                                            + "${writeDirectionOverlapRatio._cutDecimal()}, "
-                                            + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height})"
-                                )
+                                if (TRACE_VISION_LOGS) {
+                                    Timber.tag(TAG).v(
+                                        "groupLinesIntoParagraphs drop 0-0-1 : "
+                                                + "${fontHeightSimilarityRatio._cutDecimal()}, "
+                                                + "${writeDirectionOverlapRatio._cutDecimal()}, "
+                                                + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height})"
+                                    )
+                                }
                             }
                         }
 
@@ -628,80 +696,92 @@ class VisionRepository @Inject constructor() {
 
                                 // [condition 0-1-0-0]
                                 if (writeDirectionDistanceFontHeightRatio <= LINE_WRITE_DIRECTION_DISTANCE_FONT_HEIGHT_RATIO_LIMIT) {
-                                    Timber.tag(TAG).d(
-                                        "groupLinesIntoParagraphs add 0-1-0-0 : "
-                                                + "${fontHeightSimilarityRatio._cutDecimal()}, "
-                                                + "${axisSimilarityRatio._cutDecimal()}, "
-                                                + "${axisHeightSimilarityRatio._cutDecimal()}, "
-                                                + "${writeDirectionDistance._cutDecimal()}, "
-                                                + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
-                                                + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height}))"
-                                    )
+                                    if (TRACE_VISION_LOGS) {
+                                        Timber.tag(TAG).d(
+                                            "groupLinesIntoParagraphs add 0-1-0-0 : "
+                                                    + "${fontHeightSimilarityRatio._cutDecimal()}, "
+                                                    + "${axisSimilarityRatio._cutDecimal()}, "
+                                                    + "${axisHeightSimilarityRatio._cutDecimal()}, "
+                                                    + "${writeDirectionDistance._cutDecimal()}, "
+                                                    + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
+                                                    + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height}))"
+                                        )
+                                    }
 
                                     if (writingDirection == WritingDirection.LTR) {
                                         if (closestLine.boundingBox.right < line.boundingBox.right) {
-                                            paragraph.lines.add(line)
+                                            paragraph.addLine(line)
                                         } else {
-                                            paragraph.lines.add(paragraph.lines.size - 1, line)
+                                            paragraph.addLine(paragraph.lines.size - 1, line)
                                         }
                                     } else {
                                         if (line.boundingBox.left < closestLine.boundingBox.left) {
-                                            paragraph.lines.add(line)
+                                            paragraph.addLine(line)
                                         } else {
-                                            paragraph.lines.add(paragraph.lines.size - 1, line)
+                                            paragraph.addLine(paragraph.lines.size - 1, line)
                                         }
                                     }
+                                    assignedLines.add(line)
                                     paragraph.hasParallelLines = true
                                     addedToParagraph = true
                                     break
                                 }
                                 // [condition 0-1-0-1]
                                 else {
-                                    Timber.tag(TAG).v(
-                                        "groupLinesIntoParagraphs drop 0-1-0-1 : "
-                                                + "${fontHeightSimilarityRatio._cutDecimal()}, "
-                                                + "${axisSimilarityRatio._cutDecimal()}, "
-                                                + "${axisHeightSimilarityRatio._cutDecimal()}, "
-                                                + "${writeDirectionDistance._cutDecimal()}, "
-                                                + "${writeDirectionDistanceFontHeightRatio}, "
-                                                + "${LINE_WRITE_DIRECTION_DISTANCE_FONT_HEIGHT_RATIO_LIMIT}, "
-                                                + "${(writeDirectionDistanceFontHeightRatio <= LINE_WRITE_DIRECTION_DISTANCE_FONT_HEIGHT_RATIO_LIMIT)}, "
-                                                + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height}))"
-                                    )
+                                    if (TRACE_VISION_LOGS) {
+                                        Timber.tag(TAG).v(
+                                            "groupLinesIntoParagraphs drop 0-1-0-1 : "
+                                                    + "${fontHeightSimilarityRatio._cutDecimal()}, "
+                                                    + "${axisSimilarityRatio._cutDecimal()}, "
+                                                    + "${axisHeightSimilarityRatio._cutDecimal()}, "
+                                                    + "${writeDirectionDistance._cutDecimal()}, "
+                                                    + "${writeDirectionDistanceFontHeightRatio}, "
+                                                    + "${LINE_WRITE_DIRECTION_DISTANCE_FONT_HEIGHT_RATIO_LIMIT}, "
+                                                    + "${(writeDirectionDistanceFontHeightRatio <= LINE_WRITE_DIRECTION_DISTANCE_FONT_HEIGHT_RATIO_LIMIT)}, "
+                                                    + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height}))"
+                                        )
+                                    }
                                 }
                             }
                             // [condition 0-1-1]
                             else {
-                                Timber.tag(TAG).v(
-                                    "groupLinesIntoParagraphs drop 0-1-1 : "
-                                            + "${fontHeightSimilarityRatio._cutDecimal()}, "
-                                            + "${axisSimilarityRatio._cutDecimal()}, "
-                                            + "${axisHeightSimilarityRatio._cutDecimal()}, "
-                                            + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height}))"
-                                )
+                                if (TRACE_VISION_LOGS) {
+                                    Timber.tag(TAG).v(
+                                        "groupLinesIntoParagraphs drop 0-1-1 : "
+                                                + "${fontHeightSimilarityRatio._cutDecimal()}, "
+                                                + "${axisSimilarityRatio._cutDecimal()}, "
+                                                + "${axisHeightSimilarityRatio._cutDecimal()}, "
+                                                + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height}))"
+                                    )
+                                }
                             }
                         }
                         // [condition 0-2]
                         else {
+                            if (TRACE_VISION_LOGS) {
+                                Timber.tag(TAG).v(
+                                    "groupLinesIntoParagraphs drop 0-2 : "
+                                            + "${fontHeightSimilarityRatio._cutDecimal()}, "
+                                            + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height}))"
+                                )
+                            }
+                        }
+                    }
+                    // [condition 1]
+                    else {
+                        if (TRACE_VISION_LOGS) {
                             Timber.tag(TAG).v(
-                                "groupLinesIntoParagraphs drop 0-2 : "
+                                "groupLinesIntoParagraphs drop 1 : "
                                         + "${fontHeightSimilarityRatio._cutDecimal()}, "
                                         + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height}))"
                             )
                         }
                     }
-                    // [condition 1]
-                    else {
-                        Timber.tag(TAG).v(
-                            "groupLinesIntoParagraphs drop 1 : "
-                                    + "${fontHeightSimilarityRatio._cutDecimal()}, "
-                                    + "${closestLine.representation}(${closestLine.height}) + ${line.representation}(${line.height}))"
-                        )
-                    }
                 }
 
                 if (!addedToParagraph) {
                     paragraphs.add(0, Paragraph(mutableListOf(line), writingDirection))
+                    assignedLines.add(line)
                 }
             }
 
@@ -726,7 +806,7 @@ class VisionRepository @Inject constructor() {
             return listOf(paragraph)
         }
 
-        Timber.tag(TAG).d("detectAndSplitParagraphs ${paragraph.representation}")
+        if (TRACE_VISION_LOGS) Timber.tag(TAG).d("detectAndSplitParagraphs ${paragraph.representation}")
 
         val lines = paragraph.lines
         val clustersVisited = mutableSetOf<Line>()
@@ -737,10 +817,12 @@ class VisionRepository @Inject constructor() {
             val neighbors =
                 lines.filter {
                     if (it != line) {
-                        Timber.tag(TAG).i(
-                            "Split cluster "
-                                    + "$distanceLimit, ${abs(line.startPosition - it.startPosition)}, ${line.boundingBox}, ${line.representation}, ${it.boundingBox}, ${it.representation}"
-                        )
+                        if (TRACE_VISION_LOGS) {
+                            Timber.tag(TAG).i(
+                                "Split cluster "
+                                        + "$distanceLimit, ${abs(line.startPosition - it.startPosition)}, ${line.boundingBox}, ${line.representation}, ${it.boundingBox}, ${it.representation}"
+                            )
+                        }
                     }
                     it != line && abs(line.startPosition - it.startPosition) <= distanceLimit
                 }
@@ -784,8 +866,10 @@ class VisionRepository @Inject constructor() {
         fun expandCluster(paragraph: Paragraph, cluster: MutableList<Paragraph>) {
             val neighbors = paragraphs.filter {
                 if (it != paragraph) {
-                    Timber.tag(TAG)
-                        .i("Correct cluster ${paragraph.isWriteDirectionOverlaps(it)}, ${paragraph.boundingBox}, ${paragraph.representation}, ${it.boundingBox}, ${it.representation}")
+                    if (TRACE_VISION_LOGS) {
+                        Timber.tag(TAG)
+                            .i("Correct cluster ${paragraph.isWriteDirectionOverlaps(it)}, ${paragraph.boundingBox}, ${paragraph.representation}, ${it.boundingBox}, ${it.representation}")
+                    }
                 }
                 it != paragraph && paragraph.isWriteDirectionOverlaps(it)
             }
@@ -833,7 +917,7 @@ class VisionRepository @Inject constructor() {
                 }
             }
         }
-        Timber.tag(TAG).i("isVerticalWriting  $countGreaterThanOne $countLessThanOne")
+        if (TRACE_VISION_LOGS) Timber.tag(TAG).i("isVerticalWriting  $countGreaterThanOne $countLessThanOne")
         return countGreaterThanOne < countLessThanOne
     }
 
@@ -841,8 +925,10 @@ class VisionRepository @Inject constructor() {
      */
     private fun setReferenceConstantValue(isVerticalWriting: Boolean, sourceLanguageCode: String) {
         val isNonSpacingLanguage = Language.isNonSpacingLanguage(sourceLanguageCode)
-        Timber.tag(TAG)
-            .d("setReferenceConstantValue - sourceLanguageCode: $sourceLanguageCode, isNonSpacingLanguage: $isNonSpacingLanguage, isVerticalWriting: $isVerticalWriting")
+        if (TRACE_VISION_LOGS) {
+            Timber.tag(TAG)
+                .d("setReferenceConstantValue - sourceLanguageCode: $sourceLanguageCode, isNonSpacingLanguage: $isNonSpacingLanguage, isVerticalWriting: $isVerticalWriting")
+        }
 
         WORD_AXIS_FONT_HEIGHT_SIMILARITY_MINIMUM_RATIO = 0.85
         WORD_WRITE_DIRECTION_DISTANCE_FONT_HEIGHT_RATIO_LIMIT = 0.63
@@ -900,5 +986,3 @@ fun Text.Line._toLine(
     }.toMutableList()
     return Line(words, writingDirection)
 }
-
-

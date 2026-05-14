@@ -161,6 +161,33 @@ data class PointerOverlayLayout(
     }
 }
 
+object PointerOverlayHitTest {
+    fun isHandleHit(
+        layout: PointerOverlayLayout,
+        touchX: Float,
+        touchY: Float,
+    ): Boolean = isHandleHit(
+        handleCenterX = layout.handleCenterX,
+        handleCenterY = layout.handleCenterY,
+        handleWidth = layout.handleWidth,
+        touchX = touchX,
+        touchY = touchY,
+    )
+
+    fun isHandleHit(
+        handleCenterX: Int,
+        handleCenterY: Int,
+        handleWidth: Int,
+        touchX: Float,
+        touchY: Float,
+    ): Boolean {
+        val radius = handleWidth / 2f
+        val dx = touchX - handleCenterX
+        val dy = touchY - handleCenterY
+        return dx * dx + dy * dy <= radius * radius
+    }
+}
+
 enum class DeviceFormFactor {
     PHONE,
     FOLDABLE,

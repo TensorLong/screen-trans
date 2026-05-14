@@ -411,15 +411,27 @@ class TargetHandleView private constructor(
             var touchStartY = 0f
             var dragStartX = 0
             var dragStartY = 0
+            var isDraggingHandle = false
 
             @SuppressLint("ClickableViewAccessibility")
             override fun onTouch(v: View, event: MotionEvent): Boolean {
+                val action = event.actionMasked
+                if (action == MotionEvent.ACTION_DOWN) {
+                    if (!PointerOverlayHitTest.isHandleHit(handleCenterX, handleCenterY, handleWidth, event.x, event.y)) {
+                        isDraggingHandle = false
+                        return false
+                    }
+                    isDraggingHandle = true
+                } else if (!isDraggingHandle) {
+                    return false
+                }
+
                 tapDetector.onTouchEvent(event)
 
-                viewModel.motionEventFlow.value = event.action
-                when (event.action) {
+                when (action) {
                     MotionEvent.ACTION_DOWN -> {
                         if (applicationContext.isNetworkAvailable()) {
+                            viewModel.motionEventFlow.value = event.action
                             viewModel.activePointerSideFlow.value = pointerSide
                             touchStartX = event.rawX
                             touchStartY = event.rawY
@@ -437,10 +449,12 @@ class TargetHandleView private constructor(
                                     onConfirm = {}
                                 )
                             }
+                            isDraggingHandle = false
                         }
                     }
 
                     MotionEvent.ACTION_MOVE -> {
+                        viewModel.motionEventFlow.value = event.action
                         val screenInfo: ScreenInfo = ScreenInfoHolder.get()
                         layoutParams.x = (dragStartX + (event.rawX - touchStartX)).toInt()
                         layoutParams.y = (dragStartY + (event.rawY - touchStartY)).toInt()
@@ -475,7 +489,14 @@ class TargetHandleView private constructor(
                     }
 
                     MotionEvent.ACTION_UP -> {
+                        viewModel.motionEventFlow.value = event.action
                         repositionWithinScreen(applicationContext)
+                        isDraggingHandle = false
+                    }
+
+                    MotionEvent.ACTION_CANCEL -> {
+                        viewModel.motionEventFlow.value = MotionEvent.ACTION_UP
+                        isDraggingHandle = false
                     }
                 }
                 return true
@@ -872,4 +893,3 @@ class TargetHandleView private constructor(
         super.clear()
     }
 }
-

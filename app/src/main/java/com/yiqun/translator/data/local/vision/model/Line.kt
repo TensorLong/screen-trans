@@ -10,9 +10,9 @@ import com.yiqun.translator.extensions._unionWith
 import timber.log.Timber
 import java.util.Locale
 import kotlin.math.abs
-import kotlin.math.max
 import kotlin.properties.Delegates
 
+private const val TRACE_LINE_COLOR_LOGS = false
 
 /**
  */
@@ -22,18 +22,15 @@ data class Line(
 ) : VisionSingleLineText {
 
     private var boundingBoxCache: Rect? = null
-    private var wordsHashCodeCache: Int? = null
 
     override val boundingBox: Rect
         get() {
-            val currentWordsHashCode = words.hashCode()
-            if (boundingBoxCache == null || wordsHashCodeCache != currentWordsHashCode) {
+            if (boundingBoxCache == null) {
                 boundingBoxCache = if (words.isEmpty()) {
                     Rect()
                 } else {
                     words.map { it.boundingBox }.reduce { acc, rect -> acc._unionWith(rect) }
                 }
-                wordsHashCodeCache = currentWordsHashCode
             }
             return boundingBoxCache!!
         }
@@ -83,6 +80,8 @@ data class Line(
 
         }
         words.add(left, newWord)
+        boundingBoxCache = boundingBoxCache
+            ?.let { cached -> cached._unionWith(newWord.boundingBox) }
     }
 
     var fontColor by Delegates.notNull<Int>()
@@ -129,43 +128,85 @@ data class Line(
         )
 
         val pixelColors = leftPixels + rightPixels + topPixels + bottomPixels
-
-        val backgroundColor = pixelColors.groupingBy { it }.eachCount().maxByOrNull { it.value }?.key ?: Color.WHITE
+        val backgroundColor = mostFrequentColor(pixelColors) ?: Color.WHITE
 
         val allChars = words.flatMap { it.chars }
         val midIndex = allChars.size / 2
-        val nonSpecialChar = (0..midIndex).firstNotNullOfOrNull { index ->
-            listOf(allChars.getOrNull(midIndex + index), allChars.getOrNull(midIndex - index)).find {
-                it?.representation?.any { ch -> ch.isLetterOrDigit() } == true
-            }
-        } ?: allChars[midIndex]
+        val nonSpecialChar = if (allChars.isEmpty()) {
+            null
+        } else {
+            (0..midIndex).firstNotNullOfOrNull { index ->
+                listOf(allChars.getOrNull(midIndex + index), allChars.getOrNull(midIndex - index)).find {
+                    it?.representation?.any { ch -> ch.isLetterOrDigit() } == true
+                }
+            } ?: allChars[midIndex]
+        } ?: run {
+            fontColor = Color.BLACK
+            this.fontColor = fontColor
+            this.backgroundColor = backgroundColor
+            return
+        }
 
 
         val charBoundingBox = VisionCoordinateMapper.toLocalRect(nonSpecialChar.boundingBox, coordinateOffsetX, coordinateOffsetY)
-        Timber.tag("Line").d("charBoundingBox $nonSpecialChar ${nonSpecialChar.boundingBox}")
+        if (TRACE_LINE_COLOR_LOGS) Timber.tag("Line").d("charBoundingBox $nonSpecialChar ${nonSpecialChar.boundingBox}")
 
-        val horizontalPixelData1 = IntArray(charBoundingBox.width())
+        val charWidth = charBoundingBox.width().coerceIn(1, bitmap.width)
+        val charHeight = charBoundingBox.height().coerceIn(1, bitmap.height)
+
+        val horizontalPixelData1 = IntArray(charWidth)
         val horizontalY1 = (charBoundingBox.top + charBoundingBox.height() / 3).coerceIn(0, bitmap.height - 1)
-        bitmap.getPixels(horizontalPixelData1, 0, charBoundingBox.width(), max(charBoundingBox.left, 0), horizontalY1, charBoundingBox.width(), 1)
+        bitmap.getPixels(
+            horizontalPixelData1,
+            0,
+            charWidth,
+            charBoundingBox.left.coerceIn(0, bitmap.width - charWidth),
+            horizontalY1,
+            charWidth,
+            1,
+        )
 
-        val horizontalPixelData2 = IntArray(charBoundingBox.width())
+        val horizontalPixelData2 = IntArray(charWidth)
         val horizontalY2 = (charBoundingBox.top + 2 * charBoundingBox.height() / 3).coerceIn(0, bitmap.height - 1)
-        bitmap.getPixels(horizontalPixelData2, 0, charBoundingBox.width(), charBoundingBox.left, horizontalY2, charBoundingBox.width(), 1)
+        bitmap.getPixels(
+            horizontalPixelData2,
+            0,
+            charWidth,
+            charBoundingBox.left.coerceIn(0, bitmap.width - charWidth),
+            horizontalY2,
+            charWidth,
+            1,
+        )
 
-        val verticalPixelData1 = IntArray(charBoundingBox.height())
+        val verticalPixelData1 = IntArray(charHeight)
         val verticalX1 = (charBoundingBox.left + charBoundingBox.width() / 3).coerceIn(0, bitmap.width - 1)
-        bitmap.getPixels(verticalPixelData1, 0, 1, verticalX1, charBoundingBox.top, 1, charBoundingBox.height())
+        bitmap.getPixels(
+            verticalPixelData1,
+            0,
+            1,
+            verticalX1,
+            charBoundingBox.top.coerceIn(0, bitmap.height - charHeight),
+            1,
+            charHeight,
+        )
 
-        val verticalPixelData2 = IntArray(charBoundingBox.height())
+        val verticalPixelData2 = IntArray(charHeight)
         val verticalX2 = (charBoundingBox.left + 2 * charBoundingBox.width() / 3).coerceIn(0, bitmap.width - 1)
-        bitmap.getPixels(verticalPixelData2, 0, 1, verticalX2, charBoundingBox.top, 1, charBoundingBox.height())
-
-        val charPixelData = horizontalPixelData1 + horizontalPixelData2 + verticalPixelData1 + verticalPixelData2
+        bitmap.getPixels(
+            verticalPixelData2,
+            0,
+            1,
+            verticalX2,
+            charBoundingBox.top.coerceIn(0, bitmap.height - charHeight),
+            1,
+            charHeight,
+        )
 
         val colorCountMap = mutableMapOf<Int, Int>()
-        for (pixel in charPixelData) {
-            colorCountMap[pixel] = colorCountMap.getOrDefault(pixel, 0) + 1
-        }
+        countColors(horizontalPixelData1, colorCountMap)
+        countColors(horizontalPixelData2, colorCountMap)
+        countColors(verticalPixelData1, colorCountMap)
+        countColors(verticalPixelData2, colorCountMap)
 
         val sortedColors = colorCountMap.entries.sortedByDescending { it.value }
 
@@ -180,23 +221,25 @@ data class Line(
             }
         }
 
-        val colorFrequency = sortedColors.joinToString(", ") { entry ->
-            "${String.format(Locale.US, "#%08X", entry.key)} - ${entry.value}"
-        }
+        if (TRACE_LINE_COLOR_LOGS) {
+            val colorFrequency = sortedColors.joinToString(", ") { entry ->
+                "${String.format(Locale.US, "#%08X", entry.key)} - ${entry.value}"
+            }
 
-        val pixelColorsString = pixelColors.joinToString(", ") { entry ->
-            "${String.format(Locale.US, "#%08X", entry)}"
-        }
+            val pixelColorsString = pixelColors.joinToString(", ") { entry ->
+                "${String.format(Locale.US, "#%08X", entry)}"
+            }
 
-        Timber.tag("Line").d(
-            "-------------- getFontAndBackgroundColors " +
-                    "fontColor: ${String.format("#%08X", fontColor)}, " +
-                    "backgroundColor: ${String.format("#%08X", backgroundColor)}, " +
-                    "line: ${representation}, " +
-                    "nonSpecialChar: ${nonSpecialChar.representation}, " +
-                    "pixelColorsString: $pixelColorsString, " +
-                    "charPixelData: $colorFrequency"
-        )
+            Timber.tag("Line").d(
+                "-------------- getFontAndBackgroundColors " +
+                        "fontColor: ${String.format("#%08X", fontColor)}, " +
+                        "backgroundColor: ${String.format("#%08X", backgroundColor)}, " +
+                        "line: ${representation}, " +
+                        "nonSpecialChar: ${nonSpecialChar.representation}, " +
+                        "pixelColorsString: $pixelColorsString, " +
+                        "charPixelData: $colorFrequency"
+            )
+        }
 
         this.fontColor = fontColor
         this.backgroundColor = backgroundColor
@@ -204,12 +247,14 @@ data class Line(
 
     fun getColorSimilarity(other: Line): Double {
 
-        Timber.tag("VisionRepository").i(
-            "----- getColorSimilarity ${String.format("#%08X", fontColor)} "
-                    + "${String.format("#%08X", backgroundColor)} "
-                    + "${String.format("#%08X", other.fontColor)} "
-                    + "${String.format("#%08X", other.backgroundColor)} "
-        )
+        if (TRACE_LINE_COLOR_LOGS) {
+            Timber.tag("VisionRepository").i(
+                "----- getColorSimilarity ${String.format("#%08X", fontColor)} "
+                        + "${String.format("#%08X", backgroundColor)} "
+                        + "${String.format("#%08X", other.fontColor)} "
+                        + "${String.format("#%08X", other.backgroundColor)} "
+            )
+        }
 
         val returnThis = if (other.fontColor == fontColor) {
             if (other.backgroundColor == backgroundColor) {
@@ -248,16 +293,36 @@ data class Line(
         val greenSimilarity = (100 - greenDifference) / 100
         val blueSimilarity = (100 - blueDifference) / 100
 
-        Timber.tag("VisionRepository").d(
-            "----- calculateColorSimilarity ${String.format("#%08X", color1)} $red1 $green1 $blue1 ${
-                String.format(
-                    "#%08X",
-                    color2
-                )
-            } $red2 $green2 $blue2 -- ${redSimilarity._cutDecimal()}  ${greenSimilarity._cutDecimal()}  ${blueSimilarity._cutDecimal()}  "
-        )
+        if (TRACE_LINE_COLOR_LOGS) {
+            Timber.tag("VisionRepository").d(
+                "----- calculateColorSimilarity ${String.format("#%08X", color1)} $red1 $green1 $blue1 ${
+                    String.format(
+                        "#%08X",
+                        color2
+                    )
+                } $red2 $green2 $blue2 -- ${redSimilarity._cutDecimal()}  ${greenSimilarity._cutDecimal()}  ${blueSimilarity._cutDecimal()}  "
+            )
+        }
 
         return (redSimilarity + greenSimilarity + blueSimilarity) / 3
+    }
+
+    private fun countColors(
+        pixels: IntArray,
+        colorCountMap: MutableMap<Int, Int>,
+    ) {
+        for (pixel in pixels) {
+            colorCountMap[pixel] = colorCountMap.getOrDefault(pixel, 0) + 1
+        }
+    }
+
+    private fun mostFrequentColor(colors: List<Int>): Int? {
+        if (colors.isEmpty()) return null
+        val counts = mutableMapOf<Int, Int>()
+        for (color in colors) {
+            counts[color] = counts.getOrDefault(color, 0) + 1
+        }
+        return counts.maxByOrNull { it.value }?.key
     }
 
 }

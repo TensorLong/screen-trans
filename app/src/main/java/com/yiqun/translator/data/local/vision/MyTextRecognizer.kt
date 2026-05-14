@@ -16,6 +16,7 @@ import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+private const val TRACE_RECOGNIZER_LOGS = false
 
 enum class TextRecognizerType {
     TEXT,
@@ -29,11 +30,8 @@ class MyTextRecognizer(val type: TextRecognizerType) {
 
     private val TAG = javaClass.simpleName
 
-    private  var recognizer: TextRecognizer
-
-    init {
-        recognizer = createTextRecognizer(type)
-    }
+    private var recognizer: TextRecognizer? = null
+    private val lifecycles = mutableSetOf<Lifecycle>()
 
     private fun createTextRecognizer(type: TextRecognizerType): TextRecognizer {
         return when (type) {
@@ -46,13 +44,15 @@ class MyTextRecognizer(val type: TextRecognizerType) {
     }
 
     fun addObserver(lifecycle: Lifecycle) {
-        lifecycle.addObserver(recognizer)
+        lifecycles.add(lifecycle)
+        recognizer?.let { lifecycle.addObserver(it) }
     }
 
     suspend fun process(inputImage: InputImage): Text =
         suspendCancellableCoroutine { continuation ->
-            Timber.tag(TAG).d("---------- process ---------")
-            recognizer.process(inputImage)
+            if (TRACE_RECOGNIZER_LOGS) Timber.tag(TAG).d("---------- process ---------")
+            val activeRecognizer = getRecognizer()
+            activeRecognizer.process(inputImage)
                 .addOnSuccessListener { result ->
                     continuation.resume(result)
                 }
@@ -60,7 +60,7 @@ class MyTextRecognizer(val type: TextRecognizerType) {
                     if (exception is MlKitException && exception.message?.contains("closed") == true) {
                         Timber.tag(TAG).d("TextRecognizer needs to be reinitialized.")
                         recognizer = createTextRecognizer(type)
-                        recognizer.process(inputImage)
+                        recognizer!!.process(inputImage)
                             .addOnSuccessListener { result ->
                                 continuation.resume(result)
                             }
@@ -74,6 +74,14 @@ class MyTextRecognizer(val type: TextRecognizerType) {
         }
 
     fun closeRecognizer() {
-        recognizer.close()
+        recognizer?.close()
+        recognizer = null
+    }
+
+    private fun getRecognizer(): TextRecognizer {
+        return recognizer ?: createTextRecognizer(type).also { newRecognizer ->
+            lifecycles.forEach { lifecycle -> lifecycle.addObserver(newRecognizer) }
+            recognizer = newRecognizer
+        }
     }
 }

@@ -467,14 +467,19 @@ open class FixedAreaView : OverlayView() {
         }
 
         val selectedAreaBitmap = createOverlaidBitmap(captureResponse.bitmap, selectedArea)
+        captureResponse.bitmap.recycle()
 
         // TestCapturedActivity.start(context, selectedAreaBitmap)
 
         val sourceLanguageCode: String = targetHandleViewModel.preferenceRepository.sourceLanguageCodeFlow.first()
-        val visionResponse: VisionResponse = targetHandleViewModel.visionRepository.request(
-            bitmap = selectedAreaBitmap,
-            sourceLanguageCode = sourceLanguageCode,
-        )
+        val visionResponse: VisionResponse = try {
+            targetHandleViewModel.visionRepository.request(
+                bitmap = selectedAreaBitmap,
+                sourceLanguageCode = sourceLanguageCode,
+            )
+        } finally {
+            selectedAreaBitmap.recycle()
+        }
 
         if (visionResponse !is VisionResponse.Success) {
             return
@@ -528,7 +533,6 @@ open class FixedAreaView : OverlayView() {
         }
     }
 }
-
 
 
 

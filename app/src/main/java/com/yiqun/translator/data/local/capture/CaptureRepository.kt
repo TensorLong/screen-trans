@@ -4,8 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.hardware.display.DisplayManager
@@ -285,15 +283,6 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
         state = State.Uninitialized
     }
 
-    private fun removeAlphaChannel(original: Bitmap): Bitmap {
-        val bitmapWithoutAlpha = Bitmap.createBitmap(original.width, original.height, Bitmap.Config.RGB_565)
-        val canvas = Canvas(bitmapWithoutAlpha)
-        val paint = Paint()
-        // paint.color = Color.WHITE // Set the default background color if needed
-        canvas.drawBitmap(original, 0f, 0f, paint)
-        return bitmapWithoutAlpha
-    }
-
     /**
      * https://stackoverflow.com/questions/42158782/mediaprojection-api-on-protected-drm-content
      * https://support.google.com/googleplay/android-developer/answer/14638385?hl=ko&ref_topic=13878452&sjid=17736376115784780377-AP#zippy=%2Cflag-secure%EA%B0%80-%EC%9D%98%EB%8F%84%ED%95%9C-%EB%8C%80%EB%A1%9C-%EC%9E%91%EB%8F%99%ED%95%98%EB%8A%94-%EB%B0%A9%EC%8B%9D%EC%9D%98-%EC%98%88%EB%8A%94-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80%EC%9A%94%2Cflag-secure-%EB%B0%8F-require-secure-env-%ED%94%8C%EB%9E%98%EA%B7%B8%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%A0-%EC%88%98-%EC%9E%88%EB%8A%94-%EC%95%B1-%EC%9C%A0%ED%98%95%EC%9D%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80%EC%9A%94%2C%EC%9D%B4%EB%9F%AC%ED%95%9C-%ED%94%8C%EB%9E%98%EA%B7%B8%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%98%EB%A9%B4-%EC%95%B1%EC%97%90-%EB%B6%80%EC%A0%95%EC%A0%81%EC%9D%B8-%EC%98%81%ED%96%A5%EC%9D%84-%EB%AF%B8%EC%B9%98%EB%82%98%EC%9A%94-%EA%B5%AC%ED%98%84%ED%95%98%EB%8A%94-%EB%8D%B0-%EC%8B%9C%EA%B0%84%EC%9D%B4-%EC%96%BC%EB%A7%88%EB%82%98-%EA%B1%B8%EB%A6%AC%EB%82%98%EC%9A%94
@@ -358,16 +347,6 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
 
         var captureResponse: CaptureResponse = captureResponseFlow.filterNotNull().first()
         if (captureResponse is CaptureResponse.Success) {
-            if (captureResponse.bitmap.config != Bitmap.Config.RGB_565) {
-                val originalBitmap = captureResponse.bitmap
-                captureResponse = CaptureResponse.Success(
-                    bitmap = removeAlphaChannel(originalBitmap),
-                    screenRect = captureResponse.screenRect,
-                )
-                originalBitmap.recycle()
-                Timber.tag(TAG).d("removeAlphaChannel capturedBitmap.allocationByteCount ${captureResponse.bitmap.allocationByteCount}")
-            }
-
 //            val (isCapturePrevented, checkerBitmap) = isCapturePrevented(capturedBitmap)
 //            captureWorkFlow.value =
 //                if (isCapturePrevented) {

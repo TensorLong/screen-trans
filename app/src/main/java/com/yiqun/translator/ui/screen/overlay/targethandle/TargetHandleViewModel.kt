@@ -36,6 +36,7 @@ import com.yiqun.translator.data.local.secure.VerdictAppRecognition
 import com.yiqun.translator.data.local.secure.VerdictDeviceRecognition
 import com.yiqun.translator.data.local.secure.VerdictPlayProtect
 import com.yiqun.translator.data.local.tts.TTSRepository
+import com.yiqun.translator.data.local.vision.AutoRecognitionPolicy
 import com.yiqun.translator.data.local.vision.TextDetectMode
 import com.yiqun.translator.data.local.vision.VisionRepository
 import com.yiqun.translator.data.local.vision.model.Line
@@ -646,7 +647,7 @@ class TargetHandleViewModel(
                 Timber.tag(TAG).d("requestCapture motionEventState $motionEventState")
                 if (motionEventState == MotionEvent.ACTION_DOWN || motionEventState == MotionEvent.ACTION_MOVE) {
                     captureStatusFlow.value = CaptureStatus.Captured
-                    requestVision(captureResponse.bitmap, captureResponse.screenRect)
+                    requestVision(captureResponse.bitmap, captureResponse.screenRect, pointerPosition)
                 }
             } else if (captureResponse is CaptureResponse.Error) {
                 Timber.tag(TAG).d("CaptureResponse.Error ${captureResponse.t.toString()}")
@@ -689,17 +690,36 @@ class TargetHandleViewModel(
 
     /**
      */
-    private suspend fun requestVision(capturedBitmap: Bitmap, captureScreenRect: Rect) {
+    private suspend fun requestVision(capturedBitmap: Bitmap, captureScreenRect: Rect, pointerPosition: Point) {
         startTime = System.nanoTime()
         Timber.tag(TAG).i("#### requestVision() ####")
 
         val sourceLanguageCode: String = preferenceRepository.sourceLanguageCodeFlow.first()
-        val visionResponse: VisionResponse = visionRepository.request(
-            bitmap = capturedBitmap,
-            sourceLanguageCode = sourceLanguageCode,
-            coordinateOffsetX = captureScreenRect.left,
-            coordinateOffsetY = captureScreenRect.top,
-        )
+        val visionResponse: VisionResponse = try {
+            var response = visionRepository.request(
+                bitmap = capturedBitmap,
+                sourceLanguageCode = sourceLanguageCode,
+                coordinateOffsetX = captureScreenRect.left,
+                coordinateOffsetY = captureScreenRect.top,
+                autoRecognitionPolicy = if (sourceLanguageCode == "auto") {
+                    AutoRecognitionPolicy.LATIN_FIRST
+                } else {
+                    AutoRecognitionPolicy.FULL
+                },
+            )
+            if (sourceLanguageCode == "auto" && response.needsFullAutoRetry(pointerPosition)) {
+                response = visionRepository.request(
+                    bitmap = capturedBitmap,
+                    sourceLanguageCode = sourceLanguageCode,
+                    coordinateOffsetX = captureScreenRect.left,
+                    coordinateOffsetY = captureScreenRect.top,
+                    autoRecognitionPolicy = AutoRecognitionPolicy.FULL,
+                )
+            }
+            response
+        } finally {
+            capturedBitmap.recycle()
+        }
 
         if (visionResponse is VisionResponse.Success) {
             endTime = System.nanoTime()
@@ -715,12 +735,46 @@ class TargetHandleViewModel(
 
             val motionEventState = motionEventFlow.first()
             if (motionEventState == MotionEvent.ACTION_DOWN || motionEventState == MotionEvent.ACTION_MOVE) {
-                Timber.tag(TAG).i("set visionResult :\n====[${visionResponse.result.text}]====")
+                Timber.tag(TAG).i("set visionResult blocks=${visionResponse.result.text.textBlocks.size}")
                 visionCaptureScreenRect = captureScreenRect
                 visionResultFlow.value = visionResponse.result
             }
         } else if (visionResponse is VisionResponse.Error) {
             Timber.tag(TAG).e("visionResponse err ${visionResponse.t}")
+        }
+    }
+
+    private fun VisionResponse.needsFullAutoRetry(pointerPosition: Point): Boolean {
+        if (this !is VisionResponse.Success) return true
+        return !hasPointedGeometry(result, pointerPosition, textDetectMode)
+    }
+
+    private fun hasPointedGeometry(
+        visionResult: com.yiqun.translator.data.local.vision.model.Transaction,
+        pointerPosition: Point,
+        textDetectMode: TextDetectMode,
+    ): Boolean {
+        if (textDetectMode == TextDetectMode.SELECT) {
+            return visionResult.text.textBlocks.isNotEmpty()
+        }
+
+        val positionedParagraph: Paragraph = visionResult.paragraphs.find { paragraph ->
+            paragraph.boundingBox.contains(pointerPosition.x, pointerPosition.y)
+        } ?: return false
+
+        if (textDetectMode == TextDetectMode.PARAGRAPH) return true
+
+        if (textDetectMode == TextDetectMode.SENTENCE || textDetectMode == TextDetectMode.SENSE_GROUP) {
+            return positionedParagraph.sentences.any { sentence ->
+                sentence.boundingPolygon.contains(pointerPosition)
+            }
+        }
+
+        val positionedLine: Line = positionedParagraph.lines.find { line ->
+            expandedRect(line.boundingBox).contains(pointerPosition.x, pointerPosition.y)
+        } ?: return false
+        return positionedLine.words.any { word ->
+            expandedRect(word.boundingBox).contains(pointerPosition.x, pointerPosition.y)
         }
     }
 
@@ -1282,9 +1336,4 @@ class TargetHandleViewModel(
 private fun Rect.containsPoint(point: Point): Boolean {
     return point.x >= left && point.x < right && point.y >= top && point.y < bottom
 }
-
-
-
-
-
 

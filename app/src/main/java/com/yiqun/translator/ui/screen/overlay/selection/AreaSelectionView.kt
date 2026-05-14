@@ -327,14 +327,19 @@ open class AreaSelectionView : OverlayView() {
             }
 
             val selectedAreaBitmap = createOverlaidBitmap(captureResponse.bitmap, selectedArea)
+            captureResponse.bitmap.recycle()
 
 //                    TestCapturedActivity.start(context, selectedAreaBitmap)
 
             val sourceLanguageCode: String = targetHandleViewModel.preferenceRepository.sourceLanguageCodeFlow.first()
-            val visionResponse: VisionResponse = targetHandleViewModel.visionRepository.request(
-                bitmap = selectedAreaBitmap,
-                sourceLanguageCode = sourceLanguageCode,
-            )
+            val visionResponse: VisionResponse = try {
+                targetHandleViewModel.visionRepository.request(
+                    bitmap = selectedAreaBitmap,
+                    sourceLanguageCode = sourceLanguageCode,
+                )
+            } finally {
+                selectedAreaBitmap.recycle()
+            }
             Timber.tag(TAG).d("$selectedArea sourceLanguageCode $sourceLanguageCode")
             Timber.tag(TAG).d("$selectedArea visionResponse $visionResponse")
 
@@ -380,6 +385,7 @@ fun createOverlaidBitmap(originalBitmap: Bitmap, rect: Rect): Bitmap {
 
         val canvas = Canvas(returnBitmap)
         canvas.drawBitmap(croppedBitmap, safeLeft.toFloat(), safeTop.toFloat(), null)
+        croppedBitmap.recycle()
 
         returnBitmap
     } catch (e: IllegalArgumentException) {
@@ -389,7 +395,6 @@ fun createOverlaidBitmap(originalBitmap: Bitmap, rect: Rect): Bitmap {
         }
     }
 }
-
 
 
 

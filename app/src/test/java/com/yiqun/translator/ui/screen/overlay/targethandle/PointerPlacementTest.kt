@@ -156,6 +156,59 @@ class PointerPlacementTest {
     }
 
     @Test
+    fun handleHitTestAcceptsPointsInsideRoundHandle() {
+        val layout = PointerOverlayLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 0, y = -95),
+        )
+
+        assertTrue(
+            PointerOverlayHitTest.isHandleHit(
+                layout = layout,
+                touchX = layout.handleCenterX.toFloat(),
+                touchY = layout.handleCenterY.toFloat(),
+            )
+        )
+    }
+
+    @Test
+    fun handleHitTestRejectsTransparentSpaceBetweenTargetIconAndHandle() {
+        val layout = PointerOverlayLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 0, y = -95),
+        )
+        val gapCenterX = layout.handleCenterX.toFloat()
+        val gapCenterY = (layout.targetIconTopLeftY + 24 + layout.handleCenterY - layout.handleWidth / 2) / 2f
+
+        assertFalse(
+            PointerOverlayHitTest.isHandleHit(
+                layout = layout,
+                touchX = gapCenterX,
+                touchY = gapCenterY,
+            )
+        )
+    }
+
+    @Test
+    fun handleHitTestRejectsTargetIconCenter() {
+        val layout = PointerOverlayLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 60, y = -65),
+        )
+
+        assertFalse(
+            PointerOverlayHitTest.isHandleHit(
+                layout = layout,
+                touchX = layout.targetIconTopLeftX + 12f,
+                touchY = layout.targetIconTopLeftY + 12f,
+            )
+        )
+    }
+
+    @Test
     fun pointerDisplayPolicyDefaultsToDualPointerOnlyOnLargeDevices() {
         assertFalse(
             PointerDisplayPolicy.defaultDualPointerEnabled(

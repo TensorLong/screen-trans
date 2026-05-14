@@ -8,7 +8,7 @@ import org.junit.Test
 class PointedCaptureCropTest {
 
     @Test
-    fun boundsForPointedTranslationStayUnderOneThirdScreenArea() {
+    fun boundsForPointedTranslationPreserveFullOcrArea() {
         val bounds = PointedCaptureCrop.boundsFor(
             screenWidth = 1080,
             screenHeight = 2400,
@@ -16,8 +16,8 @@ class PointedCaptureCropTest {
             pointerY = 1200,
         )
 
-        assertTrue(width(bounds) * height(bounds) <= 1080 * 2400 / 3)
-        assertRect(rectOf(0, 800, 1080, 1600), bounds)
+        assertEquals(1080 * 2400, width(bounds) * height(bounds))
+        assertRect(rectOf(0, 0, 1080, 2400), bounds)
     }
 
     @Test
@@ -29,7 +29,7 @@ class PointedCaptureCropTest {
             pointerY = 12,
         )
 
-        assertRect(rectOf(0, 0, 1080, 800), bounds)
+        assertRect(rectOf(0, 0, 1080, 2400), bounds)
         assertTrue(540 >= bounds.left && 540 < bounds.right)
         assertTrue(12 >= bounds.top && 12 < bounds.bottom)
     }
@@ -47,7 +47,7 @@ class PointedCaptureCropTest {
     }
 
     @Test
-    fun pointedCropCutsOcrPixelsAndReturnedBitmapMemoryByMoreThanHalf() {
+    fun pointedBoundsNeverReduceOcrPixels() {
         val screenWidth = 1080
         val screenHeight = 2400
         val fullScreenPixels = screenWidth * screenHeight
@@ -59,11 +59,7 @@ class PointedCaptureCropTest {
         )
         val croppedPixels = width(bounds) * height(bounds)
 
-        val oldReturnedRgb565Bytes = fullScreenPixels * RGB_565_BYTES_PER_PIXEL
-        val newReturnedRgb565Bytes = croppedPixels * RGB_565_BYTES_PER_PIXEL
-
-        assertTrue(croppedPixels <= fullScreenPixels / 3)
-        assertTrue(newReturnedRgb565Bytes <= oldReturnedRgb565Bytes / 3)
+        assertEquals(fullScreenPixels, croppedPixels)
     }
 
     private fun width(rect: Rect): Int = rect.right - rect.left
@@ -86,7 +82,4 @@ class PointedCaptureCropTest {
         }
     }
 
-    private companion object {
-        const val RGB_565_BYTES_PER_PIXEL = 2
-    }
 }

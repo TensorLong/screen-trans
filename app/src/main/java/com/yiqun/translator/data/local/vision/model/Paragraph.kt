@@ -13,18 +13,15 @@ data class Paragraph(
 ) : VisionText {
 
     private var boundingBoxCache: Rect? = null
-    private var linesHashCodeCache: Int? = null
 
     override val boundingBox: Rect
         get() {
-            val currentWordsHashCode = lines.hashCode()
-            if (boundingBoxCache == null || linesHashCodeCache != currentWordsHashCode) {
+            if (boundingBoxCache == null) {
                 boundingBoxCache = if (lines.isEmpty()) {
                     Rect()
                 } else {
                     lines.map { it.boundingBox }.reduce { acc, rect -> acc._unionWith(rect) }
                 }
-                linesHashCodeCache = currentWordsHashCode
             }
             return boundingBoxCache!!
         }
@@ -47,6 +44,16 @@ data class Paragraph(
             }
             return _sentences!!
         }
+
+    fun addLine(line: Line) {
+        lines.add(line)
+        includeLineInCaches(line)
+    }
+
+    fun addLine(index: Int, line: Line) {
+        lines.add(index, line)
+        includeLineInCaches(line)
+    }
 
     /**
      */
@@ -135,5 +142,11 @@ data class Paragraph(
 
     override fun toString(): String {
         return "Paragraph(boundingBox=$boundingBox, representation='$representation', lines=${lines.joinToString(separator = "\n", prefix = "[", postfix = "]") { it.toString() }})"
+    }
+
+    private fun includeLineInCaches(line: Line) {
+        boundingBoxCache = boundingBoxCache
+            ?.let { cached -> cached._unionWith(line.boundingBox) }
+        _sentences = null
     }
 }
