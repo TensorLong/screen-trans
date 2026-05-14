@@ -130,6 +130,8 @@ class TargetHandleView private constructor(
 
     private var pointerDimen = 0
 
+    private var pointerThumbSpace = 0
+
     private var dualPointerMode = false
 
     private val pointerOffsetXState = MutableStateFlow(0)
@@ -171,12 +173,27 @@ class TargetHandleView private constructor(
         val motionEventState by viewModel.motionEventFlow.collectAsStateWithLifecycle()
         val activePointerSide by viewModel.activePointerSideFlow.collectAsStateWithLifecycle()
         val isActivePointer = activePointerSide == pointerSide
+        val defaultTargetFromHandleOffset = remember { viewModel.preferenceRepository.defaultPointerOffset }
+        val leftTargetFromHandleOffset by viewModel.preferenceRepository.pointerLeftOffsetFlow.collectAsStateWithLifecycle(
+            lifecycle = lifecycleOwner.lifecycle,
+            initialValue = defaultTargetFromHandleOffset
+        )
+        val rightTargetFromHandleOffset by viewModel.preferenceRepository.pointerRightOffsetFlow.collectAsStateWithLifecycle(
+            lifecycle = lifecycleOwner.lifecycle,
+            initialValue = defaultTargetFromHandleOffset
+        )
+        val targetFromHandleOffset = when (pointerSide) {
+            PointerSide.LEFT -> leftTargetFromHandleOffset
+            PointerSide.RIGHT -> rightTargetFromHandleOffset
+        }
         LaunchedEffect(pointerStoppedPosition) {
             Timber.tag(TAG).d("LaunchedEffect motionEventState $motionEventState")
         }
         val menuOperatingState by MenuBarView.operatingStateFlow.collectAsStateWithLifecycle()
         val pointerOffsetX by pointerOffsetXState.collectAsStateWithLifecycle()
         val pointerOffsetY by pointerOffsetYState.collectAsStateWithLifecycle()
+        val targetIconOffsetX = pointerOffsetX + targetFromHandleOffset.x - defaultTargetFromHandleOffset.x
+        val targetIconOffsetY = pointerOffsetY + targetFromHandleOffset.y - defaultTargetFromHandleOffset.y
         val translationState by viewModel.translationFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
             initialValue = null
@@ -255,7 +272,7 @@ class TargetHandleView private constructor(
             Box(
                 modifier = Modifier
                     .size(dimensionResource(id = R.dimen.target_pointer_dimen))
-                    .offset { IntOffset(pointerOffsetX, pointerOffsetY) },
+                    .offset { IntOffset(targetIconOffsetX, targetIconOffsetY) },
                 contentAlignment = Alignment.Center
             ) {
                 if (translateStatus == TranslateStatus.Requested && textDetectMode != TextDetectMode.SELECT) {
@@ -428,7 +445,7 @@ class TargetHandleView private constructor(
                         pointerOffsetYState.value = _pointerOffsetY
 
                         val x = layoutParams.x + viewWidth / 2 + _pointerOffsetX
-                        val y = layoutParams.y + pointerDimen / 2 + _pointerOffsetY
+                        val y = layoutParams.y + pointerDimen + pointerThumbSpace + viewWidth / 2 + _pointerOffsetY
                         viewModel.updatePointerPosition(pointerSide, Point(x, y))
                     }
 
@@ -451,6 +468,7 @@ class TargetHandleView private constructor(
         viewWidth = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_width)
         viewHeight = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_height)
         pointerDimen = applicationContext.resources.getDimensionPixelSize(R.dimen.target_pointer_dimen)
+        pointerThumbSpace = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_pointer_thumb_space)
 //        Timber.tag(TAG).d("viewWidth $viewWidth")
 //        Timber.tag(TAG).d("viewHeight $viewHeight")
 //        Timber.tag(TAG).d("pointerDimen $pointerDimen")

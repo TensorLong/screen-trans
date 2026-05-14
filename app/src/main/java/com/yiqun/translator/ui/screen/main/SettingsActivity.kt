@@ -104,6 +104,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -412,13 +413,14 @@ class SettingsActivity : AVDActivity() {
             initialValue = false
         )
 
+        val defaultPointerOffset = remember { viewModel.preferenceRepository.defaultPointerOffset }
         val pointerLeftOffset by viewModel.preferenceRepository.pointerLeftOffsetFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
-            initialValue = PointerOffset.DEFAULT
+            initialValue = defaultPointerOffset
         )
         val pointerRightOffset by viewModel.preferenceRepository.pointerRightOffsetFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
-            initialValue = PointerOffset.DEFAULT
+            initialValue = defaultPointerOffset
         )
         val dualPointerEnabled by viewModel.preferenceRepository.dualPointerEnabledFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
@@ -1481,6 +1483,7 @@ class SettingsActivity : AVDActivity() {
             PointerDistanceCalibrationView(
                 leftOffset = pointerLeftOffset,
                 rightOffset = pointerRightOffset,
+                defaultOffset = defaultPointerOffset,
                 dualPointerEnabled = supportsDualPointer && dualPointerEnabled,
                 onDismissRequest = {
                     closeTranslation()
@@ -1525,6 +1528,7 @@ class SettingsActivity : AVDActivity() {
     fun PointerDistanceCalibrationView(
         leftOffset: PointerOffset,
         rightOffset: PointerOffset,
+        defaultOffset: PointerOffset,
         dualPointerEnabled: Boolean,
         onDismissRequest: () -> Unit,
         onConfirm: (PointerOffset, PointerOffset) -> Unit,
@@ -1637,8 +1641,8 @@ class SettingsActivity : AVDActivity() {
                             onClick = {
                                 previewTick = 0
                                 when (activeSide) {
-                                    PointerSide.LEFT -> currentLeftOffset = PointerOffset.DEFAULT
-                                    PointerSide.RIGHT -> currentRightOffset = PointerOffset.DEFAULT
+                                    PointerSide.LEFT -> currentLeftOffset = defaultOffset
+                                    PointerSide.RIGHT -> currentRightOffset = defaultOffset
                                 }
                             },
                         ) {
@@ -1700,13 +1704,13 @@ class SettingsActivity : AVDActivity() {
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val targetCenter = Offset(size.width / 2f, size.height / 2f)
-                    val pointerCenter = Offset(
+                    val handleCenter = Offset(
                         x = targetCenter.x - offset.x,
                         y = targetCenter.y - offset.y,
                     )
                     drawLine(
                         color = borderColor.copy(alpha = 0.65f),
-                        start = pointerCenter,
+                        start = handleCenter,
                         end = targetCenter,
                         strokeWidth = 3f,
                     )
@@ -1718,11 +1722,6 @@ class SettingsActivity : AVDActivity() {
                 }
                 Box(
                     modifier = Modifier
-                        .border(
-                            width = if (previewVisible) 3.dp else 1.5.dp,
-                            color = if (previewVisible) Color(0xFF48baef) else borderColor,
-                            shape = RoundedCornerShape(10.dp)
-                        )
                         .padding(12.dp)
                         .background(
                             color = if (previewVisible) Color(0x3348baef) else Color.Transparent,
@@ -1741,7 +1740,20 @@ class SettingsActivity : AVDActivity() {
                     contentDescription = null,
                     modifier = Modifier
                         .size(34.dp)
-                        .offset { androidx.compose.ui.unit.IntOffset(-offset.x, -offset.y) }
+                        .border(
+                            width = if (previewVisible) 2.dp else 0.dp,
+                            color = if (previewVisible) Color(0xFF48baef) else Color.Transparent,
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    colorFilter = ColorFilter.tint(if (previewVisible) Color(0xFF48baef) else borderColor)
+                )
+                Image(
+                    painter = painterResource(id = if (isDarkMode) R.drawable.drag_handle_dark else R.drawable.drag_handle),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .size(58.dp)
+                        .offset { IntOffset(-offset.x, -offset.y) }
                         .pointerInput(Unit) {
                             detectDragGestures { _, dragAmount ->
                                 onOffsetChange(

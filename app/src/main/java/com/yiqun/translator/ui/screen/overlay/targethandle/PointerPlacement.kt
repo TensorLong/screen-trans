@@ -29,12 +29,26 @@ data class PointerOffset(
             )
         }
 
-        fun decode(value: String?): PointerOffset {
-            if (value.isNullOrBlank()) return DEFAULT
+        fun defaultTargetFromHandleOffset(
+            pointerDimen: Int,
+            handleWidth: Int,
+            pointerThumbSpace: Int,
+        ): PointerOffset {
+            return PointerOffset(
+                x = 0,
+                y = -(pointerDimen / 2 + pointerThumbSpace + handleWidth / 2),
+            )
+        }
+
+        fun decode(
+            value: String?,
+            defaultValue: PointerOffset = DEFAULT,
+        ): PointerOffset {
+            if (value.isNullOrBlank()) return defaultValue
             val parts = value.split(",")
-            if (parts.size != 2) return DEFAULT
-            val x = parts[0].trim().toIntOrNull() ?: return DEFAULT
-            val y = parts[1].trim().toIntOrNull() ?: return DEFAULT
+            if (parts.size != 2) return defaultValue
+            val x = parts[0].trim().toIntOrNull() ?: return defaultValue
+            val y = parts[1].trim().toIntOrNull() ?: return defaultValue
             return PointerOffset(x, y)
         }
     }
@@ -46,6 +60,10 @@ data class PointerOffsetPair(
 ) {
     companion object {
         val DEFAULT = PointerOffsetPair(PointerOffset.DEFAULT, PointerOffset.DEFAULT)
+
+        fun default(defaultOffset: PointerOffset): PointerOffsetPair {
+            return PointerOffsetPair(defaultOffset, defaultOffset)
+        }
     }
 }
 
@@ -104,6 +122,7 @@ object PointerDisplayPolicy {
 class PointerCalibrationSession(
     savedLeft: PointerOffset,
     savedRight: PointerOffset,
+    private val defaultOffset: PointerOffset = PointerOffset.DEFAULT,
 ) {
     private var savedOffsets = PointerOffsetPair(savedLeft, savedRight)
     private var currentOffsets = savedOffsets
@@ -114,7 +133,7 @@ class PointerCalibrationSession(
     }
 
     fun reset(side: PointerSide) {
-        setCurrent(side, PointerOffset.DEFAULT)
+        setCurrent(side, defaultOffset)
     }
 
     fun current(side: PointerSide): PointerOffset = when (side) {

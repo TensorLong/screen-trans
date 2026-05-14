@@ -56,6 +56,25 @@ class PointerPlacementTest {
     }
 
     @Test
+    fun systemDefaultOffsetMatchesCurrentHandleAndTargetIconLayout() {
+        val offset = PointerOffset.defaultTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            pointerThumbSpace = 18,
+        )
+
+        assertEquals(PointerOffset(x = 0, y = -65), offset)
+        assertEquals(
+            100 to 135,
+            PointerCoordinateMapper.toOcrPoint(
+                visualPointerX = 100,
+                visualPointerY = 200,
+                offset = offset,
+            )
+        )
+    }
+
+    @Test
     fun pointerOffsetRoundTripsThroughPreferenceValue() {
         val offset = PointerOffset(x = -18, y = 27)
 
@@ -99,5 +118,19 @@ class PointerPlacementTest {
         val confirmed = session.confirm()
         assertEquals(PointerOffset(x = 30, y = -20), confirmed.left)
         assertEquals(PointerOffset.DEFAULT, confirmed.right)
+    }
+
+    @Test
+    fun calibrationResetRestoresSystemDefaultOffset() {
+        val defaultOffset = PointerOffset(x = 0, y = -65)
+        val session = PointerCalibrationSession(
+            savedLeft = PointerOffset(x = 12, y = -40),
+            savedRight = PointerOffset(x = 8, y = 12),
+            defaultOffset = defaultOffset,
+        )
+
+        session.reset(PointerSide.LEFT)
+
+        assertEquals(defaultOffset, session.current(PointerSide.LEFT))
     }
 }

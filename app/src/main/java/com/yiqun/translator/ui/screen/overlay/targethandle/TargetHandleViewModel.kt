@@ -150,7 +150,9 @@ class TargetHandleViewModel(
 
     val activePointerSideFlow = MutableStateFlow(PointerSide.LEFT)
 
-    private val pointerOffsetPairFlow = MutableStateFlow(PointerOffsetPair.DEFAULT)
+    private val pointerOffsetPairFlow = MutableStateFlow(
+        PointerOffsetPair.default(preferenceRepository.defaultPointerOffset)
+    )
 
     /**
      */

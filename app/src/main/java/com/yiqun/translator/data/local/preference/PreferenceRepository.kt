@@ -16,6 +16,7 @@ import com.yiqun.translator.data.local.vision.TextDetectMode
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuConfig
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.yiqun.translator.R
 import com.yiqun.translator.ui.screen.overlay.targethandle.DeviceFormFactorResolver
 import com.yiqun.translator.ui.screen.overlay.targethandle.PointerDisplayPolicy
 import com.yiqun.translator.ui.screen.overlay.targethandle.PointerOffset
@@ -79,6 +80,13 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
     private val preferenceDataStore: DataStore<Preferences> = context.preferenceDataStore
 
     private val gson = Gson()
+
+    val defaultPointerOffset: PointerOffset
+        get() = PointerOffset.defaultTargetFromHandleOffset(
+            pointerDimen = context.resources.getDimensionPixelSize(R.dimen.target_pointer_dimen),
+            handleWidth = context.resources.getDimensionPixelSize(R.dimen.target_handle_width),
+            pointerThumbSpace = context.resources.getDimensionPixelSize(R.dimen.target_handle_pointer_thumb_space),
+        )
 
     private val preferenceFlow: Flow<Preferences> = preferenceDataStore.data
         .catch { exception ->
@@ -158,11 +166,11 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
     }
 
     val pointerLeftOffsetFlow: Flow<PointerOffset> = preferenceFlow.map { preferences ->
-        PointerOffset.decode(preferences[POINTER_LEFT_OFFSET])
+        PointerOffset.decode(preferences[POINTER_LEFT_OFFSET], defaultPointerOffset)
     }
 
     val pointerRightOffsetFlow: Flow<PointerOffset> = preferenceFlow.map { preferences ->
-        PointerOffset.decode(preferences[POINTER_RIGHT_OFFSET])
+        PointerOffset.decode(preferences[POINTER_RIGHT_OFFSET], defaultPointerOffset)
     }
 
     val dualPointerEnabledFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
