@@ -161,6 +161,70 @@ data class PointerOverlayLayout(
     }
 }
 
+data class PointerPassThroughWindowLayout(
+    val touchableWidth: Int,
+    val touchableHeight: Int,
+    val targetIconWindowWidth: Int,
+    val targetIconWindowHeight: Int,
+    val handleCenterX: Int,
+    val handleCenterY: Int,
+    val targetIconTopLeftXFromHandle: Int,
+    val targetIconTopLeftYFromHandle: Int,
+) {
+    val handleCenter: Pair<Int, Int>
+        get() = handleCenterX to handleCenterY
+
+    val targetIconTopLeftFromHandle: Pair<Int, Int>
+        get() = targetIconTopLeftXFromHandle to targetIconTopLeftYFromHandle
+
+    val targetIconCenterFromHandle: Pair<Int, Int>
+        get() = targetIconTopLeftXFromHandle + targetIconWindowWidth / 2 to
+                targetIconTopLeftYFromHandle + targetIconWindowHeight / 2
+
+    fun targetIconTopLeftX(edgeCorrectionX: Int): Int = targetIconTopLeftXFromHandle + edgeCorrectionX
+
+    fun targetIconTopLeftY(edgeCorrectionY: Int): Int = targetIconTopLeftYFromHandle + edgeCorrectionY
+
+    fun visualLeft(edgeCorrectionX: Int = 0): Int = minOf(0, targetIconTopLeftX(edgeCorrectionX))
+
+    fun visualTop(edgeCorrectionY: Int = 0): Int = minOf(0, targetIconTopLeftY(edgeCorrectionY))
+
+    fun visualRight(edgeCorrectionX: Int = 0): Int =
+        maxOf(touchableWidth, targetIconTopLeftX(edgeCorrectionX) + targetIconWindowWidth)
+
+    fun visualBottom(edgeCorrectionY: Int = 0): Int =
+        maxOf(touchableHeight, targetIconTopLeftY(edgeCorrectionY) + targetIconWindowHeight)
+
+    fun visualWidth(edgeCorrectionX: Int = 0): Int = visualRight(edgeCorrectionX) - visualLeft(edgeCorrectionX)
+
+    fun visualHeight(edgeCorrectionY: Int = 0): Int = visualBottom(edgeCorrectionY) - visualTop(edgeCorrectionY)
+
+    fun touchableWindowContains(x: Int, y: Int): Boolean {
+        return x in 0 until touchableWidth && y in 0 until touchableHeight
+    }
+
+    companion object {
+        fun fromTargetFromHandleOffset(
+            pointerDimen: Int,
+            handleWidth: Int,
+            targetFromHandleOffset: PointerOffset,
+        ): PointerPassThroughWindowLayout {
+            val handleCenter = handleWidth / 2
+            val pointerHalf = pointerDimen / 2
+            return PointerPassThroughWindowLayout(
+                touchableWidth = handleWidth,
+                touchableHeight = handleWidth,
+                targetIconWindowWidth = pointerDimen,
+                targetIconWindowHeight = pointerDimen,
+                handleCenterX = handleCenter,
+                handleCenterY = handleCenter,
+                targetIconTopLeftXFromHandle = handleCenter + targetFromHandleOffset.x - pointerHalf,
+                targetIconTopLeftYFromHandle = handleCenter + targetFromHandleOffset.y - pointerHalf,
+            )
+        }
+    }
+}
+
 object PointerOverlayHitTest {
     fun isHandleHit(
         layout: PointerOverlayLayout,

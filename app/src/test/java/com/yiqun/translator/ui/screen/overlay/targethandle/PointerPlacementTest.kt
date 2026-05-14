@@ -209,6 +209,44 @@ class PointerPlacementTest {
     }
 
     @Test
+    fun passThroughWindowsKeepTargetIconOutsideTouchableHandleWindow() {
+        val layout = PointerPassThroughWindowLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 0, y = -95),
+        )
+
+        assertEquals(70, layout.touchableWidth)
+        assertEquals(70, layout.touchableHeight)
+        assertEquals(35 to 35, layout.handleCenter)
+        assertEquals(23 to -72, layout.targetIconTopLeftFromHandle)
+        assertEquals(35 to -60, layout.targetIconCenterFromHandle)
+        assertEquals(0, layout.visualLeft())
+        assertEquals(-72, layout.visualTop())
+        assertEquals(70, layout.visualWidth())
+        assertEquals(142, layout.visualHeight())
+        assertFalse(layout.touchableWindowContains(35, -24))
+        assertFalse(layout.touchableWindowContains(35, -60))
+    }
+
+    @Test
+    fun passThroughWindowsDoNotExpandTouchableBoundsForHorizontalTargetOffsets() {
+        val layout = PointerPassThroughWindowLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 60, y = -65),
+        )
+
+        assertEquals(70, layout.touchableWidth)
+        assertEquals(70, layout.touchableHeight)
+        assertEquals(83 to -42, layout.targetIconTopLeftFromHandle)
+        assertEquals(95 to -30, layout.targetIconCenterFromHandle)
+        assertEquals(107, layout.visualWidth())
+        assertEquals(112, layout.visualHeight())
+        assertFalse(layout.touchableWindowContains(95, -30))
+    }
+
+    @Test
     fun pointerDisplayPolicyDefaultsToDualPointerOnlyOnLargeDevices() {
         assertFalse(
             PointerDisplayPolicy.defaultDualPointerEnabled(
