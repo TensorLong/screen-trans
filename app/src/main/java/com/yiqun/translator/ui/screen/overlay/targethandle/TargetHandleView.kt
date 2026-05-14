@@ -84,10 +84,42 @@ import kotlin.math.sqrt
 /**
  */
 @Singleton
-class TargetHandleView private constructor() : OverlayView() {
+class TargetHandleView private constructor(
+    private val pointerSide: PointerSide,
+) : OverlayView() {
 
     companion object {
-        val INSTANCE: TargetHandleView by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { TargetHandleView() }
+        val PRIMARY: TargetHandleView by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { TargetHandleView(PointerSide.LEFT) }
+        val SECONDARY: TargetHandleView by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { TargetHandleView(PointerSide.RIGHT) }
+        val INSTANCE: TargetHandleView
+            get() = PRIMARY
+
+        suspend fun castConfigured(
+            applicationContext: Context,
+            dualPointerMode: Boolean,
+            repositionPrimary: Boolean = false,
+        ) {
+            if (PRIMARY.isRunning.get()) {
+                PRIMARY.dualPointerMode = dualPointerMode
+                if (repositionPrimary) {
+                    PRIMARY.setAtStartPosition(applicationContext)
+                }
+            } else {
+                PRIMARY.castWithMode(applicationContext, dualPointerMode)
+            }
+            if (dualPointerMode) {
+                if (!SECONDARY.isRunning.get()) {
+                    SECONDARY.castWithMode(applicationContext, true)
+                }
+            } else if (SECONDARY.isRunning.get()) {
+                SECONDARY.clear()
+            }
+        }
+
+        fun clearAll() {
+            if (PRIMARY.isRunning.get()) PRIMARY.clear()
+            if (SECONDARY.isRunning.get()) SECONDARY.clear()
+        }
     }
 
     private lateinit var viewModel: TargetHandleViewModel
@@ -97,6 +129,8 @@ class TargetHandleView private constructor() : OverlayView() {
     private var viewHeight = 0
 
     private var pointerDimen = 0
+
+    private var dualPointerMode = false
 
     private val pointerOffsetXState = MutableStateFlow(0)
 
@@ -135,6 +169,8 @@ class TargetHandleView private constructor() : OverlayView() {
         }
         val translateStatus by viewModel.translateStatusFlow.collectAsStateWithLifecycle()
         val motionEventState by viewModel.motionEventFlow.collectAsStateWithLifecycle()
+        val activePointerSide by viewModel.activePointerSideFlow.collectAsStateWithLifecycle()
+        val isActivePointer = activePointerSide == pointerSide
         LaunchedEffect(pointerStoppedPosition) {
             Timber.tag(TAG).d("LaunchedEffect motionEventState $motionEventState")
         }
@@ -171,8 +207,8 @@ class TargetHandleView private constructor() : OverlayView() {
         }
 
         val previousVisionText = remember { mutableStateOf<VisionText?>(null) }
-        LaunchedEffect(dragHandleHaptic, pointerStoppedPosition, pointerPositionedVisionText, textDetectMode) {
-            if (pointerPositionedVisionText == null) {
+        LaunchedEffect(dragHandleHaptic, pointerStoppedPosition, pointerPositionedVisionText, textDetectMode, activePointerSide) {
+            if (!isActivePointer || pointerPositionedVisionText == null) {
                 previousVisionText.value = null
             } else if (dragHandleHaptic
                 && pointerStoppedPosition != null
@@ -187,8 +223,8 @@ class TargetHandleView private constructor() : OverlayView() {
             }
         }
 
-        LaunchedEffect(textDetectMode, pointerStoppedPosition) {
-            if (pointerStoppedPosition != null && textDetectMode == TextDetectMode.SELECT && !AreaSelectionView.INSTANCE.isRunning.get()) {
+        LaunchedEffect(textDetectMode, pointerStoppedPosition, activePointerSide) {
+            if (isActivePointer && pointerStoppedPosition != null && textDetectMode == TextDetectMode.SELECT && !AreaSelectionView.INSTANCE.isRunning.get()) {
                 // Timber.tag(TAG).i("AreaSelectionView.INSTANCE.cast $pointerStoppedPosition")
                 if (dragHandleHaptic) {
                     context.vibrate()
@@ -197,8 +233,8 @@ class TargetHandleView private constructor() : OverlayView() {
             }
         }
 
-        LaunchedEffect(textDetectMode, pointerStoppedPosition) {
-            if (pointerStoppedPosition != null && textDetectMode == TextDetectMode.FIXED_AREA && !FixedAreaView.INSTANCE.isRunning.get()) {
+        LaunchedEffect(textDetectMode, pointerStoppedPosition, activePointerSide) {
+            if (isActivePointer && pointerStoppedPosition != null && textDetectMode == TextDetectMode.FIXED_AREA && !FixedAreaView.INSTANCE.isRunning.get()) {
                 // Timber.tag(TAG).i("FixedAreaView.INSTANCE.cast $pointerStoppedPosition")
                 if (dragHandleHaptic) {
                     context.vibrate()
@@ -238,7 +274,8 @@ class TargetHandleView private constructor() : OverlayView() {
                             if (isWritingRtl.value) rotationY = 180f
                         },
                     alpha = if (
-                        motionEventState == MotionEvent.INVALID_POINTER_ID
+                        !isActivePointer
+                        || motionEventState == MotionEvent.INVALID_POINTER_ID
                         || motionEventState == MotionEvent.ACTION_UP
                     ) 0.0f else 1.0f,
                     colorFilter = if (areaSelecting) {
@@ -275,10 +312,12 @@ class TargetHandleView private constructor() : OverlayView() {
             }
         }
 
-        LaunchedEffect(motionEventState, translationState, menuOperatingState) {
+        LaunchedEffect(motionEventState, translationState, menuOperatingState, activePointerSide) {
 //            Timber.tag(TAG).d("LaunchedEffect motionEventState == MotionEvent.ACTION_UP : ${motionEventState == MotionEvent.ACTION_UP}")
             Timber.tag(TAG).d("LaunchedEffect translationState [$translationState]")
-            if (menuOperatingState) {
+            if (!isActivePointer) {
+                cancelDockDragHandle()
+            } else if (menuOperatingState) {
                 cancelDockDragHandle()
             } else {
                 if (motionEventState == MotionEvent.ACTION_UP && translationState == null) {
@@ -339,6 +378,7 @@ class TargetHandleView private constructor() : OverlayView() {
                 when (event.action) {
                     MotionEvent.ACTION_DOWN -> {
                         if (applicationContext.isNetworkAvailable()) {
+                            viewModel.activePointerSideFlow.value = pointerSide
                             touchStartX = event.rawX
                             touchStartY = event.rawY
                             dragStartX = layoutParams.x
@@ -389,7 +429,7 @@ class TargetHandleView private constructor() : OverlayView() {
 
                         val x = layoutParams.x + viewWidth / 2 + _pointerOffsetX
                         val y = layoutParams.y + pointerDimen / 2 + _pointerOffsetY
-                        viewModel.pointerPositionFlow.value = Point(x, y)
+                        viewModel.updatePointerPosition(pointerSide, Point(x, y))
                     }
 
                     MotionEvent.ACTION_UP -> {
@@ -402,6 +442,11 @@ class TargetHandleView private constructor() : OverlayView() {
     }
 
     override suspend fun cast(applicationContext: Context) {
+        castWithMode(applicationContext, false)
+    }
+
+    suspend fun castWithMode(applicationContext: Context, dualPointerMode: Boolean) {
+        this.dualPointerMode = dualPointerMode
         val screenInfo: ScreenInfo = ScreenInfoHolder.get()
         viewWidth = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_width)
         viewHeight = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_height)
@@ -413,7 +458,7 @@ class TargetHandleView private constructor() : OverlayView() {
         layoutParams = WindowManager.LayoutParams(
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            screenInfo.width / 2 - viewWidth / 2,
+            startX(screenInfo),
             screenInfo.height / 2 - viewHeight / 2,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -439,9 +484,21 @@ class TargetHandleView private constructor() : OverlayView() {
         val screenInfo: ScreenInfo = ScreenInfoHolder.get()
         SayHereView.INSTANCE.clear()
         cancelDockDragHandle()
-        layoutParams.x = screenInfo.width / 2 - viewWidth / 2
+        layoutParams.x = startX(screenInfo)
         layoutParams.y = screenInfo.height / 2 - viewHeight / 2
         updateLayout(context)
+    }
+
+    private fun startX(screenInfo: ScreenInfo): Int {
+        val x = if (!dualPointerMode) {
+            screenInfo.width / 2 - viewWidth / 2
+        } else {
+            when (pointerSide) {
+                PointerSide.LEFT -> screenInfo.width / 4 - viewWidth / 2
+                PointerSide.RIGHT -> screenInfo.width * 3 / 4 - viewWidth / 2
+            }
+        }
+        return x.coerceIn(0, (screenInfo.width - viewWidth).coerceAtLeast(0))
     }
 
     override fun onServiceConnected(overlayService: OverlayService) {

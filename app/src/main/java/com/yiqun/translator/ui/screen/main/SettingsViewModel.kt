@@ -11,6 +11,7 @@ import com.yiqun.translator.data.remote.firebase.RemoteConfigRepository
 import com.yiqun.translator.data.remote.translation.TranslationKitType
 import com.yiqun.translator.data.remote.translation.TranslationRepository
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuConfig
+import com.yiqun.translator.ui.screen.overlay.targethandle.PointerOffset
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -46,6 +47,15 @@ class SettingsViewModel @Inject constructor(
 
     fun updateDragHandleHaptic(dragHandleHaptic: Boolean) {
         preferenceRepository.update(PreferenceRepository.DRAG_HANDLE_HAPTIC, dragHandleHaptic)
+    }
+
+    fun updatePointerOffset(left: PointerOffset, right: PointerOffset) {
+        preferenceRepository.update(PreferenceRepository.POINTER_LEFT_OFFSET, left.encode())
+        preferenceRepository.update(PreferenceRepository.POINTER_RIGHT_OFFSET, right.encode())
+    }
+
+    fun updateDualPointerEnabled(enabled: Boolean) {
+        preferenceRepository.update(PreferenceRepository.DUAL_POINTER_ENABLED, enabled)
     }
 
     fun updateMenuBarVisibility(menuVisibility: Boolean) {

@@ -23,7 +23,9 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +38,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -79,6 +82,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
@@ -126,6 +130,10 @@ import com.yiqun.translator.ui.screen.overlay.menubar.MenuConfig
 import com.yiqun.translator.ui.screen.overlay.settings.HelpTextDetectModeView
 import com.yiqun.translator.ui.screen.overlay.settings.HelpTranslationKitView
 import com.yiqun.translator.ui.screen.overlay.settings.SliderDialogView
+import com.yiqun.translator.ui.screen.overlay.targethandle.DeviceFormFactorResolver
+import com.yiqun.translator.ui.screen.overlay.targethandle.PointerCoordinateMapper
+import com.yiqun.translator.ui.screen.overlay.targethandle.PointerDisplayPolicy
+import com.yiqun.translator.ui.screen.overlay.targethandle.PointerOffset
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleView
 import com.yiqun.translator.ui.screen.overlay.voicelist.VoiceListView
 import com.yiqun.translator.ui.screen.permissions.ScreenCapturePermissionRequesterActivity
@@ -286,10 +294,10 @@ class SettingsActivity : AVDActivity() {
             if (!MenuBarView.INSTANCE.isRunning.get()) {
                 MenuBarView.INSTANCE.cast(applicationContext)
             }
-            if (!TargetHandleView.INSTANCE.isRunning.get()) {
-                TargetHandleView.INSTANCE.cast(applicationContext)
-//                snackMessageFlow.value = getString(R.string.snack_message_start_foreground_service)
-            }
+            TargetHandleView.castConfigured(
+                applicationContext = applicationContext,
+                dualPointerMode = viewModel.preferenceRepository.dualPointerEnabledFlow.first()
+            )
 
             delay(1000)
             if (isActive) {
@@ -393,6 +401,21 @@ class SettingsActivity : AVDActivity() {
             lifecycle = lifecycleOwner.lifecycle,
             initialValue = false
         )
+
+        val pointerLeftOffset by viewModel.preferenceRepository.pointerLeftOffsetFlow.collectAsStateWithLifecycle(
+            lifecycle = lifecycleOwner.lifecycle,
+            initialValue = PointerOffset.DEFAULT
+        )
+        val pointerRightOffset by viewModel.preferenceRepository.pointerRightOffsetFlow.collectAsStateWithLifecycle(
+            lifecycle = lifecycleOwner.lifecycle,
+            initialValue = PointerOffset.DEFAULT
+        )
+        val dualPointerEnabled by viewModel.preferenceRepository.dualPointerEnabledFlow.collectAsStateWithLifecycle(
+            lifecycle = lifecycleOwner.lifecycle,
+            initialValue = PointerDisplayPolicy.defaultDualPointerEnabled(DeviceFormFactorResolver.resolve(configuration))
+        )
+        val supportsDualPointer = PointerDisplayPolicy.defaultDualPointerEnabled(DeviceFormFactorResolver.resolve(configuration))
+        var showPointerCalibration by remember { mutableStateOf(false) }
 
         // Menubar Visibility
         val menuBarVisibility by viewModel.preferenceRepository.menuBarVisibilityFlow.collectAsStateWithLifecycle(
@@ -660,6 +683,73 @@ class SettingsActivity : AVDActivity() {
 
                             MenuItem(
                                 menuItemPosition = MenuItemPosition.Top,
+                                onClick = {
+                                    showPointerCalibration = true
+                                }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 50.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    MenuText(text = getString(R.string.settings_menu_pointer_distance))
+                                    Text(
+                                        modifier = Modifier.padding(end = 10.dp),
+                                        text = if (dualPointerEnabled) getString(R.string.settings_menu_pointer_distance_dual) else getString(R.string.settings_menu_pointer_distance_single),
+                                        color = subContentColor,
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = fontDimensionResource(R.dimen.settings_menu_subtext_size)),
+                                    )
+                                }
+                            }
+
+                            if (supportsDualPointer) {
+                                MenuItem(
+                                    menuItemPosition = MenuItemPosition.Middle,
+                                    onClick = {
+                                        val updated = !dualPointerEnabled
+                                        viewModel.updateDualPointerEnabled(updated)
+                                        coroutineScope.launch {
+                                            TargetHandleView.castConfigured(applicationContext, updated, repositionPrimary = true)
+                                        }
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        MenuText(text = getString(R.string.settings_menu_dual_pointer))
+                                        Switch(
+                                            checked = dualPointerEnabled,
+                                            onCheckedChange = { value ->
+                                                viewModel.updateDualPointerEnabled(value)
+                                                coroutineScope.launch {
+                                                    TargetHandleView.castConfigured(applicationContext, value, repositionPrimary = true)
+                                                }
+                                            },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = switchThumbColor,
+                                                checkedTrackColor = switchTrackColor
+                                            ),
+                                            modifier = Modifier
+                                                .scale(switchScale)
+                                                .align(Alignment.CenterVertically)
+                                                .semantics {
+                                                    contentDescription = if (dualPointerEnabled) {
+                                                        "Dual pointer on"
+                                                    } else {
+                                                        "Dual pointer off"
+                                                    }
+                                                }
+                                        )
+                                    }
+                                }
+                            }
+
+                            MenuItem(
+                                menuItemPosition = MenuItemPosition.Middle,
                                 onClick = {
                                     coroutineScope.launch {
                                         settingStringFlow.value = getSecondValueText(dockingDelay)
@@ -1353,6 +1443,26 @@ class SettingsActivity : AVDActivity() {
             }
         }
 
+        if (showPointerCalibration) {
+            PointerDistanceCalibrationView(
+                leftOffset = pointerLeftOffset,
+                rightOffset = pointerRightOffset,
+                dualPointerEnabled = supportsDualPointer && dualPointerEnabled,
+                onDismissRequest = {
+                    closeTranslation()
+                    showPointerCalibration = false
+                },
+                onConfirm = { left, right ->
+                    closeTranslation()
+                    viewModel.updatePointerOffset(left, right)
+                    showPointerCalibration = false
+                },
+                onTest = { point ->
+                    runTranslation(point, TextDetectMode.SENTENCE)
+                },
+            )
+        }
+
         if (showAiApiSettingsDialog) {
             AiApiSettingsDialog(
                 onDismissRequest = { showAiApiSettingsDialog = false },
@@ -1377,6 +1487,199 @@ class SettingsActivity : AVDActivity() {
                 onFetchModels = { viewModel.fetchAiModels() },
                 onTestConnection = { viewModel.testAiConnection() },
             )
+        }
+    }
+
+    @Composable
+    fun PointerDistanceCalibrationView(
+        leftOffset: PointerOffset,
+        rightOffset: PointerOffset,
+        dualPointerEnabled: Boolean,
+        onDismissRequest: () -> Unit,
+        onConfirm: (PointerOffset, PointerOffset) -> Unit,
+        onTest: (Point) -> Unit,
+    ) {
+        var currentLeftOffset by remember(leftOffset) { mutableStateOf(leftOffset) }
+        var currentRightOffset by remember(rightOffset) { mutableStateOf(rightOffset) }
+        val isDarkMode = isSystemInDarkTheme()
+        val backgroundColor = if (isDarkMode) Color(0xFF101012) else Color(0xFFf8f8fb)
+        val contentColor = if (isDarkMode) Color(0xFFfcfcfc) else Color(0xFF010000)
+        val subContentColor = if (isDarkMode) Color(0xFFc8c8cc) else Color(0xFF626265)
+
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = backgroundColor
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(22.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = getString(R.string.settings_menu_pointer_distance),
+                        color = contentColor,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = getString(R.string.settings_menu_pointer_distance_helper),
+                        color = subContentColor,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    PointerCalibrationTarget(
+                        modifier = Modifier.weight(1f),
+                        label = if (dualPointerEnabled) getString(R.string.settings_menu_pointer_left) else getString(R.string.settings_menu_pointer_single),
+                        offset = currentLeftOffset,
+                        onOffsetChange = { currentLeftOffset = it },
+                        onTest = { anchor ->
+                            val (x, y) = PointerCoordinateMapper.toOcrPoint(
+                                visualPointerX = anchor.x - currentLeftOffset.x,
+                                visualPointerY = anchor.y - currentLeftOffset.y,
+                                offset = currentLeftOffset
+                            )
+                            onTest(Point(x, y))
+                        },
+                    )
+                    if (dualPointerEnabled) {
+                        PointerCalibrationTarget(
+                            modifier = Modifier.weight(1f),
+                            label = getString(R.string.settings_menu_pointer_right),
+                            offset = currentRightOffset,
+                            onOffsetChange = { currentRightOffset = it },
+                            onTest = { anchor ->
+                                val (x, y) = PointerCoordinateMapper.toOcrPoint(
+                                    visualPointerX = anchor.x - currentRightOffset.x,
+                                    visualPointerY = anchor.y - currentRightOffset.y,
+                                    offset = currentRightOffset
+                                )
+                                onTest(Point(x, y))
+                            },
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                currentLeftOffset = PointerOffset.DEFAULT
+                                currentRightOffset = PointerOffset.DEFAULT
+                            },
+                        ) {
+                            Text(getString(R.string.settings_menu_pointer_distance_reset))
+                        }
+                        Button(
+                            modifier = Modifier.weight(1f),
+                            onClick = onDismissRequest,
+                        ) {
+                            Text(getString(R.string.settings_menu_ai_api_cancel))
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { onConfirm(currentLeftOffset, currentRightOffset) },
+                    ) {
+                        Text(getString(R.string.settings_menu_ai_api_save))
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun PointerCalibrationTarget(
+        modifier: Modifier = Modifier,
+        label: String,
+        offset: PointerOffset,
+        onOffsetChange: (PointerOffset) -> Unit,
+        onTest: (Point) -> Unit,
+    ) {
+        var anchorPoint by remember { mutableStateOf(Point(0, 0)) }
+        val isDarkMode = isSystemInDarkTheme()
+        val borderColor = if (isDarkMode) Color(0xFF6a91b2) else Color(0xFF446987)
+        val textColor = if (isDarkMode) Color(0xFFfcfcfc) else Color(0xFF010000)
+
+        Column(
+            modifier = modifier,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = label,
+                color = textColor,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .background(
+                        color = if (isDarkMode) Color(0xFF1f1f22) else Color.White,
+                        shape = RoundedCornerShape(22.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .border(1.5.dp, borderColor, RoundedCornerShape(10.dp))
+                        .padding(12.dp)
+                        .onGloballyPositioned { coordinates ->
+                            val center = coordinates.boundsInWindow().center
+                            anchorPoint = Point(center.x.roundToInt(), center.y.roundToInt())
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = getString(R.string.settings_menu_pointer_distance_sample),
+                        color = textColor,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
+                    )
+                }
+                Image(
+                    painter = painterResource(id = R.drawable.drag_pointer),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(34.dp)
+                        .offset { androidx.compose.ui.unit.IntOffset(-offset.x, -offset.y) }
+                        .pointerInput(offset) {
+                            detectDragGestures { _, dragAmount ->
+                                onOffsetChange(
+                                    PointerOffset(
+                                        x = offset.x - dragAmount.x.roundToInt(),
+                                        y = offset.y - dragAmount.y.roundToInt(),
+                                    )
+                                )
+                            }
+                        }
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Button(
+                onClick = { onTest(anchorPoint) },
+            ) {
+                Text(getString(R.string.settings_menu_ai_api_test))
+            }
         }
     }
 
@@ -1623,7 +1926,7 @@ class SettingsActivity : AVDActivity() {
 
     private fun startReviewFlow(manager: ReviewManager) {
         MenuBarView.INSTANCE.clear()
-        TargetHandleView.INSTANCE.clear()
+        TargetHandleView.clearAll()
 
         val request = manager.requestReviewFlow()
 //        Timber.tag(TAG).d("appReview() startReviewFlow request $request")
@@ -1641,7 +1944,10 @@ class SettingsActivity : AVDActivity() {
             }
             lifecycleScope.launch {
                 MenuBarView.INSTANCE.cast(applicationContext)
-                TargetHandleView.INSTANCE.cast(applicationContext)
+                TargetHandleView.castConfigured(
+                    applicationContext = applicationContext,
+                    dualPointerMode = viewModel.preferenceRepository.dualPointerEnabledFlow.first()
+                )
             }
         }
     }

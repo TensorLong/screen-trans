@@ -148,6 +148,10 @@ class TargetHandleViewModel(
      */
     val pointerPositionFlow = MutableStateFlow<Point?>(null)
 
+    val activePointerSideFlow = MutableStateFlow(PointerSide.LEFT)
+
+    private val pointerOffsetPairFlow = MutableStateFlow(PointerOffsetPair.DEFAULT)
+
     /**
      */
     val dockStateFlow = MutableStateFlow<Boolean>(false)
@@ -202,7 +206,7 @@ class TargetHandleViewModel(
                         SecureRepository.VERDICT_APP_RECOGNITION_FAILED = true
                         delay(warnDelay)
                         MenuBarView.INSTANCE.clear()
-                        TargetHandleView.INSTANCE.clear()
+                        TargetHandleView.clearAll()
                         DialogView.INSTANCE.cast(
                             applicationContext = applicationContext,
                             isGlobalAlerts = true,
@@ -222,7 +226,7 @@ class TargetHandleViewModel(
                         sendSecureAnalytics(secureAssessmentInfo)
                         delay(warnDelay)
                         MenuBarView.INSTANCE.clear()
-                        TargetHandleView.INSTANCE.clear()
+                        TargetHandleView.clearAll()
                         DialogView.INSTANCE.cast(
                             applicationContext = applicationContext,
                             isGlobalAlerts = true,
@@ -246,7 +250,7 @@ class TargetHandleViewModel(
                         sendSecureAnalytics(secureAssessmentInfo)
                         delay(warnDelay)
                         MenuBarView.INSTANCE.clear()
-                        TargetHandleView.INSTANCE.clear()
+                        TargetHandleView.clearAll()
                         DialogView.INSTANCE.cast(
                             applicationContext = applicationContext,
                             isGlobalAlerts = true,
@@ -285,7 +289,7 @@ class TargetHandleViewModel(
                         sendSecureAnalytics(secureAssessmentInfo)
                         delay(warnDelay)
                         MenuBarView.INSTANCE.clear()
-                        TargetHandleView.INSTANCE.clear()
+                        TargetHandleView.clearAll()
                         DialogView.INSTANCE.cast(
                             applicationContext = applicationContext,
                             isGlobalAlerts = true,
@@ -513,6 +517,17 @@ class TargetHandleViewModel(
                     ttsSpeechRate = ttsSpeechRate_
                 }
         }
+
+        viewModelScope.launch {
+            combine(
+                preferenceRepository.pointerLeftOffsetFlow,
+                preferenceRepository.pointerRightOffsetFlow
+            ) { left, right ->
+                PointerOffsetPair(left, right)
+            }.collect { offsets ->
+                pointerOffsetPairFlow.value = offsets
+            }
+        }
     }
 
     fun updateTextDetectMode(textDetectMode: TextDetectMode) {
@@ -521,6 +536,16 @@ class TargetHandleViewModel(
 
     fun updateTranslationKitType(kitType: TranslationKitType) {
         preferenceRepository.update(PreferenceRepository.TRANSLATION_KIT_TYPE, kitType.name)
+    }
+
+    fun updatePointerPosition(side: PointerSide, visualPoint: Point) {
+        activePointerSideFlow.value = side
+        val offsets = pointerOffsetPairFlow.value
+        val offset = when (side) {
+            PointerSide.LEFT -> offsets.left
+            PointerSide.RIGHT -> offsets.right
+        }
+        pointerPositionFlow.value = PointerCoordinateMapper.toOcrPoint(visualPoint, offset)
     }
 
 

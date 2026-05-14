@@ -60,6 +60,16 @@
     <!-- SettingsActivity -->
     <string name="settings_title">Settings</string>
     <string name="settings_menu_cat_pointer">Pointer Handle</string>
+    <string name="settings_menu_pointer_distance">Pointer Distance</string>
+    <string name="settings_menu_pointer_distance_single">Single</string>
+    <string name="settings_menu_pointer_distance_dual">Left / Right</string>
+    <string name="settings_menu_pointer_distance_helper">Drag the pointer around the sample OCR frame. Test uses the temporary position; Save makes it permanent.</string>
+    <string name="settings_menu_pointer_distance_sample">Sample text for pointer testing</string>
+    <string name="settings_menu_pointer_distance_reset">Reset</string>
+    <string name="settings_menu_dual_pointer">Dual Pointer</string>
+    <string name="settings_menu_pointer_single">Pointer</string>
+    <string name="settings_menu_pointer_left">Left Pointer</string>
+    <string name="settings_menu_pointer_right">Right Pointer</string>
     <string name="settings_menu_pointer_docking_delay">Pointer Docking Delay</string>
     <string name="settings_menu_haptic_feedback_to_detection">Haptic Feedback on Detection</string>
     <string name="settings_menu_cat_menubar">Menu Bar</string>

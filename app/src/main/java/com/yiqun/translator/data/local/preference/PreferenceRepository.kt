@@ -16,6 +16,9 @@ import com.yiqun.translator.data.local.vision.TextDetectMode
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuConfig
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.yiqun.translator.ui.screen.overlay.targethandle.DeviceFormFactorResolver
+import com.yiqun.translator.ui.screen.overlay.targethandle.PointerDisplayPolicy
+import com.yiqun.translator.ui.screen.overlay.targethandle.PointerOffset
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +59,9 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
         val DRAG_HANDLE_DOCKING = booleanPreferencesKey("drag_handle_docking")
         val DOCKING_DELAY = longPreferencesKey("docking_delay")
         val DRAG_HANDLE_HAPTIC = booleanPreferencesKey("drag_handle_haptic")
+        val POINTER_LEFT_OFFSET = stringPreferencesKey("pointer_left_offset")
+        val POINTER_RIGHT_OFFSET = stringPreferencesKey("pointer_right_offset")
+        val DUAL_POINTER_ENABLED = booleanPreferencesKey("dual_pointer_enabled")
         val MENU_BAR_VISIBILITY = booleanPreferencesKey("menu_bar_visibility")
         val MENU_BAR_TRANSPARENCY = floatPreferencesKey("menu_bar_transparency")
         val MENU_BAR_COMPOSITION = stringPreferencesKey("menu_bar_composition")
@@ -149,6 +155,20 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
 
     val dragHandleHapticFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
         preferences[DRAG_HANDLE_HAPTIC] ?: false
+    }
+
+    val pointerLeftOffsetFlow: Flow<PointerOffset> = preferenceFlow.map { preferences ->
+        PointerOffset.decode(preferences[POINTER_LEFT_OFFSET])
+    }
+
+    val pointerRightOffsetFlow: Flow<PointerOffset> = preferenceFlow.map { preferences ->
+        PointerOffset.decode(preferences[POINTER_RIGHT_OFFSET])
+    }
+
+    val dualPointerEnabledFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
+        preferences[DUAL_POINTER_ENABLED] ?: PointerDisplayPolicy.defaultDualPointerEnabled(
+            DeviceFormFactorResolver.resolve(context.resources.configuration)
+        )
     }
 
     val menuBarVisibilityFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
