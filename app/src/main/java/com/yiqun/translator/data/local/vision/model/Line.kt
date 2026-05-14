@@ -3,6 +3,7 @@ package com.yiqun.translator.data.local.vision.model
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Rect
+import com.yiqun.translator.data.local.vision.VisionCoordinateMapper
 import com.yiqun.translator.data.local.vision.WritingDirection
 import com.yiqun.translator.extensions._cutDecimal
 import com.yiqun.translator.extensions._unionWith
@@ -90,19 +91,22 @@ data class Line(
 
     /**
      */
-    fun setFontAndBackgroundColors(bitmap: Bitmap) {
-        val yCenter = boundingBox.centerY()
-        val xCenter = boundingBox.centerX()
+    fun setFontAndBackgroundColors(
+        bitmap: Bitmap,
+        coordinateOffsetX: Int = 0,
+        coordinateOffsetY: Int = 0,
+    ) {
+        val localBoundingBox = VisionCoordinateMapper.toLocalRect(boundingBox, coordinateOffsetX, coordinateOffsetY)
 
-        val left = boundingBox.left - 2
-        val right = boundingBox.right + 2
-        val top = boundingBox.top - 2
-        val bottom = boundingBox.bottom + 2
+        val left = localBoundingBox.left - 2
+        val right = localBoundingBox.right + 2
+        val top = localBoundingBox.top - 2
+        val bottom = localBoundingBox.bottom + 2
 
-        val x1 = (boundingBox.left + boundingBox.width() / 3).coerceIn(0, bitmap.width - 1)
-        val x2 = (boundingBox.left + 2 * boundingBox.width() / 3).coerceIn(0, bitmap.width - 1)
-        val y1 = (boundingBox.top + boundingBox.height() / 3).coerceIn(0, bitmap.height - 1)
-        val y2 = (boundingBox.top + 2 * boundingBox.height() / 3).coerceIn(0, bitmap.height - 1)
+        val x1 = (localBoundingBox.left + localBoundingBox.width() / 3).coerceIn(0, bitmap.width - 1)
+        val x2 = (localBoundingBox.left + 2 * localBoundingBox.width() / 3).coerceIn(0, bitmap.width - 1)
+        val y1 = (localBoundingBox.top + localBoundingBox.height() / 3).coerceIn(0, bitmap.height - 1)
+        val y2 = (localBoundingBox.top + 2 * localBoundingBox.height() / 3).coerceIn(0, bitmap.height - 1)
 
         val leftPixels = listOfNotNull(
             if (left >= 0) bitmap.getPixel(left, y1) else null,
@@ -137,7 +141,7 @@ data class Line(
         } ?: allChars[midIndex]
 
 
-        val charBoundingBox = nonSpecialChar.boundingBox
+        val charBoundingBox = VisionCoordinateMapper.toLocalRect(nonSpecialChar.boundingBox, coordinateOffsetX, coordinateOffsetY)
         Timber.tag("Line").d("charBoundingBox $nonSpecialChar ${nonSpecialChar.boundingBox}")
 
         val horizontalPixelData1 = IntArray(charBoundingBox.width())

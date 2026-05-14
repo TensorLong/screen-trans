@@ -7,8 +7,10 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
+import android.media.Image
 import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
@@ -37,6 +39,8 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
     }
 
     companion object {
+        private const val ARGB_8888_BYTES_PER_PIXEL = 4
+
         var mediaProjectionToken: Intent? = null
             set(value) {
                 field = value
@@ -55,6 +59,8 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
     private var virtualDisplay: VirtualDisplay? = null
 
     private val captureResponseFlow = MutableStateFlow<CaptureResponse?>(null)
+
+    private var requestedScreenRect: Rect? = null
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -110,25 +116,13 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
                 try {
                     if (captureResponseFlow.value == null) {
                         if (capturedImage != null) {
-                            val planes = capturedImage.planes
-                            val buffer = planes[0].buffer
-
-                            val pixelStride = planes[0].pixelStride
-                            val rowStride = planes[0].rowStride
-                            val rowPadding: Int = rowStride - pixelStride * screenInfo.width
-//                            Timber.tag(TAG).d("width $width")
-//                            Timber.tag(TAG).d("height $height")
-//                            Timber.tag(TAG).d("capturedImage.width ${capturedImage.width}")
-//                            Timber.tag(TAG).d("capturedImage.height ${capturedImage.height}")
-//                            Timber.tag(TAG).d("pixelStride $pixelStride")
-//                            Timber.tag(TAG).d("rowStride $rowStride")
-//                            Timber.tag(TAG).d("rowPadding $rowPadding")
-
-                            var capturedBitmap = createBitmap(screenInfo.width + rowPadding / pixelStride, screenInfo.height)
-                            capturedBitmap.copyPixelsFromBuffer(buffer)
-                            capturedBitmap = Bitmap.createBitmap(capturedBitmap, 0, 0, screenInfo.width, screenInfo.height)
+                            val (capturedBitmap, screenRect) = bitmapFromImage(
+                                image = capturedImage,
+                                screenInfo = screenInfo,
+                                requestedRect = requestedScreenRect,
+                            )
 //                            Timber.tag(TAG).d("capturedBitmap.allocationByteCount ${capturedBitmap.allocationByteCount}")
-                            captureResponseFlow.value = CaptureResponse.Success(capturedBitmap)
+                            captureResponseFlow.value = CaptureResponse.Success(capturedBitmap, screenRect)
                         } else {
                             captureResponseFlow.value = CaptureResponse.Error(CapturedImageInvalidException())
                         }
@@ -159,6 +153,131 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
             Timber.tag(TAG).e("err e ${e.toString()} $mediaProjectionToken")
             captureResponseFlow.value = CaptureResponse.Error(NoMediaProjectionTokenException(e.toString()))
         }
+    }
+
+    private fun bitmapFromImage(
+        image: Image,
+        screenInfo: ScreenInfo,
+        requestedRect: Rect?,
+    ): Pair<Bitmap, Rect> {
+        val screenRect = rectOf(0, 0, screenInfo.width, screenInfo.height)
+        val safeRect = requestedRect
+            ?.let { sanitizeRect(it, screenInfo.width, screenInfo.height) }
+            ?: screenRect
+
+        return if (sameRect(safeRect, screenRect)) {
+            copyFullBitmap(image, screenInfo) to screenRect
+        } else {
+            copyCroppedBitmap(image, safeRect) to safeRect
+        }
+    }
+
+    private fun copyFullBitmap(image: Image, screenInfo: ScreenInfo): Bitmap {
+        val planes = image.planes
+        val buffer = planes[0].buffer
+
+        val pixelStride = planes[0].pixelStride
+        val rowStride = planes[0].rowStride
+        val rowPadding: Int = rowStride - pixelStride * screenInfo.width
+
+        val paddedBitmap = createBitmap(screenInfo.width + rowPadding / pixelStride, screenInfo.height)
+        paddedBitmap.copyPixelsFromBuffer(buffer)
+        if (rowPadding == 0) {
+            return paddedBitmap
+        }
+
+        val croppedBitmap = Bitmap.createBitmap(paddedBitmap, 0, 0, screenInfo.width, screenInfo.height)
+        paddedBitmap.recycle()
+        return croppedBitmap
+    }
+
+    private fun copyCroppedBitmap(image: Image, rect: Rect): Bitmap {
+        val plane = image.planes[0]
+        if (rect.left == 0 && rect.right == image.width && plane.pixelStride == ARGB_8888_BYTES_PER_PIXEL) {
+            return copyFullWidthCroppedBitmap(image, rect, plane)
+        }
+        return copyCroppedBitmapPixelByPixel(image, rect, plane)
+    }
+
+    private fun copyFullWidthCroppedBitmap(
+        image: Image,
+        rect: Rect,
+        plane: Image.Plane,
+    ): Bitmap {
+        val pixelStride = plane.pixelStride
+        val rowStride = plane.rowStride
+        if (rowStride % pixelStride != 0) {
+            return copyCroppedBitmapPixelByPixel(image, rect, plane)
+        }
+
+        val paddedWidth = rowStride / pixelStride
+        val height = rect.bottom - rect.top
+        val buffer = plane.buffer.duplicate()
+        buffer.position(rect.top * rowStride)
+
+        val paddedBitmap = createBitmap(paddedWidth, height)
+        paddedBitmap.copyPixelsFromBuffer(buffer)
+        if (paddedWidth == rect.width()) {
+            return paddedBitmap
+        }
+
+        val croppedBitmap = Bitmap.createBitmap(paddedBitmap, 0, 0, rect.width(), height)
+        paddedBitmap.recycle()
+        return croppedBitmap
+    }
+
+    private fun copyCroppedBitmapPixelByPixel(
+        image: Image,
+        rect: Rect,
+        plane: Image.Plane,
+    ): Bitmap {
+        val buffer = plane.buffer
+        val pixelStride = plane.pixelStride
+        val rowStride = plane.rowStride
+        val width = rect.right - rect.left
+        val height = rect.bottom - rect.top
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+        val rowPixels = IntArray(width)
+
+        for (row in 0 until height) {
+            val bufferRowStart = (rect.top + row) * rowStride + rect.left * pixelStride
+            for (column in 0 until width) {
+                val pixelStart = bufferRowStart + column * pixelStride
+                val red = buffer.get(pixelStart).toInt() and 0xFF
+                val green = buffer.get(pixelStart + 1).toInt() and 0xFF
+                val blue = buffer.get(pixelStart + 2).toInt() and 0xFF
+                rowPixels[column] = (0xFF shl 24) or (red shl 16) or (green shl 8) or blue
+            }
+            bitmap.setPixels(rowPixels, 0, width, 0, row, width, 1)
+        }
+
+        return bitmap
+    }
+
+    private fun sanitizeRect(rect: Rect, screenWidth: Int, screenHeight: Int): Rect {
+        val maxRight = screenWidth.coerceAtLeast(1)
+        val maxBottom = screenHeight.coerceAtLeast(1)
+        val left = rect.left.coerceIn(0, maxRight - 1)
+        val top = rect.top.coerceIn(0, maxBottom - 1)
+        val right = rect.right.coerceIn(left + 1, maxRight)
+        val bottom = rect.bottom.coerceIn(top + 1, maxBottom)
+        return rectOf(left, top, right, bottom)
+    }
+
+    private fun rectOf(left: Int, top: Int, right: Int, bottom: Int): Rect {
+        return Rect().apply {
+            this.left = left
+            this.top = top
+            this.right = right
+            this.bottom = bottom
+        }
+    }
+
+    private fun sameRect(first: Rect, second: Rect): Boolean {
+        return first.left == second.left &&
+                first.top == second.top &&
+                first.right == second.right &&
+                first.bottom == second.bottom
     }
 
     fun restart() {
@@ -227,9 +346,10 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
         mediaProjection = null
     }
 
-    suspend fun request(): CaptureResponse {
+    suspend fun request(cropRect: Rect? = null): CaptureResponse {
         Timber.tag(TAG).i("#### request() ####")
         captureResponseFlow.value = null
+        requestedScreenRect = cropRect
 
         Timber.tag(TAG).i("State $state")
         if (state == State.Uninitialized) {
@@ -238,8 +358,15 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
 
         var captureResponse: CaptureResponse = captureResponseFlow.filterNotNull().first()
         if (captureResponse is CaptureResponse.Success) {
-            captureResponse = CaptureResponse.Success(removeAlphaChannel(captureResponse.bitmap))
-            Timber.tag(TAG).d("removeAlphaChannel capturedBitmap.allocationByteCount ${captureResponse.bitmap.allocationByteCount}")
+            if (captureResponse.bitmap.config != Bitmap.Config.RGB_565) {
+                val originalBitmap = captureResponse.bitmap
+                captureResponse = CaptureResponse.Success(
+                    bitmap = removeAlphaChannel(originalBitmap),
+                    screenRect = captureResponse.screenRect,
+                )
+                originalBitmap.recycle()
+                Timber.tag(TAG).d("removeAlphaChannel capturedBitmap.allocationByteCount ${captureResponse.bitmap.allocationByteCount}")
+            }
 
 //            val (isCapturePrevented, checkerBitmap) = isCapturePrevented(capturedBitmap)
 //            captureWorkFlow.value =
@@ -249,6 +376,7 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
 //                    Response.Success(capturedBitmap)
 //                }
         }
+        requestedScreenRect = null
         return captureResponse
     }
 
@@ -257,5 +385,5 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
         clearResources()
         mediaProjectionToken = null
     }
-}
 
+}

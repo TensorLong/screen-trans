@@ -19,10 +19,12 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.yiqun.translator.R
 import com.yiqun.translator.data.local.capture.CapturePreventedException
+import com.yiqun.translator.data.local.capture.PointedCaptureCrop
 import com.yiqun.translator.data.local.capture.CaptureRepository
 import com.yiqun.translator.data.local.capture.CaptureResponse
 import com.yiqun.translator.data.local.capture.NoMediaProjectionTokenException
 import com.yiqun.translator.data.local.preference.PreferenceRepository
+import com.yiqun.translator.data.local.screen.ScreenInfoHolder
 import com.yiqun.translator.data.local.secure.ApiKeyInfo
 import com.yiqun.translator.data.local.secure.DeviceActivityLevel
 import com.yiqun.translator.data.local.secure.DeviceInspection
@@ -169,6 +171,10 @@ class TargetHandleViewModel(
     /**
      */
     val translateStatusFlow = MutableStateFlow(TranslateStatus.Idle)
+
+    private var captureJob: Job? = null
+
+    private var visionCaptureScreenRect: Rect? = null
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -564,13 +570,10 @@ class TargetHandleViewModel(
                 .collect { motionEvent ->
                     if (motionEvent == MotionEvent.ACTION_DOWN) {
                         Timber.tag(TAG).i("#### TargetHandle motionEvent MotionEvent.ACTION_DOWN ####")
-                        if (
-                            textDetectMode == TextDetectMode.WORD
-                            || textDetectMode == TextDetectMode.SENTENCE
-                            || textDetectMode == TextDetectMode.SENSE_GROUP
-                            || textDetectMode == TextDetectMode.PARAGRAPH
-                        ) {
-                            requestCapture()
+                        if (isPointedTranslationMode(textDetectMode)) {
+                            visionResultFlow.value = null
+                            visionCaptureScreenRect = null
+                            captureStatusFlow.value = CaptureStatus.Idle
                         }
                     } else if (motionEvent == MotionEvent.ACTION_UP) {
                         Timber.tag(TAG).i("#### TargetHandle motionEvent MotionEvent.ACTION_UP ####")
@@ -580,20 +583,57 @@ class TargetHandleViewModel(
         }
     }
 
+    private fun collectPointerStoppedCaptureRequests() {
+        viewModelScope.launch {
+            pointerStoppedPositionFlow
+                .collectLatest { pointerPosition ->
+                    if (pointerPosition == null) {
+                        captureJob?.cancel()
+                        return@collectLatest
+                    }
+                    if (!isPointedTranslationMode(textDetectMode)) {
+                        return@collectLatest
+                    }
+                    val motionEventState = motionEventFlow.first()
+                    if (motionEventState != MotionEvent.ACTION_DOWN && motionEventState != MotionEvent.ACTION_MOVE) {
+                        return@collectLatest
+                    }
+                    if (visionCaptureScreenRect?.containsPoint(pointerPosition) == true && visionResultFlow.value != null) {
+                        return@collectLatest
+                    }
+                    requestCapture(pointerPosition)
+                }
+        }
+    }
+
+    private fun isPointedTranslationMode(textDetectMode: TextDetectMode): Boolean {
+        return textDetectMode == TextDetectMode.WORD ||
+                textDetectMode == TextDetectMode.SENTENCE ||
+                textDetectMode == TextDetectMode.SENSE_GROUP ||
+                textDetectMode == TextDetectMode.PARAGRAPH
+    }
+
     /**
      */
-    private fun requestCapture() {
+    private fun requestCapture(pointerPosition: Point) {
         startTime = System.nanoTime()
         Timber.tag(TAG).i("#### requestCapture() ####")
 
         visionResultFlow.value = null
         captureStatusFlow.value = CaptureStatus.Requested
 
-        viewModelScope.launch {
+        captureJob?.cancel()
+        captureJob = viewModelScope.launch {
             Timber.tag(TAG).d("requestCapture viewModelScope.launch -------------- 0")
             delay(50)
             Timber.tag(TAG).d("requestCapture viewModelScope.launch -------------- 1")
-            val captureResponse: CaptureResponse = captureRepository.request()
+            val screenInfo = ScreenInfoHolder.get()
+            val cropRect = PointedCaptureCrop.boundsFor(
+                screenWidth = screenInfo.width,
+                screenHeight = screenInfo.height,
+                pointer = pointerPosition,
+            )
+            val captureResponse: CaptureResponse = captureRepository.request(cropRect)
             Timber.tag(TAG).d("requestCapture viewModelScope.launch -------------- 2 $captureResponse")
             if (captureResponse is CaptureResponse.Success) {
                 endTime = System.nanoTime()
@@ -606,7 +646,7 @@ class TargetHandleViewModel(
                 Timber.tag(TAG).d("requestCapture motionEventState $motionEventState")
                 if (motionEventState == MotionEvent.ACTION_DOWN || motionEventState == MotionEvent.ACTION_MOVE) {
                     captureStatusFlow.value = CaptureStatus.Captured
-                    requestVision(captureResponse.bitmap)
+                    requestVision(captureResponse.bitmap, captureResponse.screenRect)
                 }
             } else if (captureResponse is CaptureResponse.Error) {
                 Timber.tag(TAG).d("CaptureResponse.Error ${captureResponse.t.toString()}")
@@ -625,6 +665,7 @@ class TargetHandleViewModel(
     }
 
     fun cancelCapture() {
+        captureJob?.cancel()
         pointerPositionFlow.value = null
         pointerPositionedTranslationFlow.value = null
         if (captureStatusFlow.value != CaptureStatus.PermissionRequested) {
@@ -632,6 +673,7 @@ class TargetHandleViewModel(
         }
         translateStatusFlow.value = TranslateStatus.Idle
         visionResultFlow.value = null
+        visionCaptureScreenRect = null
     }
 
     fun restartCaptureRepository() {
@@ -647,7 +689,7 @@ class TargetHandleViewModel(
 
     /**
      */
-    private suspend fun requestVision(capturedBitmap: Bitmap) {
+    private suspend fun requestVision(capturedBitmap: Bitmap, captureScreenRect: Rect) {
         startTime = System.nanoTime()
         Timber.tag(TAG).i("#### requestVision() ####")
 
@@ -655,6 +697,8 @@ class TargetHandleViewModel(
         val visionResponse: VisionResponse = visionRepository.request(
             bitmap = capturedBitmap,
             sourceLanguageCode = sourceLanguageCode,
+            coordinateOffsetX = captureScreenRect.left,
+            coordinateOffsetY = captureScreenRect.top,
         )
 
         if (visionResponse is VisionResponse.Success) {
@@ -672,6 +716,7 @@ class TargetHandleViewModel(
             val motionEventState = motionEventFlow.first()
             if (motionEventState == MotionEvent.ACTION_DOWN || motionEventState == MotionEvent.ACTION_MOVE) {
                 Timber.tag(TAG).i("set visionResult :\n====[${visionResponse.result.text}]====")
+                visionCaptureScreenRect = captureScreenRect
                 visionResultFlow.value = visionResponse.result
             }
         } else if (visionResponse is VisionResponse.Error) {
@@ -1220,6 +1265,7 @@ class TargetHandleViewModel(
         collectServiceOperationInfoFlow()
         collectPreference()
         collectTargetHandleMotionEvent()
+        collectPointerStoppedCaptureRequests()
         collectVisionTextForTranslationView()
         collectTranslationVoiceFlow()
     }
@@ -1233,6 +1279,9 @@ class TargetHandleViewModel(
     }
 }
 
+private fun Rect.containsPoint(point: Point): Boolean {
+    return point.x >= left && point.x < right && point.y >= top && point.y < bottom
+}
 
 
 

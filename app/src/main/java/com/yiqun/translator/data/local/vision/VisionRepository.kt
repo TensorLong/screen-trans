@@ -83,7 +83,12 @@ class VisionRepository @Inject constructor() {
         devanagariRecognitionClient.addObserver(lifecycle)
     }
 
-    suspend fun request(bitmap: Bitmap, sourceLanguageCode: String): VisionResponse = coroutineScope {
+    suspend fun request(
+        bitmap: Bitmap,
+        sourceLanguageCode: String,
+        coordinateOffsetX: Int = 0,
+        coordinateOffsetY: Int = 0,
+    ): VisionResponse = coroutineScope {
         Timber.tag(TAG).i("#### request() ####  $sourceLanguageCode")
         val inputImage: InputImage = InputImage.fromBitmap(bitmap, 0)
 
@@ -122,9 +127,9 @@ class VisionRepository @Inject constructor() {
                 val isVerticalWriting = detectVerticalWriting(text)
                 val writingDirection = Language.writingDirection(_sourceLanguageCode, isVerticalWriting)
                 if (writingDirection == WritingDirection.LTR || writingDirection == WritingDirection.RTL) {
-                    _sourceLanguageCode to textToParagraphs(bitmap, text, _sourceLanguageCode, writingDirection)
+                    _sourceLanguageCode to textToParagraphs(bitmap, text, _sourceLanguageCode, writingDirection, coordinateOffsetX, coordinateOffsetY)
                 } else {
-                    _sourceLanguageCode to textToVerticalParagraphs(bitmap, text, _sourceLanguageCode, writingDirection)
+                    _sourceLanguageCode to textToVerticalParagraphs(bitmap, text, _sourceLanguageCode, writingDirection, coordinateOffsetX, coordinateOffsetY)
                 }
             }
 
@@ -189,7 +194,14 @@ class VisionRepository @Inject constructor() {
     /**
      * WritingDirection.LTR, WritingDirection.RTL
      */
-    private fun textToParagraphs(bitmap: Bitmap, text: Text, sourceLanguageCode: String, writingDirection: WritingDirection): List<Paragraph> {
+    private fun textToParagraphs(
+        bitmap: Bitmap,
+        text: Text,
+        sourceLanguageCode: String,
+        writingDirection: WritingDirection,
+        coordinateOffsetX: Int,
+        coordinateOffsetY: Int,
+    ): List<Paragraph> {
         Timber.tag(TAG).i("#### textToParagraphs() ####  ${"\n" + text.text}")
         setReferenceConstantValue(false, sourceLanguageCode)
 
@@ -199,9 +211,9 @@ class VisionRepository @Inject constructor() {
             Timber.tag(TAG).i("element : ${it.boundingBox} ${it.text} ${(it.boundingBox!!.width().toDouble() / it.boundingBox!!.height())._cutDecimal()}")
         }
 
-        val words: List<Word> = convertTextElementsToWords(bitmap, elements, writingDirection)
+        val words: List<Word> = convertTextElementsToWords(bitmap, elements, writingDirection, coordinateOffsetX, coordinateOffsetY)
 
-        val lines: List<Line> = groupWordsIntoLines(bitmap, words, writingDirection)
+        val lines: List<Line> = groupWordsIntoLines(bitmap, words, writingDirection, coordinateOffsetX, coordinateOffsetY)
 
         lines.forEach { Timber.tag(TAG).i("groupWordsIntoLines result : ${it.boundingBox}, ${it.representation}, ${it.words}") }
 
@@ -233,7 +245,14 @@ class VisionRepository @Inject constructor() {
     /**
      * WritingDirection.TTB_LTR, WritingDirection.TTB_RTL
      */
-    private fun textToVerticalParagraphs(bitmap: Bitmap, text: Text, sourceLanguageCode: String, writingDirection: WritingDirection): List<Paragraph> {
+    private fun textToVerticalParagraphs(
+        bitmap: Bitmap,
+        text: Text,
+        sourceLanguageCode: String,
+        writingDirection: WritingDirection,
+        coordinateOffsetX: Int,
+        coordinateOffsetY: Int,
+    ): List<Paragraph> {
         Timber.tag(TAG).i("#### textToVerticalParagraphs() ####  ${"\n" + text.text}")
 
         val textLines: List<Text.Line> =
@@ -256,8 +275,8 @@ class VisionRepository @Inject constructor() {
             .filter { it.boundingBox.isValid() }
             .forEach { textLine ->
                 if (textLine.boundingBox!!.height() > textLine.boundingBox!!.width()) {
-                    val line = textLine._toLine(writingDirection).apply {
-                        setFontAndBackgroundColors(bitmap)
+                    val line = textLine._toLine(writingDirection, coordinateOffsetX, coordinateOffsetY).apply {
+                        setFontAndBackgroundColors(bitmap, coordinateOffsetX, coordinateOffsetY)
                     }
                     verticalLines.add(line)
                 } else {
@@ -284,8 +303,8 @@ class VisionRepository @Inject constructor() {
         setReferenceConstantValue(false, sourceLanguageCode)
         val horizontalWritingDirection = Language.writingDirection(sourceLanguageCode, false)
         val elements: List<Text.Element> = convertTextLinesToTextElements(horizontalTextLines, horizontalWritingDirection)
-        val words: List<Word> = convertTextElementsToWords(bitmap, elements, horizontalWritingDirection)
-        val lines: List<Line> = groupWordsIntoLines(bitmap, words, horizontalWritingDirection)
+        val words: List<Word> = convertTextElementsToWords(bitmap, elements, horizontalWritingDirection, coordinateOffsetX, coordinateOffsetY)
+        val lines: List<Line> = groupWordsIntoLines(bitmap, words, horizontalWritingDirection, coordinateOffsetX, coordinateOffsetY)
         var horizontalParagraphs: List<Paragraph> = groupLinesIntoParagraphs(lines, horizontalWritingDirection)
         horizontalParagraphs = horizontalParagraphs.flatMap { paragraph ->
             val splitParagraphs = detectAndSplitParagraphs(paragraph, horizontalWritingDirection)
@@ -365,7 +384,13 @@ class VisionRepository @Inject constructor() {
 
     /**
      */
-    private fun convertTextElementsToWords(bitmap: Bitmap, elements: List<Text.Element>, writingDirection: WritingDirection): List<Word> {
+    private fun convertTextElementsToWords(
+        bitmap: Bitmap,
+        elements: List<Text.Element>,
+        writingDirection: WritingDirection,
+        coordinateOffsetX: Int,
+        coordinateOffsetY: Int,
+    ): List<Word> {
         val words = mutableListOf<Word>()
         val bitmapWidth = bitmap.width
         val bitmapHeight = bitmap.height
@@ -377,12 +402,22 @@ class VisionRepository @Inject constructor() {
                 val right = if (boundingBox.right > bitmapWidth) bitmapWidth else boundingBox.right
                 val bottom = if (boundingBox.bottom > bitmapHeight) bitmapHeight else boundingBox.bottom
 
-                val correctedBoundingBox = Rect(left, top, right, bottom)
+                val correctedBoundingBox = VisionCoordinateMapper.toScreenRect(
+                    rectOf(left, top, right, bottom),
+                    coordinateOffsetX,
+                    coordinateOffsetY,
+                )
 
                 if (correctedBoundingBox.width() > 0 && correctedBoundingBox.height() > 0) {
                     val chars = element.symbols
                         .filter { it.boundingBox.isValid() }
-                        .map { Char(it.boundingBox!!, it.text, writingDirection) }
+                        .map {
+                            Char(
+                                VisionCoordinateMapper.toScreenRect(it.boundingBox!!, coordinateOffsetX, coordinateOffsetY),
+                                it.text,
+                                writingDirection
+                            )
+                        }
 
                     if (chars.isNotEmpty()) {
                         words.add(Word(correctedBoundingBox, element.text, writingDirection, chars))
@@ -395,7 +430,13 @@ class VisionRepository @Inject constructor() {
 
     /**
      */
-    private fun groupWordsIntoLines(bitmap: Bitmap, words: List<Word>, writingDirection: WritingDirection): List<Line> {
+    private fun groupWordsIntoLines(
+        bitmap: Bitmap,
+        words: List<Word>,
+        writingDirection: WritingDirection,
+        coordinateOffsetX: Int,
+        coordinateOffsetY: Int,
+    ): List<Line> {
         val lines = mutableListOf<Line>()
 
         words
@@ -472,7 +513,7 @@ class VisionRepository @Inject constructor() {
             }
 
         lines.forEach {
-            it.setFontAndBackgroundColors(bitmap)
+            it.setFontAndBackgroundColors(bitmap, coordinateOffsetX, coordinateOffsetY)
         }
 
         return lines
@@ -829,19 +870,35 @@ class VisionRepository @Inject constructor() {
     }
 }
 
-fun Text.Element._toWord(writingDirection: WritingDirection): Word {
-    val chars = this.symbols.map { symbol ->
-        Char(symbol.boundingBox!!, symbol.text, writingDirection)
+private fun rectOf(left: Int, top: Int, right: Int, bottom: Int): Rect {
+    return Rect().apply {
+        this.left = left
+        this.top = top
+        this.right = right
+        this.bottom = bottom
     }
-    return Word(this.boundingBox!!, this.text, writingDirection, chars)
 }
 
-fun Text.Line._toLine(writingDirection: WritingDirection): Line {
+fun Text.Element._toWord(
+    writingDirection: WritingDirection,
+    coordinateOffsetX: Int = 0,
+    coordinateOffsetY: Int = 0,
+): Word {
+    val chars = this.symbols.map { symbol ->
+        Char(VisionCoordinateMapper.toScreenRect(symbol.boundingBox!!, coordinateOffsetX, coordinateOffsetY), symbol.text, writingDirection)
+    }
+    return Word(VisionCoordinateMapper.toScreenRect(this.boundingBox!!, coordinateOffsetX, coordinateOffsetY), this.text, writingDirection, chars)
+}
+
+fun Text.Line._toLine(
+    writingDirection: WritingDirection,
+    coordinateOffsetX: Int = 0,
+    coordinateOffsetY: Int = 0,
+): Line {
     val words = this.elements.map { element ->
-        element._toWord(writingDirection)
+        element._toWord(writingDirection, coordinateOffsetX, coordinateOffsetY)
     }.toMutableList()
     return Line(words, writingDirection)
 }
-
 
 
