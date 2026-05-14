@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.PixelFormat
 import android.os.Build
 import android.view.Gravity
-import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
@@ -90,6 +89,7 @@ import com.yiqun.translator.ui.screen.overlay.settings.HelpTextDetectModeView
 import com.yiqun.translator.ui.screen.overlay.settings.HelpTranslationKitView
 import com.yiqun.translator.ui.screen.overlay.settings.SliderDialogView
 import com.yiqun.translator.ui.screen.overlay.targethandle.CaptureStatus
+import com.yiqun.translator.ui.screen.overlay.targethandle.PointerInteractionVisibilityPolicy
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -143,9 +143,13 @@ class MenuBarView private constructor() : OverlayView() {
 
             val settingsActivityLiveState by SettingsActivity.liveStateFlow.collectAsStateWithLifecycle()
             val settingsSurface by SettingsActivity.settingsSurfaceFlow.collectAsStateWithLifecycle()
+            val pointerInteractionActive = PointerInteractionVisibilityPolicy.isInteractionActive(
+                targetHandleMotionEventState
+            )
             val settingsHomeMenuVisible = MenuBarVisibilityPolicy.visibleInSettings(
                 activityLive = settingsActivityLiveState,
                 surface = settingsSurface,
+                pointerInteractionActive = pointerInteractionActive,
             )
 
             // Drag handle dock state
@@ -172,17 +176,19 @@ class MenuBarView private constructor() : OverlayView() {
                 view?.let {
                     val menuVisible = when {
                         settingsActivityLiveState -> settingsHomeMenuVisible
-                        captureStatus != CaptureStatus.Requested
-                                && targetHandleMotionEventState != MotionEvent.ACTION_MOVE
-                                && (!dragHandleDockState || menuBarDragState.value == MenuBarDragStates.Handling)
-                                && !(textDetectMode == TextDetectMode.FIXED_AREA && fixedAreaViewState == FixedAreaView.State.Translating) -> true
-
-                        else -> false
+                        else -> MenuBarVisibilityPolicy.visibleOutsideSettings(
+                            captureRequested = captureStatus == CaptureStatus.Requested,
+                            pointerInteractionActive = pointerInteractionActive,
+                            dragHandleDocked = dragHandleDockState,
+                            menuHandling = menuBarDragState.value == MenuBarDragStates.Handling,
+                            fixedAreaTranslating = textDetectMode == TextDetectMode.FIXED_AREA &&
+                                    fixedAreaViewState == FixedAreaView.State.Translating,
+                        )
                     }
 
                     Timber.tag(TAG).d(
                         "captureStatus $captureStatus " +
-                                "\ntargetHandle ${targetHandleMotionEventState != MotionEvent.ACTION_MOVE} " +
+                                "\ntargetHandle ${!pointerInteractionActive} " +
                                 "\ndragHandleDock ${!dragHandleDockState} " +
                                 "\nmenuBarDrag ${menuBarDragState.value != MenuBarDragStates.Handling} " +
                                 "\nmenuVisible $menuVisible " +
@@ -447,6 +453,25 @@ class MenuBarView private constructor() : OverlayView() {
             gravity = Gravity.TOP or Gravity.CENTER
         }
         super.cast(applicationContext)
+    }
+
+    fun updatePointerInteractionWindowVisibility(visible: Boolean) {
+        view?.let {
+            it.animate().cancel()
+            it.alpha = if (visible) 1f else 0f
+            it.visibility = if (visible) View.VISIBLE else View.GONE
+            if (::layoutParams.isInitialized) {
+                layoutParams.alpha = if (visible) 1f else 0f
+                layoutParams.flags = if (visible) {
+                    layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+                } else {
+                    layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                }
+                if (isServiceInitialized() && it.isAttachedToWindow) {
+                    updateLayout(overlayService.applicationContext)
+                }
+            }
+        }
     }
 
     suspend fun castAtStartPosition(applicationContext: Context) {
@@ -1063,12 +1088,6 @@ fun TranslationKitIconButton(
         }
     }
 }
-
-
-
-
-
-
 
 
 

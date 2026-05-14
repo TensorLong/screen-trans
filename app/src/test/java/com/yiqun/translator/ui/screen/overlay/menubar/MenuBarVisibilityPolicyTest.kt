@@ -39,4 +39,41 @@ class MenuBarVisibilityPolicyTest {
             )
         )
     }
+
+    @Test
+    fun settingsMenuBarIsHiddenDuringPointerInteraction() {
+        assertFalse(
+            MenuBarVisibilityPolicy.visibleInSettings(
+                activityLive = true,
+                surface = SettingsSurface.HOME,
+                pointerInteractionActive = true,
+            )
+        )
+    }
+
+    @Test
+    fun menuBarIsHiddenDuringPointerInteraction() {
+        assertFalse(
+            MenuBarVisibilityPolicy.visibleOutsideSettings(
+                captureRequested = false,
+                pointerInteractionActive = true,
+                dragHandleDocked = false,
+                menuHandling = false,
+                fixedAreaTranslating = false,
+            )
+        )
+    }
+
+    @Test
+    fun menuBarIsRestoredWhenPointerInteractionEnds() {
+        assertTrue(
+            MenuBarVisibilityPolicy.visibleOutsideSettings(
+                captureRequested = false,
+                pointerInteractionActive = false,
+                dragHandleDocked = false,
+                menuHandling = false,
+                fixedAreaTranslating = false,
+            )
+        )
+    }
 }

@@ -1,5 +1,6 @@
 package com.yiqun.translator.ui.screen.overlay.targethandle
 
+import android.view.MotionEvent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -297,5 +298,62 @@ class PointerPlacementTest {
         session.reset(PointerSide.LEFT)
 
         assertEquals(defaultOffset, session.current(PointerSide.LEFT))
+    }
+
+    @Test
+    fun pointerInteractionKeepsOnlyActiveSideVisibleUntilReleased() {
+        assertTrue(
+            PointerInteractionVisibilityPolicy.visibleForSide(
+                side = PointerSide.LEFT,
+                activeSide = PointerSide.LEFT,
+                motionEventAction = MotionEvent.ACTION_DOWN,
+            )
+        )
+        assertFalse(
+            PointerInteractionVisibilityPolicy.visibleForSide(
+                side = PointerSide.RIGHT,
+                activeSide = PointerSide.LEFT,
+                motionEventAction = MotionEvent.ACTION_DOWN,
+            )
+        )
+        assertTrue(
+            PointerInteractionVisibilityPolicy.visibleForSide(
+                side = PointerSide.LEFT,
+                activeSide = PointerSide.LEFT,
+                motionEventAction = MotionEvent.ACTION_MOVE,
+            )
+        )
+        assertFalse(
+            PointerInteractionVisibilityPolicy.visibleForSide(
+                side = PointerSide.RIGHT,
+                activeSide = PointerSide.LEFT,
+                motionEventAction = MotionEvent.ACTION_MOVE,
+            )
+        )
+    }
+
+    @Test
+    fun pointerInteractionRestoresAllSidesAfterInteractionEnds() {
+        assertTrue(
+            PointerInteractionVisibilityPolicy.visibleForSide(
+                side = PointerSide.LEFT,
+                activeSide = PointerSide.RIGHT,
+                motionEventAction = MotionEvent.ACTION_UP,
+            )
+        )
+        assertTrue(
+            PointerInteractionVisibilityPolicy.visibleForSide(
+                side = PointerSide.RIGHT,
+                activeSide = PointerSide.RIGHT,
+                motionEventAction = MotionEvent.ACTION_UP,
+            )
+        )
+        assertTrue(
+            PointerInteractionVisibilityPolicy.visibleForSide(
+                side = PointerSide.LEFT,
+                activeSide = PointerSide.RIGHT,
+                motionEventAction = MotionEvent.ACTION_CANCEL,
+            )
+        )
     }
 }

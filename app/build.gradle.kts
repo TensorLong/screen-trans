@@ -17,8 +17,8 @@ android {
         applicationId = "com.yiqun.translator"
         minSdk = 23
         targetSdk = 35
-        versionCode = 20707
-        versionName = "2.7.7"
+        versionCode = 20708
+        versionName = "2.7.8"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     bundle {
@@ -173,7 +173,6 @@ dependencies {
 kapt {
     correctErrorTypes = true
 }
-
 
 
 

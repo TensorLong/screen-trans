@@ -75,6 +75,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import javax.inject.Singleton
+import java.util.LinkedHashSet
 import kotlin.math.sqrt
 
 
@@ -86,6 +87,8 @@ class TargetHandleView private constructor(
 ) : OverlayView() {
 
     companion object {
+        private val instances = LinkedHashSet<TargetHandleView>()
+
         val PRIMARY: TargetHandleView by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { TargetHandleView(PointerSide.LEFT) }
         val SECONDARY: TargetHandleView by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { TargetHandleView(PointerSide.RIGHT) }
         val INSTANCE: TargetHandleView
@@ -117,6 +120,28 @@ class TargetHandleView private constructor(
             if (PRIMARY.isRunning.get()) PRIMARY.clear()
             if (SECONDARY.isRunning.get()) SECONDARY.clear()
         }
+
+        private fun registeredInstances(): List<TargetHandleView> {
+            return synchronized(instances) { instances.toList() }
+        }
+
+        private fun showOnlyInteractingPointer(activeSide: PointerSide) {
+            registeredInstances().forEach { handleView ->
+                handleView.updatePointerInteractionWindowVisibility(handleView.pointerSide == activeSide)
+            }
+            MenuBarView.INSTANCE.updatePointerInteractionWindowVisibility(false)
+        }
+
+        private fun restorePointerInteractionWindows() {
+            registeredInstances().forEach { handleView ->
+                handleView.updatePointerInteractionWindowVisibility(true)
+            }
+            MenuBarView.INSTANCE.updatePointerInteractionWindowVisibility(true)
+        }
+    }
+
+    init {
+        synchronized(instances) { instances.add(this) }
     }
 
     private lateinit var viewModel: TargetHandleViewModel
@@ -181,6 +206,11 @@ class TargetHandleView private constructor(
         val motionEventState by viewModel.motionEventFlow.collectAsStateWithLifecycle()
         val activePointerSide by viewModel.activePointerSideFlow.collectAsStateWithLifecycle()
         val isActivePointer = activePointerSide == pointerSide
+        val interactionVisible = PointerInteractionVisibilityPolicy.visibleForSide(
+            side = pointerSide,
+            activeSide = activePointerSide,
+            motionEventAction = motionEventState,
+        )
         val defaultTargetFromHandleOffset = remember { viewModel.preferenceRepository.defaultPointerOffset }
         val leftTargetFromHandleOffset by viewModel.preferenceRepository.pointerLeftOffsetFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
@@ -210,6 +240,8 @@ class TargetHandleView private constructor(
         SideEffect {
             updatePassThroughWindowLayout(context, passThroughLayout)
             updateTargetLayout(context, pointerOffsetX, pointerOffsetY)
+            updateHandleWindowVisibility(interactionVisible)
+            updateTargetWindowVisibility(interactionVisible)
         }
         val translationState by viewModel.translationFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
@@ -327,6 +359,11 @@ class TargetHandleView private constructor(
         val motionEventState by viewModel.motionEventFlow.collectAsStateWithLifecycle()
         val activePointerSide by viewModel.activePointerSideFlow.collectAsStateWithLifecycle()
         val isActivePointer = activePointerSide == pointerSide
+        val interactionVisible = PointerInteractionVisibilityPolicy.visibleForSide(
+            side = pointerSide,
+            activeSide = activePointerSide,
+            motionEventAction = motionEventState,
+        )
         val defaultTargetFromHandleOffset = remember { viewModel.preferenceRepository.defaultPointerOffset }
         val leftTargetFromHandleOffset by viewModel.preferenceRepository.pointerLeftOffsetFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
@@ -352,6 +389,7 @@ class TargetHandleView private constructor(
         SideEffect {
             updatePassThroughWindowLayout(context, passThroughLayout)
             updateTargetLayout(context, pointerOffsetX, pointerOffsetY)
+            updateTargetWindowVisibility(interactionVisible)
         }
 
         val areaSelecting by viewModel.areaSelectingStateFlow.collectAsStateWithLifecycle(
@@ -453,8 +491,9 @@ class TargetHandleView private constructor(
                 when (action) {
                     MotionEvent.ACTION_DOWN -> {
                         if (applicationContext.isNetworkAvailable()) {
-                            viewModel.motionEventFlow.value = event.action
                             viewModel.activePointerSideFlow.value = pointerSide
+                            viewModel.motionEventFlow.value = event.action
+                            showOnlyInteractingPointer(pointerSide)
                             touchStartX = event.rawX
                             touchStartY = event.rawY
                             dragStartX = layoutParams.x
@@ -476,7 +515,9 @@ class TargetHandleView private constructor(
                     }
 
                     MotionEvent.ACTION_MOVE -> {
+                        viewModel.activePointerSideFlow.value = pointerSide
                         viewModel.motionEventFlow.value = event.action
+                        showOnlyInteractingPointer(pointerSide)
                         val screenInfo: ScreenInfo = ScreenInfoHolder.get()
                         layoutParams.x = (dragStartX + (event.rawX - touchStartX)).toInt()
                         layoutParams.y = (dragStartY + (event.rawY - touchStartY)).toInt()
@@ -521,11 +562,13 @@ class TargetHandleView private constructor(
                     MotionEvent.ACTION_UP -> {
                         viewModel.motionEventFlow.value = event.action
                         repositionWithinScreen(applicationContext)
+                        restorePointerInteractionWindows()
                         isDraggingHandle = false
                     }
 
                     MotionEvent.ACTION_CANCEL -> {
                         viewModel.motionEventFlow.value = MotionEvent.ACTION_UP
+                        restorePointerInteractionWindows()
                         isDraggingHandle = false
                     }
                 }
@@ -592,6 +635,45 @@ class TargetHandleView private constructor(
                     .updateViewLayout(localTargetView, targetLayoutParams)
             } catch (e: IllegalArgumentException) {
                 Timber.tag(TAG).e(e, "targetView updateViewLayout failed")
+            }
+        }
+    }
+
+    private fun updatePointerInteractionWindowVisibility(visible: Boolean) {
+        updateHandleWindowVisibility(visible)
+        updateTargetWindowVisibility(visible)
+    }
+
+    private fun updateHandleWindowVisibility(visible: Boolean) {
+        val localView = view ?: return
+        localView.alpha = if (visible) 1f else 0f
+        localView.visibility = if (visible) View.VISIBLE else View.GONE
+        if (::layoutParams.isInitialized) {
+            layoutParams.alpha = if (visible) 1f else 0f
+            layoutParams.flags = if (visible) {
+                layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
+            } else {
+                layoutParams.flags or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            }
+            if (isServiceInitialized() && localView.isAttachedToWindow) {
+                updateLayout(overlayService.applicationContext)
+            }
+        }
+    }
+
+    private fun updateTargetWindowVisibility(visible: Boolean) {
+        val localTargetView = targetView ?: return
+        localTargetView.alpha = if (visible) 1f else 0f
+        localTargetView.visibility = if (visible) View.VISIBLE else View.GONE
+        if (::targetLayoutParams.isInitialized) {
+            targetLayoutParams.alpha = if (visible) 1f else 0f
+            if (isServiceInitialized() && localTargetView.isAttachedToWindow) {
+                try {
+                    (overlayService.applicationContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
+                        .updateViewLayout(localTargetView, targetLayoutParams)
+                } catch (e: IllegalArgumentException) {
+                    Timber.tag(TAG).e(e, "targetView visibility updateViewLayout failed")
+                }
             }
         }
     }
@@ -771,6 +853,7 @@ class TargetHandleView private constructor(
                 viewModel.updateTextDetectMode(TextDetectMode.SENTENCE)
                 delay(100L)
             }
+            viewModel.activePointerSideFlow.value = pointerSide
             viewModel.motionEventFlow.value = MotionEvent.ACTION_DOWN
             delay(1200L)
             viewModel.pointerPositionFlow.value = point

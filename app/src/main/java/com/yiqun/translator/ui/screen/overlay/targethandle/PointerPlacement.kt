@@ -2,6 +2,7 @@ package com.yiqun.translator.ui.screen.overlay.targethandle
 
 import android.content.res.Configuration
 import android.graphics.Point
+import android.view.MotionEvent
 
 enum class PointerSide {
     LEFT,
@@ -285,6 +286,20 @@ object DeviceFormFactorResolver {
 object PointerDisplayPolicy {
     fun defaultDualPointerEnabled(formFactor: DeviceFormFactor): Boolean {
         return formFactor == DeviceFormFactor.FOLDABLE || formFactor == DeviceFormFactor.TABLET
+    }
+}
+
+object PointerInteractionVisibilityPolicy {
+    fun isInteractionActive(motionEventAction: Int): Boolean {
+        return motionEventAction == MotionEvent.ACTION_DOWN || motionEventAction == MotionEvent.ACTION_MOVE
+    }
+
+    fun visibleForSide(
+        side: PointerSide,
+        activeSide: PointerSide,
+        motionEventAction: Int,
+    ): Boolean {
+        return !isInteractionActive(motionEventAction) || side == activeSide
     }
 }
 
