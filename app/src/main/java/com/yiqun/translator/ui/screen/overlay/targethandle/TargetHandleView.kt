@@ -96,6 +96,18 @@ class TargetHandleView private constructor(
             }
         }
 
+        suspend fun recastForCurrentConfiguration(applicationContext: Context) {
+            val dualPointerMode = PRIMARY.viewModel.preferenceRepository.dualPointerEnabledFlow.first()
+            castConfigured(
+                applicationContext = applicationContext,
+                dualPointerMode = dualPointerMode,
+                repositionPrimary = true,
+            )
+            if (dualPointerMode && SECONDARY.isRunning.get()) {
+                SECONDARY.setAtStartPosition(applicationContext)
+            }
+        }
+
         fun clearAll() {
             if (PRIMARY.isRunning.get()) PRIMARY.clear()
             if (SECONDARY.isRunning.get()) SECONDARY.clear()
@@ -344,6 +356,7 @@ class TargetHandleView private constructor(
                 }
             },
             launchInOverlayViewCoroutineScope {
+                val dockingReleaseTracker = PointerDockingReleaseTracker()
                 combine(
                     viewModel.motionEventFlow,
                     viewModel.translationFlow,
@@ -352,11 +365,18 @@ class TargetHandleView private constructor(
                 ) { motionEventAction, translationState, menuOperating, activeSide ->
                     DockingState(motionEventAction, translationState, menuOperating, activeSide)
                 }.collect { state ->
+                    val shouldScheduleDock = dockingReleaseTracker.shouldScheduleDockAfterRelease(
+                        side = pointerSide,
+                        activeSide = state.activeSide,
+                        motionEventAction = state.motionEventAction,
+                        translationActive = state.translationState != null,
+                        menuOperating = state.menuOperating,
+                    )
                     if (state.activeSide != pointerSide || state.menuOperating) {
                         cancelDockDragHandle(applicationContext)
                         return@collect
                     }
-                    if (state.motionEventAction == MotionEvent.ACTION_UP && state.translationState == null) {
+                    if (shouldScheduleDock) {
                         scheduleDockAfterRelease(applicationContext)
                     }
                 }
@@ -475,41 +495,29 @@ class TargetHandleView private constructor(
                         layoutParams.x = (dragStartX + (event.rawX - touchStartX)).toInt()
                         layoutParams.y = (dragStartY + (event.rawY - touchStartY)).toInt()
                         clampLayoutWithinScreen(screenInfo)
-                        updateLayout(applicationContext)
-
-                        val loc = IntArray(2)
-                        view?.getLocationOnScreen(loc)
-
-                        val centerX = loc[0] + handleCenterX
-                        val adjustionPositionWidth = handleWidth * 6 / 10
-
-                        val _screenStartAdjustionPosition = adjustionPositionWidth
-                        val _screenEndAdjustionPosition = screenInfo.width - adjustionPositionWidth
-
-//                        Timber.tag(TAG).d("isRTL $isRTL centerX $centerX fullWidth ${screenInfo.height} StartAdjustion $_screenStartAdjustionPosition EndAdjustion $_screenEndAdjustionPosition")
-                        val _pointerOffsetX = when {
-                            centerX < _screenStartAdjustionPosition -> _screenStartAdjustionPosition - centerX
-                            centerX > _screenEndAdjustionPosition -> _screenEndAdjustionPosition - centerX
-                            else -> 0
-                        } * if (isRTL) 1 else -1
-
-                        pointerOffsetXState.value = _pointerOffsetX
 
                         val windowLayout = passThroughWindowLayout
-                        val visualBottom = if (windowLayout != null) {
-                            loc[1] + windowLayout.visualBottom()
+                        val edgeCorrection = if (windowLayout != null) {
+                            PointerDragEdgeCorrection.calculate(
+                                x = layoutParams.x,
+                                y = layoutParams.y,
+                                screenWidth = screenInfo.width,
+                                screenHeight = screenInfo.height,
+                                layout = windowLayout,
+                                handleWidth = handleWidth,
+                                isRtl = isRTL,
+                            )
                         } else {
-                            loc[1] + viewHeight
+                            PointerEdgeCorrection(0, 0)
                         }
-                        val visualHeight = windowLayout?.visualHeight() ?: viewHeight
-                        val _screenBottomStart = screenInfo.height - visualHeight
-                        val bottomLeft = visualBottom
-                        val _pointerOffsetY = if (bottomLeft > _screenBottomStart) (bottomLeft - _screenBottomStart) / 2 else 0
-                        pointerOffsetYState.value = _pointerOffsetY
-                        updateTargetLayout(applicationContext, _pointerOffsetX, _pointerOffsetY)
 
-                        val x = layoutParams.x + handleCenterX + _pointerOffsetX
-                        val y = layoutParams.y + handleCenterY + _pointerOffsetY
+                        pointerOffsetXState.value = edgeCorrection.x
+                        pointerOffsetYState.value = edgeCorrection.y
+                        clampLayoutWithinScreen(screenInfo)
+                        updateLayout(applicationContext)
+
+                        val x = layoutParams.x + handleCenterX + edgeCorrection.x
+                        val y = layoutParams.y + handleCenterY + edgeCorrection.y
                         viewModel.updatePointerPosition(pointerSide, Point(x, y))
                     }
 
@@ -644,7 +652,11 @@ class TargetHandleView private constructor(
 
     suspend fun castWithMode(applicationContext: Context, dualPointerMode: Boolean) {
         this.dualPointerMode = dualPointerMode
-        val screenInfo: ScreenInfo = ScreenInfoHolder.get()
+        var screenInfo: ScreenInfo = ScreenInfoHolder.get()
+        if (PointerScreenInfoRefreshPolicy.requiresRefresh(screenInfo.width, screenInfo.height)) {
+            ScreenInfoHolder.updateScreenInfoInService(applicationContext)
+            screenInfo = ScreenInfoHolder.get()
+        }
         handleWidth = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_width)
         pointerDimen = applicationContext.resources.getDimensionPixelSize(R.dimen.target_pointer_dimen)
         pointerThumbSpace = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_pointer_thumb_space)
@@ -706,35 +718,41 @@ class TargetHandleView private constructor(
     private fun setAtStartPosition(context: Context) {
         val screenInfo: ScreenInfo = ScreenInfoHolder.get()
         SayHereView.INSTANCE.clear()
-        cancelDockDragHandle(context)
+        cancelDockDragHandle()
+        PointerDefaultPlacement.edgeCorrection().let { edgeCorrection ->
+            pointerOffsetXState.value = edgeCorrection.x
+            pointerOffsetYState.value = edgeCorrection.y
+        }
         layoutParams.x = startX(screenInfo)
         layoutParams.y = startY(screenInfo)
         updateLayout(context)
     }
 
     private fun startX(screenInfo: ScreenInfo): Int {
-        val handleX = if (!dualPointerMode) {
-            screenInfo.width / 2
-        } else {
-            when (pointerSide) {
-                PointerSide.LEFT -> screenInfo.width / 4
-                PointerSide.RIGHT -> screenInfo.width * 3 / 4
-            }
+        passThroughWindowLayout?.let { windowLayout ->
+            return PointerDefaultPlacement.layoutTopLeft(
+                screenWidth = screenInfo.width,
+                screenHeight = screenInfo.height,
+                layout = windowLayout,
+                side = pointerSide,
+                dualPointerMode = dualPointerMode,
+            ).first
         }
-        val x = handleX - handleCenterX
-        val windowLayout = passThroughWindowLayout
-        if (windowLayout != null) {
-            val minX = -windowLayout.visualLeft()
-            val maxX = screenInfo.width - windowLayout.visualRight()
-            return x.coerceIn(minX, maxX.coerceAtLeast(minX))
-        }
+        val x = screenInfo.width / 2 - handleCenterX
         return x.coerceIn(0, (screenInfo.width - viewWidth).coerceAtLeast(0))
     }
 
     private fun startY(screenInfo: ScreenInfo): Int {
-        val windowLayout = passThroughWindowLayout ?: return screenInfo.height / 2 - viewHeight / 2
-        val visualTop = screenInfo.height / 2 - windowLayout.visualHeight() / 2
-        return visualTop - windowLayout.visualTop()
+        passThroughWindowLayout?.let { windowLayout ->
+            return PointerDefaultPlacement.layoutTopLeft(
+                screenWidth = screenInfo.width,
+                screenHeight = screenInfo.height,
+                layout = windowLayout,
+                side = pointerSide,
+                dualPointerMode = dualPointerMode,
+            ).second
+        }
+        return screenInfo.height * 2 / 3 - handleCenterY
     }
 
     private fun overlayWindowType(): Int {
@@ -874,44 +892,12 @@ class TargetHandleView private constructor(
      */
     private fun onConfigurationChanged(context: Context) {
         Timber.tag(TAG).d("#### onConfigurationChanged() ####")
-        viewModel.restartCaptureRepository()
-
-        val screenInfo: ScreenInfo = ScreenInfoHolder.get()
-        Timber.tag(TAG).d("layoutParams.x ${layoutParams.x} layoutParams.y ${layoutParams.y} screenInfo $screenInfo")
-
-        layoutParams.x = when (layoutParams.x + viewWidth) {
-            viewWidth -> 0
-            screenInfo.height -> screenInfo.width - viewWidth
-            screenInfo.width -> screenInfo.height - viewWidth
-            else -> (layoutParams.x + viewWidth / 2) * screenInfo.width / screenInfo.height - viewWidth / 2
+        if (pointerSide == PointerSide.LEFT) {
+            viewModel.restartCaptureRepository()
+            launchInOverlayViewCoroutineScope {
+                recastForCurrentConfiguration(context)
+            }
         }
-
-        if (layoutParams.x < 0) {
-            layoutParams.x = 0
-        } else if ((layoutParams.x + viewWidth) > screenInfo.width) {
-            layoutParams.x = screenInfo.width - viewWidth
-        }
-
-        layoutParams.y = when (layoutParams.y + viewHeight) {
-            viewHeight -> 0
-            screenInfo.height -> screenInfo.width - viewHeight
-            screenInfo.width -> screenInfo.height - viewHeight
-            else -> (layoutParams.y + viewHeight / 2) * screenInfo.height / screenInfo.width - viewHeight / 2
-        }
-
-        if (layoutParams.y < 0) {
-            layoutParams.y = 0
-        } else if ((layoutParams.y + viewHeight) > screenInfo.height) {
-            layoutParams.y = screenInfo.height - viewHeight
-        }
-
-//         layoutParams.x = screenInfo.width / 2 - viewWidth / 2
-//         layoutParams.y = screenInfo.height / 2 - viewHeight / 2
-
-        updateLayout(context)
-        Timber.tag(TAG).d("updateLayout layoutParams.x ${layoutParams.x} layoutParams.y ${layoutParams.y} screenInfo $screenInfo")
-
-//        scheduleDockDragHandle(context)
     }
 
     /**

@@ -246,6 +246,79 @@ object PointerWindowBounds {
     }
 }
 
+data class PointerEdgeCorrection(
+    val x: Int,
+    val y: Int,
+)
+
+object PointerDragEdgeCorrection {
+    fun calculate(
+        x: Int,
+        y: Int,
+        screenWidth: Int,
+        screenHeight: Int,
+        layout: PointerPassThroughWindowLayout,
+        handleWidth: Int = layout.touchableWidth,
+        isRtl: Boolean,
+    ): PointerEdgeCorrection {
+        val centerX = x + layout.handleCenterX
+        val horizontalAdjustmentThreshold = handleWidth * 6 / 10
+        val screenStartAdjustmentPosition = horizontalAdjustmentThreshold
+        val screenEndAdjustmentPosition = screenWidth - horizontalAdjustmentThreshold
+        val horizontalCorrection = when {
+            centerX < screenStartAdjustmentPosition -> screenStartAdjustmentPosition - centerX
+            centerX > screenEndAdjustmentPosition -> screenEndAdjustmentPosition - centerX
+            else -> 0
+        } * if (isRtl) 1 else -1
+
+        val visualBottom = y + layout.visualBottom()
+        val visualHeight = layout.visualHeight()
+        val screenBottomStart = screenHeight - visualHeight
+        val verticalCorrection = if (visualBottom > screenBottomStart) {
+            (visualBottom - screenBottomStart) / 2
+        } else {
+            0
+        }
+
+        return PointerEdgeCorrection(horizontalCorrection, verticalCorrection)
+    }
+}
+
+object PointerDefaultPlacement {
+    fun edgeCorrection(): PointerEdgeCorrection = PointerEdgeCorrection(0, 0)
+
+    fun layoutTopLeft(
+        screenWidth: Int,
+        screenHeight: Int,
+        layout: PointerPassThroughWindowLayout,
+        side: PointerSide,
+        dualPointerMode: Boolean,
+    ): Pair<Int, Int> {
+        val handleCenterX = if (!dualPointerMode) {
+            screenWidth / 2
+        } else {
+            when (side) {
+                PointerSide.LEFT -> screenWidth / 4
+                PointerSide.RIGHT -> screenWidth * 3 / 4
+            }
+        }
+        val handleCenterY = screenHeight * 2 / 3
+        return PointerWindowBounds.clampLayoutPosition(
+            x = handleCenterX - layout.handleCenterX,
+            y = handleCenterY - layout.handleCenterY,
+            screenWidth = screenWidth,
+            screenHeight = screenHeight,
+            layout = layout,
+        )
+    }
+}
+
+object PointerScreenInfoRefreshPolicy {
+    fun requiresRefresh(screenWidth: Int, screenHeight: Int): Boolean {
+        return screenWidth <= 0 || screenHeight <= 0
+    }
+}
+
 object PointerOverlayHitTest {
     fun isHandleHit(
         layout: PointerOverlayLayout,
@@ -323,6 +396,47 @@ object PointerInteractionVisibilityPolicy {
     }
 }
 
+class PointerDockingReleaseTracker {
+    private var draggedSide: PointerSide? = null
+
+    fun shouldScheduleDockAfterRelease(
+        side: PointerSide,
+        activeSide: PointerSide,
+        motionEventAction: Int,
+        translationActive: Boolean,
+        menuOperating: Boolean,
+    ): Boolean {
+        if (activeSide != side || menuOperating) {
+            reset()
+            return false
+        }
+
+        return when (motionEventAction) {
+            MotionEvent.ACTION_MOVE -> {
+                draggedSide = side
+                false
+            }
+
+            MotionEvent.ACTION_UP -> {
+                val shouldSchedule = draggedSide == side && !translationActive
+                reset()
+                shouldSchedule
+            }
+
+            MotionEvent.ACTION_CANCEL -> {
+                reset()
+                false
+            }
+
+            else -> false
+        }
+    }
+
+    fun reset() {
+        draggedSide = null
+    }
+}
+
 object OverlayWindowAlpha {
     const val passThroughVisibleAlpha: Float = 0.8f
 
@@ -377,6 +491,7 @@ object TargetIconRenderPolicy {
     }
 
     fun contentAlpha(state: TargetIconRenderState): Float {
+        if (state.pointerVisible) return 1.0f
         return if (state.dimmed) 0.01f else 1.0f
     }
 }

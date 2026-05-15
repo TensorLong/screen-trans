@@ -268,6 +268,123 @@ class PointerPlacementTest {
     }
 
     @Test
+    fun dragBoundsClampRechecksVisualAreaAfterEdgeCorrection() {
+        val layout = PointerPassThroughWindowLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 0, y = 300),
+        )
+
+        val edgeCorrection = PointerDragEdgeCorrection.calculate(
+            x = 200,
+            y = 1940,
+            screenWidth = 1080,
+            screenHeight = 2400,
+            layout = layout,
+            isRtl = false,
+        )
+        val clamped = PointerWindowBounds.clampLayoutPosition(
+            x = 200,
+            y = 1940,
+            screenWidth = 1080,
+            screenHeight = 2400,
+            layout = layout,
+            edgeCorrectionX = edgeCorrection.x,
+            edgeCorrectionY = edgeCorrection.y,
+        )
+
+        assertEquals(0, edgeCorrection.x)
+        assertEquals(117, edgeCorrection.y)
+        assertEquals(200 to 1936, clamped)
+        assertEquals(2376, clamped.second + layout.targetIconTopLeftY(edgeCorrection.y))
+        assertEquals(2400, clamped.second + layout.visualBottom(edgeCorrection.y))
+    }
+
+    @Test
+    fun defaultSinglePointerPlacementUsesHorizontalCenterAndOneThirdFromBottom() {
+        val layout = PointerPassThroughWindowLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 0, y = -65),
+        )
+
+        val placement = PointerDefaultPlacement.layoutTopLeft(
+            screenWidth = 1080,
+            screenHeight = 2400,
+            layout = layout,
+            side = PointerSide.LEFT,
+            dualPointerMode = false,
+        )
+
+        assertEquals(505 to 1565, placement)
+        assertEquals(540 to 1600, (layout.handleCenter.first + placement.first) to (layout.handleCenter.second + placement.second))
+        assertEquals(540 to 1535, (placement.first + layout.targetIconCenterFromHandle.first) to (placement.second + layout.targetIconCenterFromHandle.second))
+    }
+
+    @Test
+    fun defaultPlacementIgnoresStaleDragEdgeCorrection() {
+        val layout = PointerPassThroughWindowLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 0, y = 300),
+        )
+        val staleCorrection = PointerDragEdgeCorrection.calculate(
+            x = 200,
+            y = 1940,
+            screenWidth = 1080,
+            screenHeight = 2400,
+            layout = layout,
+            isRtl = false,
+        )
+
+        val correctionForDefault = PointerDefaultPlacement.edgeCorrection()
+        val placement = PointerDefaultPlacement.layoutTopLeft(
+            screenWidth = 1080,
+            screenHeight = 2400,
+            layout = layout,
+            side = PointerSide.LEFT,
+            dualPointerMode = false,
+        )
+
+        assertEquals(PointerEdgeCorrection(x = 0, y = 117), staleCorrection)
+        assertEquals(PointerEdgeCorrection(x = 0, y = 0), correctionForDefault)
+        assertEquals(540 to 1600, (layout.handleCenter.first + placement.first) to (layout.handleCenter.second + placement.second))
+        assertEquals(1888, placement.second + layout.targetIconTopLeftY(correctionForDefault.y))
+        assertEquals(2005, placement.second + layout.targetIconTopLeftY(staleCorrection.y))
+    }
+
+    @Test
+    fun defaultDualPointerPlacementUsesQuarterWidthsAndOneThirdFromBottom() {
+        val layout = PointerPassThroughWindowLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 0, y = -65),
+        )
+
+        val left = PointerDefaultPlacement.layoutTopLeft(
+            screenWidth = 1080,
+            screenHeight = 2400,
+            layout = layout,
+            side = PointerSide.LEFT,
+            dualPointerMode = true,
+        )
+        val right = PointerDefaultPlacement.layoutTopLeft(
+            screenWidth = 1080,
+            screenHeight = 2400,
+            layout = layout,
+            side = PointerSide.RIGHT,
+            dualPointerMode = true,
+        )
+
+        assertEquals(235 to 1565, left)
+        assertEquals(775 to 1565, right)
+        assertEquals(270, left.first + layout.handleCenter.first)
+        assertEquals(810, right.first + layout.handleCenter.first)
+        assertEquals(1600, left.second + layout.handleCenter.second)
+        assertEquals(1600, right.second + layout.handleCenter.second)
+    }
+
+    @Test
     fun pointerDisplayPolicyDefaultsToDualPointerOnlyOnLargeDevices() {
         assertFalse(
             PointerDisplayPolicy.defaultDualPointerEnabled(
@@ -282,6 +399,92 @@ class PointerPlacementTest {
         assertTrue(
             PointerDisplayPolicy.defaultDualPointerEnabled(
                 DeviceFormFactorResolver.resolve(widthDp = 674, heightDp = 842, smallestWidthDp = 500)
+            )
+        )
+    }
+
+    @Test
+    fun screenInfoRefreshIsRequiredBeforeDefaultPlacementWhenScreenSizeIsUnknown() {
+        assertTrue(PointerScreenInfoRefreshPolicy.requiresRefresh(screenWidth = 0, screenHeight = 2400))
+        assertTrue(PointerScreenInfoRefreshPolicy.requiresRefresh(screenWidth = 1080, screenHeight = 0))
+        assertFalse(PointerScreenInfoRefreshPolicy.requiresRefresh(screenWidth = 1080, screenHeight = 2400))
+    }
+
+    @Test
+    fun initialActionUpDoesNotScheduleDocking() {
+        val tracker = PointerDockingReleaseTracker()
+
+        assertFalse(
+            tracker.shouldScheduleDockAfterRelease(
+                side = PointerSide.LEFT,
+                activeSide = PointerSide.LEFT,
+                motionEventAction = MotionEvent.ACTION_UP,
+                translationActive = false,
+                menuOperating = false,
+            )
+        )
+    }
+
+    @Test
+    fun tapWithoutMoveDoesNotScheduleDocking() {
+        val tracker = PointerDockingReleaseTracker()
+
+        tracker.shouldScheduleDockAfterRelease(
+            side = PointerSide.LEFT,
+            activeSide = PointerSide.LEFT,
+            motionEventAction = MotionEvent.ACTION_DOWN,
+            translationActive = false,
+            menuOperating = false,
+        )
+
+        assertFalse(
+            tracker.shouldScheduleDockAfterRelease(
+                side = PointerSide.LEFT,
+                activeSide = PointerSide.LEFT,
+                motionEventAction = MotionEvent.ACTION_UP,
+                translationActive = false,
+                menuOperating = false,
+            )
+        )
+    }
+
+    @Test
+    fun draggedReleaseSchedulesDockingOnlyWhenNoTranslationIsShown() {
+        val tracker = PointerDockingReleaseTracker()
+
+        assertFalse(
+            tracker.shouldScheduleDockAfterRelease(
+                side = PointerSide.LEFT,
+                activeSide = PointerSide.LEFT,
+                motionEventAction = MotionEvent.ACTION_MOVE,
+                translationActive = false,
+                menuOperating = false,
+            )
+        )
+        assertTrue(
+            tracker.shouldScheduleDockAfterRelease(
+                side = PointerSide.LEFT,
+                activeSide = PointerSide.LEFT,
+                motionEventAction = MotionEvent.ACTION_UP,
+                translationActive = false,
+                menuOperating = false,
+            )
+        )
+
+        tracker.shouldScheduleDockAfterRelease(
+            side = PointerSide.LEFT,
+            activeSide = PointerSide.LEFT,
+            motionEventAction = MotionEvent.ACTION_MOVE,
+            translationActive = false,
+            menuOperating = false,
+        )
+        assertFalse(
+            tracker.shouldScheduleDockAfterRelease(
+                side = PointerSide.LEFT,
+                activeSide = PointerSide.LEFT,
+                motionEventAction = MotionEvent.ACTION_UP,
+                translationActive = true,
+                menuOperating = false,
             )
         )
     }
@@ -438,6 +641,25 @@ class PointerPlacementTest {
     fun targetIconContentDimsDuringCaptureWithoutChangingWindowVisibility() {
         val state = TargetIconRenderPolicy.stateFor(
             side = PointerSide.LEFT,
+            activeSide = PointerSide.RIGHT,
+            motionEventAction = MotionEvent.ACTION_MOVE,
+            textDetectMode = TextDetectMode.SENTENCE,
+            captureStatus = CaptureStatus.Requested,
+            fixedAreaTranslating = false,
+            translateStatus = TranslateStatus.Idle,
+            areaSelecting = false,
+            writingRtl = false,
+        )
+
+        assertFalse(state.pointerVisible)
+        assertTrue(state.dimmed)
+        assertEquals(0.01f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+    }
+
+    @Test
+    fun activeDraggedPointerIconStaysOpaqueDuringCapture() {
+        val state = TargetIconRenderPolicy.stateFor(
+            side = PointerSide.LEFT,
             activeSide = PointerSide.LEFT,
             motionEventAction = MotionEvent.ACTION_MOVE,
             textDetectMode = TextDetectMode.SENTENCE,
@@ -448,7 +670,8 @@ class PointerPlacementTest {
             writingRtl = false,
         )
 
+        assertTrue(state.pointerVisible)
         assertTrue(state.dimmed)
-        assertEquals(0.01f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+        assertEquals(1.0f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
     }
 }
