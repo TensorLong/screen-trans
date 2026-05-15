@@ -89,7 +89,9 @@ import com.yiqun.translator.ui.screen.overlay.settings.HelpTextDetectModeView
 import com.yiqun.translator.ui.screen.overlay.settings.HelpTranslationKitView
 import com.yiqun.translator.ui.screen.overlay.settings.SliderDialogView
 import com.yiqun.translator.ui.screen.overlay.targethandle.CaptureStatus
+import com.yiqun.translator.ui.screen.overlay.targethandle.OverlayWindowAlpha
 import com.yiqun.translator.ui.screen.overlay.targethandle.PointerInteractionVisibilityPolicy
+import com.yiqun.translator.ui.screen.overlay.targethandle.StableWindowVisibilityState
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -118,6 +120,8 @@ class MenuBarView private constructor() : OverlayView() {
     override lateinit var layoutParams: WindowManager.LayoutParams
 
     private var debounceSetOperatingStateJob: Job? = null
+
+    private val windowVisibilityState = StableWindowVisibilityState()
 
     private fun toggleOperatingState() {
         operatingStateFlow.value = true
@@ -457,11 +461,13 @@ class MenuBarView private constructor() : OverlayView() {
 
     fun updatePointerInteractionWindowVisibility(visible: Boolean) {
         view?.let {
+            if (!windowVisibilityState.markIfChanged(visible)) return
             it.animate().cancel()
-            it.alpha = if (visible) 1f else 0f
+            val alpha = OverlayWindowAlpha.forTouchableVisibility(visible)
+            it.alpha = alpha
             it.visibility = if (visible) View.VISIBLE else View.GONE
             if (::layoutParams.isInitialized) {
-                layoutParams.alpha = if (visible) 1f else 0f
+                layoutParams.alpha = alpha
                 layoutParams.flags = if (visible) {
                     layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
                 } else {
@@ -472,6 +478,11 @@ class MenuBarView private constructor() : OverlayView() {
                 }
             }
         }
+    }
+
+    override fun clear() {
+        windowVisibilityState.reset()
+        super.clear()
     }
 
     suspend fun castAtStartPosition(applicationContext: Context) {
@@ -1088,7 +1099,6 @@ fun TranslationKitIconButton(
         }
     }
 }
-
 
 
 

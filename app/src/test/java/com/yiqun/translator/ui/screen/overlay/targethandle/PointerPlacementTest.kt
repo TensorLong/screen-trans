@@ -1,6 +1,7 @@
 package com.yiqun.translator.ui.screen.overlay.targethandle
 
 import android.view.MotionEvent
+import com.yiqun.translator.data.local.vision.TextDetectMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -248,6 +249,25 @@ class PointerPlacementTest {
     }
 
     @Test
+    fun dragBoundsClampKeepsPassThroughVisualAreaOnScreen() {
+        val layout = PointerPassThroughWindowLayout.fromTargetFromHandleOffset(
+            pointerDimen = 24,
+            handleWidth = 70,
+            targetFromHandleOffset = PointerOffset(x = 0, y = -65),
+        )
+
+        val clamped = PointerWindowBounds.clampLayoutPosition(
+            x = -932,
+            y = -827,
+            screenWidth = 1080,
+            screenHeight = 2400,
+            layout = layout,
+        )
+
+        assertEquals(0 to 42, clamped)
+    }
+
+    @Test
     fun pointerDisplayPolicyDefaultsToDualPointerOnlyOnLargeDevices() {
         assertFalse(
             PointerDisplayPolicy.defaultDualPointerEnabled(
@@ -355,5 +375,80 @@ class PointerPlacementTest {
                 motionEventAction = MotionEvent.ACTION_CANCEL,
             )
         )
+    }
+
+    @Test
+    fun passThroughOverlayAlphaStaysInsideAndroidTouchableSafetyLimit() {
+        assertEquals(0.8f, OverlayWindowAlpha.passThroughVisibleAlpha, 0.0f)
+        assertEquals(0.8f, OverlayWindowAlpha.forPassThroughVisibility(true), 0.0f)
+        assertEquals(0.0f, OverlayWindowAlpha.forPassThroughVisibility(false), 0.0f)
+    }
+
+    @Test
+    fun visibilityStateIgnoresRepeatedWindowVisibilityUpdates() {
+        val state = StableWindowVisibilityState()
+
+        assertTrue(state.markIfChanged(true))
+        assertFalse(state.markIfChanged(true))
+        assertTrue(state.markIfChanged(false))
+        assertFalse(state.markIfChanged(false))
+        assertTrue(state.markIfChanged(true))
+    }
+
+    @Test
+    fun targetIconStateKeepsProgressVisibleAfterPointerRelease() {
+        val state = TargetIconRenderPolicy.stateFor(
+            side = PointerSide.LEFT,
+            activeSide = PointerSide.LEFT,
+            motionEventAction = MotionEvent.ACTION_UP,
+            textDetectMode = TextDetectMode.SENTENCE,
+            captureStatus = CaptureStatus.Idle,
+            fixedAreaTranslating = false,
+            translateStatus = TranslateStatus.Requested,
+            areaSelecting = false,
+            writingRtl = false,
+        )
+
+        assertFalse(state.pointerVisible)
+        assertTrue(state.progressVisible)
+        assertEquals(TargetIconTint.NONE, state.tint)
+    }
+
+    @Test
+    fun targetIconStatePreservesSelectionTintAndRtl() {
+        val state = TargetIconRenderPolicy.stateFor(
+            side = PointerSide.LEFT,
+            activeSide = PointerSide.LEFT,
+            motionEventAction = MotionEvent.ACTION_MOVE,
+            textDetectMode = TextDetectMode.SELECT,
+            captureStatus = CaptureStatus.Idle,
+            fixedAreaTranslating = false,
+            translateStatus = TranslateStatus.Idle,
+            areaSelecting = true,
+            writingRtl = true,
+        )
+
+        assertTrue(state.pointerVisible)
+        assertFalse(state.progressVisible)
+        assertTrue(state.writingRtl)
+        assertEquals(TargetIconTint.SELECT, state.tint)
+    }
+
+    @Test
+    fun targetIconContentDimsDuringCaptureWithoutChangingWindowVisibility() {
+        val state = TargetIconRenderPolicy.stateFor(
+            side = PointerSide.LEFT,
+            activeSide = PointerSide.LEFT,
+            motionEventAction = MotionEvent.ACTION_MOVE,
+            textDetectMode = TextDetectMode.SENTENCE,
+            captureStatus = CaptureStatus.Requested,
+            fixedAreaTranslating = false,
+            translateStatus = TranslateStatus.Idle,
+            areaSelecting = false,
+            writingRtl = false,
+        )
+
+        assertTrue(state.dimmed)
+        assertEquals(0.01f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
     }
 }

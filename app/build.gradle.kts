@@ -17,8 +17,8 @@ android {
         applicationId = "com.yiqun.translator"
         minSdk = 23
         targetSdk = 35
-        versionCode = 20708
-        versionName = "2.7.8"
+        versionCode = 20709
+        versionName = "2.7.9"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     bundle {
@@ -36,7 +36,9 @@ android {
     }
     buildTypes {
         debug {
-            isMinifyEnabled = false
+            isDebuggable = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         release {
@@ -173,9 +175,6 @@ dependencies {
 kapt {
     correctErrorTypes = true
 }
-
-
-
 
 
 

@@ -53,7 +53,7 @@ abstract class OverlayView : OverlayServiceEventListener {
 
     lateinit var overlayService: OverlayService
 
-    var view: ComposeView? = null
+    var view: View? = null
 
     private var oldViewDetachRunnable: Runnable? = null
 
@@ -75,10 +75,7 @@ abstract class OverlayView : OverlayServiceEventListener {
         launchInOverlayViewCoroutineScope {
             val oldView = if (reattach && view?.isAttachedToWindow == true) view else null
             if (view == null || reattach) {
-                view = ComposeView(overlayService).apply {
-                    setViewTreeLifecycleOwner(overlayService)
-                    setViewTreeSavedStateRegistryOwner(overlayService)
-                    setContent(composable)
+                view = createView(overlayService).apply {
                     touchListener(overlayService.applicationContext)?.let {
                         setOnTouchListener(it)
                     }
@@ -135,6 +132,14 @@ abstract class OverlayView : OverlayServiceEventListener {
             .logEvent(FirebaseAnalytics.Event.SCREEN_VIEW) {
                 param(FirebaseAnalytics.Param.SCREEN_CLASS, TAG)
             }
+    }
+
+    protected open fun createView(overlayService: OverlayService): View {
+        return ComposeView(overlayService).apply {
+            setViewTreeLifecycleOwner(overlayService)
+            setViewTreeSavedStateRegistryOwner(overlayService)
+            setContent(composable)
+        }
     }
 
     open suspend fun cast(

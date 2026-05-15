@@ -412,8 +412,10 @@ class SplashActivity : AVDActivity() {
                     onConfirm = {
                         coroutineScope.launch {
                             delay(200)
-//                            TargetHandleView.INSTANCE.cast(applicationContext)
-                            SettingsActivity.start(context)
+                            TargetHandleView.castConfigured(
+                                applicationContext = applicationContext,
+                                dualPointerMode = viewModel.preferenceRepository.dualPointerEnabledFlow.first(),
+                            )
                             finish()
                         }
                     },
@@ -426,6 +428,4 @@ class SplashActivity : AVDActivity() {
         )
     }
 }
-
-
 

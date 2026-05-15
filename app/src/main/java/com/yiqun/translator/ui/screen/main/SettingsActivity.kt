@@ -193,6 +193,8 @@ class SettingsActivity : AVDActivity() {
 
 //    private val snackMessageFlow = MutableStateFlow("")
 
+    private var ttsAcquiredWhileResumed = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -300,6 +302,7 @@ class SettingsActivity : AVDActivity() {
         }
 
         liveStateFlow.value = true
+        acquireTtsForVisibleSettings()
 
         lifecycleScope.launch {
             if (!MenuBarView.INSTANCE.isRunning.get()) {
@@ -331,7 +334,22 @@ class SettingsActivity : AVDActivity() {
         HelpTranslationKitView.INSTANCE.clear()
         liveStateFlow.value = false
         aiApiSettingsDialogLiveStateFlow.value = false
+        releaseTtsForVisibleSettings()
         super.onPause()
+    }
+
+    private fun acquireTtsForVisibleSettings() {
+        if (!ttsAcquiredWhileResumed) {
+            viewModel.ttsRepository.acquire()
+            ttsAcquiredWhileResumed = true
+        }
+    }
+
+    private fun releaseTtsForVisibleSettings() {
+        if (ttsAcquiredWhileResumed) {
+            viewModel.ttsRepository.release()
+            ttsAcquiredWhileResumed = false
+        }
     }
 
     private var _textDetectMode: TextDetectMode? = null

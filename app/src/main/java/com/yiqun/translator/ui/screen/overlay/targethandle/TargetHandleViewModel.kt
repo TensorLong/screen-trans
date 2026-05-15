@@ -177,6 +177,8 @@ class TargetHandleViewModel(
 
     private var visionCaptureScreenRect: Rect? = null
 
+    private var ttsAcquiredForTranslation = false
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //                                                                                            //
@@ -1280,10 +1282,13 @@ class TargetHandleViewModel(
                 Pair(orderedVoiceNames, detectedLanguageCode)
             }
                 .collect { (orderedVoiceNames, detectedLanguageCode) ->
+                    ensureTtsAcquiredForTranslation()
                     Timber.tag(TAG).i("Ordered Voice Names: $orderedVoiceNames")
                     Timber.tag(TAG).i("Detected Language Code: $detectedLanguageCode")
                     val matchingVoiceName = if (orderedVoiceNames.isEmpty()) {
-                        val availableVoices = ttsRepository.availableVoicesFlow.filterNotNull().first()
+                        val availableVoices = ttsRepository.availableVoicesFlow
+                            .filter { it.isNotEmpty() }
+                            .first()
                         availableVoices.map { voice -> voice.name }.firstOrNull { voiceName ->
                             voiceName.startsWith(detectedLanguageCode)
                         }
@@ -1300,7 +1305,15 @@ class TargetHandleViewModel(
         }
     }
 
+    private fun ensureTtsAcquiredForTranslation() {
+        if (!ttsAcquiredForTranslation) {
+            ttsRepository.acquire()
+            ttsAcquiredForTranslation = true
+        }
+    }
+
     fun playTTS(text: String) {
+        ensureTtsAcquiredForTranslation()
         ttsRepository.playTTS(text, ttsSpeechRate)
     }
 
@@ -1314,7 +1327,6 @@ class TargetHandleViewModel(
         secureRepository.acquire()
         captureRepository.acquire()
         translationRepository.acquire()
-        ttsRepository.acquire()
         collectSecureStateFlow()
         collectServiceOperationInfoFlow()
         collectPreference()
@@ -1328,7 +1340,10 @@ class TargetHandleViewModel(
         secureRepository.release()
         captureRepository.release()
         translationRepository.release()
-        ttsRepository.release()
+        if (ttsAcquiredForTranslation) {
+            ttsRepository.release()
+            ttsAcquiredForTranslation = false
+        }
         super.onCleared()
     }
 }
@@ -1336,4 +1351,3 @@ class TargetHandleViewModel(
 private fun Rect.containsPoint(point: Point): Boolean {
     return point.x >= left && point.x < right && point.y >= top && point.y < bottom
 }
-

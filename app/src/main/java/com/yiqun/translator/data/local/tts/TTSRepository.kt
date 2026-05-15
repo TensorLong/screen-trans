@@ -9,7 +9,9 @@ import com.yiqun.translator.ui.screen.overlay.translation.TTSStatus
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import java.util.Locale
 import java.util.UUID
@@ -21,6 +23,8 @@ class TTSRepository @Inject constructor(@ApplicationContext val context: Context
 
     private var tts: TextToSpeech? = null
     private var ttsForText: TextToSpeech? = null
+    private var mainTtsStarting = false
+    private var testTtsStarting = false
 
     val ttsStatusFlow = MutableStateFlow(TTSStatus.Uninitialized)
 
@@ -43,6 +47,7 @@ class TTSRepository @Inject constructor(@ApplicationContext val context: Context
                 Timber.tag(TAG).i("TextToSpeech result status $status success $success")
 
                 if (success) {
+                    mainTtsStarting = false
                     tts?.setLanguage(locale)
                     tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
                         override fun onStart(utteranceId: String?) {
@@ -76,6 +81,7 @@ class TTSRepository @Inject constructor(@ApplicationContext val context: Context
                     initTTS(locale, attempts + 1)
                 } else {
                     Timber.tag(TAG).e("initTTS completely failed after $attempts attempts.")
+                    mainTtsStarting = false
                     ttsStatusFlow.value = TTSStatus.Uninitialized
                 }
             }
@@ -96,14 +102,52 @@ class TTSRepository @Inject constructor(@ApplicationContext val context: Context
 
                 Timber.tag(TAG).i("initTTSForText result status $status success $success")
 
-                if (!success && attempts < 10) {
+                if (success) {
+                    testTtsStarting = false
+                } else if (attempts < 10) {
                     val delayTime = (2000 + 1000 * attempts).toLong()
                     Timber.tag(TAG).w("initTTSForText failed, retrying in ${delayTime}ms... Attempt: ${attempts + 1}")
                     delay(delayTime)
                     initTTSForText(attempts + 1)
+                } else {
+                    testTtsStarting = false
                 }
             }
         }
+    }
+
+    private fun ensureMainTtsStarted() {
+        if (tts != null || mainTtsStarting) return
+        mainTtsStarting = true
+        initTTS(getCurrentLocale())
+    }
+
+    private fun ensureTestTtsStarted() {
+        if (ttsForText != null || testTtsStarting) return
+        testTtsStarting = true
+        initTTSForText()
+    }
+
+    private suspend fun awaitMainTtsReady(): Boolean {
+        ensureMainTtsStarted()
+        if (tts != null && ttsStatusFlow.value != TTSStatus.Uninitialized) return true
+        return withTimeoutOrNull(5000) {
+            ttsStatusFlow
+                .filter { it != TTSStatus.Uninitialized }
+                .first()
+            true
+        } ?: false
+    }
+
+    private suspend fun awaitTestTtsReady(): Boolean {
+        ensureTestTtsStarted()
+        if (ttsForText != null) return true
+        return withTimeoutOrNull(5000) {
+            while (ttsForText == null) {
+                delay(100)
+            }
+            true
+        } ?: false
     }
 
     fun stopTTS() {
@@ -114,6 +158,8 @@ class TTSRepository @Inject constructor(@ApplicationContext val context: Context
     private fun clearTTS() {
         Timber.tag(TAG).i("------------ clearTTS --------------")
         ttsStatusFlow.value = TTSStatus.Uninitialized
+        mainTtsStarting = false
+        testTtsStarting = false
         try {
             tts?.stop()
         } catch (_: Exception) {
@@ -130,6 +176,10 @@ class TTSRepository @Inject constructor(@ApplicationContext val context: Context
             ttsForText?.shutdown()
         } catch (_: Exception) {
         }
+        tts = null
+        ttsForText = null
+        currentVoiceFlow.value = null
+        availableVoicesFlow.value = emptyList()
     }
 
     private fun getCurrentLocale(): Locale {
@@ -138,6 +188,7 @@ class TTSRepository @Inject constructor(@ApplicationContext val context: Context
 
     fun setVoice(voiceName: String) {
         launchInAVDCoroutineScope {
+            if (!awaitMainTtsReady()) return@launchInAVDCoroutineScope
             Timber.tag(TAG).i("setVoice ${tts?.voice} to $voiceName")
             val matchingVoice = availableVoicesFlow.first()?.firstOrNull { it.name == voiceName }
             Timber.tag(TAG).i("matchingVoice  $matchingVoice")
@@ -150,27 +201,33 @@ class TTSRepository @Inject constructor(@ApplicationContext val context: Context
 
     fun playTTS(text: String, speechRate: Float? = 1.0f) {
         Timber.tag(TAG).i("playTTS Starting TTS playback for text: $text")
-        val utteranceId = UUID.randomUUID().toString()
-        speechRate?.let { tts?.setSpeechRate(it) }
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+        launchInAVDCoroutineScope {
+            if (!awaitMainTtsReady()) return@launchInAVDCoroutineScope
+            val utteranceId = UUID.randomUUID().toString()
+            speechRate?.let { tts?.setSpeechRate(it) }
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+        }
     }
 
     fun playTestTTS(text: String, speechRate: Float? = 1.0f, voice: Voice? = null) {
         Timber.tag(TAG).i("playTestTTS Starting TTS playback for text: $text")
-        val utteranceId = UUID.randomUUID().toString()
-        speechRate?.let { ttsForText?.setSpeechRate(it) }
-        voice?.let { ttsForText?.setVoice(it) }
-        val result = ttsForText?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
-        Timber.tag(TAG).i("playTestTTS speak result: $result")
+        launchInAVDCoroutineScope {
+            if (!awaitTestTtsReady()) return@launchInAVDCoroutineScope
+            val utteranceId = UUID.randomUUID().toString()
+            speechRate?.let { ttsForText?.setSpeechRate(it) }
+            voice?.let { ttsForText?.setVoice(it) }
+            val result = ttsForText?.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId)
+            Timber.tag(TAG).i("playTestTTS speak result: $result")
+        }
+    }
+
+    override fun onFirstReference() {
+        ensureMainTtsStarted()
+        ensureTestTtsStarted()
     }
 
     override fun onZeroReferences() {
         Timber.tag(TAG).i("onZeroReferences called, cancelling all coroutines and clearing TTS resources")
         clearTTS()
-    }
-
-    init {
-        initTTS(getCurrentLocale())
-        initTTSForText()
     }
 }

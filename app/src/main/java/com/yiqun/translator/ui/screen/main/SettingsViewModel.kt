@@ -111,12 +111,10 @@ class SettingsViewModel @Inject constructor(
     init {
         Timber.tag(TAG).i("#### init ####")
         translationRepository.acquire()
-        ttsRepository.acquire()
     }
 
     override fun onCleared() {
         translationRepository.release()
-        ttsRepository.release()
         super.onCleared()
     }
 }

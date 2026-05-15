@@ -3,6 +3,7 @@ package com.yiqun.translator.ui.screen.overlay.targethandle
 import android.content.res.Configuration
 import android.graphics.Point
 import android.view.MotionEvent
+import com.yiqun.translator.data.local.vision.TextDetectMode
 
 enum class PointerSide {
     LEFT,
@@ -226,6 +227,25 @@ data class PointerPassThroughWindowLayout(
     }
 }
 
+object PointerWindowBounds {
+    fun clampLayoutPosition(
+        x: Int,
+        y: Int,
+        screenWidth: Int,
+        screenHeight: Int,
+        layout: PointerPassThroughWindowLayout,
+        edgeCorrectionX: Int = 0,
+        edgeCorrectionY: Int = 0,
+    ): Pair<Int, Int> {
+        val minX = -layout.visualLeft(edgeCorrectionX)
+        val maxX = screenWidth - layout.visualRight(edgeCorrectionX)
+        val minY = -layout.visualTop(edgeCorrectionY)
+        val maxY = screenHeight - layout.visualBottom(edgeCorrectionY)
+        return x.coerceIn(minX, maxX.coerceAtLeast(minX)) to
+                y.coerceIn(minY, maxY.coerceAtLeast(minY))
+    }
+}
+
 object PointerOverlayHitTest {
     fun isHandleHit(
         layout: PointerOverlayLayout,
@@ -300,6 +320,78 @@ object PointerInteractionVisibilityPolicy {
         motionEventAction: Int,
     ): Boolean {
         return !isInteractionActive(motionEventAction) || side == activeSide
+    }
+}
+
+object OverlayWindowAlpha {
+    const val passThroughVisibleAlpha: Float = 0.8f
+
+    fun forPassThroughVisibility(visible: Boolean): Float {
+        return if (visible) passThroughVisibleAlpha else 0.0f
+    }
+
+    fun forTouchableVisibility(visible: Boolean): Float {
+        return if (visible) 1.0f else 0.0f
+    }
+}
+
+enum class TargetIconTint {
+    NONE,
+    SELECT,
+    FIXED_AREA,
+}
+
+data class TargetIconRenderState(
+    val pointerVisible: Boolean = false,
+    val progressVisible: Boolean = false,
+    val dimmed: Boolean = false,
+    val writingRtl: Boolean = false,
+    val tint: TargetIconTint = TargetIconTint.NONE,
+)
+
+object TargetIconRenderPolicy {
+    fun stateFor(
+        side: PointerSide,
+        activeSide: PointerSide,
+        motionEventAction: Int,
+        textDetectMode: TextDetectMode,
+        captureStatus: CaptureStatus,
+        fixedAreaTranslating: Boolean,
+        translateStatus: TranslateStatus,
+        areaSelecting: Boolean,
+        writingRtl: Boolean,
+    ): TargetIconRenderState {
+        return TargetIconRenderState(
+            pointerVisible = PointerInteractionVisibilityPolicy.isInteractionActive(motionEventAction) &&
+                    side == activeSide,
+            progressVisible = translateStatus == TranslateStatus.Requested &&
+                    textDetectMode != TextDetectMode.SELECT,
+            dimmed = captureStatus == CaptureStatus.Requested || fixedAreaTranslating,
+            writingRtl = writingRtl,
+            tint = when {
+                !areaSelecting -> TargetIconTint.NONE
+                textDetectMode == TextDetectMode.SELECT -> TargetIconTint.SELECT
+                else -> TargetIconTint.FIXED_AREA
+            },
+        )
+    }
+
+    fun contentAlpha(state: TargetIconRenderState): Float {
+        return if (state.dimmed) 0.01f else 1.0f
+    }
+}
+
+class StableWindowVisibilityState {
+    private var visible: Boolean? = null
+
+    fun markIfChanged(newVisible: Boolean): Boolean {
+        if (visible == newVisible) return false
+        visible = newVisible
+        return true
+    }
+
+    fun reset() {
+        visible = null
     }
 }
 

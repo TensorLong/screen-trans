@@ -4,52 +4,30 @@ import android.animation.Animator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.Point
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
+import android.graphics.RectF
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
+import android.view.animation.LinearInterpolator
+import android.widget.ImageView
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SignalWifiStatusbarConnectedNoInternet4
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.dynamicanimation.animation.FloatValueHolder
 import androidx.dynamicanimation.animation.SpringAnimation
 import androidx.dynamicanimation.animation.SpringForce
-import androidx.lifecycle.setViewTreeLifecycleOwner
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.yiqun.translator.R
 import com.yiqun.translator.core.OverlayService
 import com.yiqun.translator.data.local.screen.ScreenInfo
@@ -59,7 +37,6 @@ import com.yiqun.translator.data.local.vision.WritingDirection
 import com.yiqun.translator.data.local.vision.model.VisionText
 import com.yiqun.translator.data.remote.translation.Language
 import com.yiqun.translator.extensions.isNetworkAvailable
-import com.yiqun.translator.extensions.toPx
 import com.yiqun.translator.extensions.vibrate
 import com.yiqun.translator.ui.screen.main.SettingsActivity
 import com.yiqun.translator.ui.screen.overlay.Event
@@ -72,10 +49,13 @@ import com.yiqun.translator.ui.screen.overlay.visiontext.VisionTextView
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import javax.inject.Singleton
 import java.util.LinkedHashSet
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 
@@ -164,7 +144,11 @@ class TargetHandleView private constructor(
 
     private lateinit var targetLayoutParams: WindowManager.LayoutParams
 
-    private var targetView: ComposeView? = null
+    private var targetView: View? = null
+
+    private val handleWindowVisibilityState = StableWindowVisibilityState()
+
+    private val targetWindowVisibilityState = StableWindowVisibilityState()
 
     private var dualPointerMode = false
 
@@ -172,270 +156,238 @@ class TargetHandleView private constructor(
 
     private val pointerOffsetYState = MutableStateFlow(0)
 
+    private var nativeStateCollectorJobs = emptyList<Job>()
+
+    private var lastTargetIconRenderState = TargetIconRenderState()
+
     override lateinit var layoutParams: WindowManager.LayoutParams
 
-    override val composable: @Composable () -> Unit = @Composable {
-        val context = LocalContext.current
-        val lifecycleOwner = LocalLifecycleOwner.current
-        val screenInfo: ScreenInfo = ScreenInfoHolder.get()
-        val isDarkMode = isSystemInDarkTheme()
-
-        val textDetectMode by viewModel.preferenceRepository.textDetectModeFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = TextDetectMode.SENTENCE
-        )
-        val pointerPosition: Point? by viewModel.pointerPositionFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = null
-        )
-        val pointerStoppedPosition: Point? by viewModel.pointerStoppedPositionFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = null
-        )
-        LaunchedEffect(pointerStoppedPosition) {
-            Timber.tag(TAG).d("LaunchedEffect pointerStoppedPosition $pointerPosition")
-        }
-        val captureStatus by viewModel.captureStatusFlow.collectAsStateWithLifecycle()
-        LaunchedEffect(pointerStoppedPosition) {
-            Timber.tag(TAG).d("LaunchedEffect captureStatus $captureStatus")
-        }
-        val fixedAreaViewState by FixedAreaView.fixedAreaViewStateFlow.collectAsStateWithLifecycle()
-        LaunchedEffect(pointerStoppedPosition) {
-            Timber.tag(TAG).d("LaunchedEffect fixedAreaViewState $fixedAreaViewState")
-        }
-        val motionEventState by viewModel.motionEventFlow.collectAsStateWithLifecycle()
-        val activePointerSide by viewModel.activePointerSideFlow.collectAsStateWithLifecycle()
-        val isActivePointer = activePointerSide == pointerSide
-        val interactionVisible = PointerInteractionVisibilityPolicy.visibleForSide(
-            side = pointerSide,
-            activeSide = activePointerSide,
-            motionEventAction = motionEventState,
-        )
-        val defaultTargetFromHandleOffset = remember { viewModel.preferenceRepository.defaultPointerOffset }
-        val leftTargetFromHandleOffset by viewModel.preferenceRepository.pointerLeftOffsetFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = defaultTargetFromHandleOffset
-        )
-        val rightTargetFromHandleOffset by viewModel.preferenceRepository.pointerRightOffsetFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = defaultTargetFromHandleOffset
-        )
-        val targetFromHandleOffset = when (pointerSide) {
-            PointerSide.LEFT -> leftTargetFromHandleOffset
-            PointerSide.RIGHT -> rightTargetFromHandleOffset
-        }
-        LaunchedEffect(pointerStoppedPosition) {
-            Timber.tag(TAG).d("LaunchedEffect motionEventState $motionEventState")
-        }
-        val menuOperatingState by MenuBarView.operatingStateFlow.collectAsStateWithLifecycle()
-        val pointerOffsetX by pointerOffsetXState.collectAsStateWithLifecycle()
-        val pointerOffsetY by pointerOffsetYState.collectAsStateWithLifecycle()
-        val passThroughLayout = remember(pointerDimen, handleWidth, targetFromHandleOffset) {
-            PointerPassThroughWindowLayout.fromTargetFromHandleOffset(
-                pointerDimen = pointerDimen,
-                handleWidth = handleWidth,
-                targetFromHandleOffset = targetFromHandleOffset,
-            )
-        }
-        SideEffect {
-            updatePassThroughWindowLayout(context, passThroughLayout)
-            updateTargetLayout(context, pointerOffsetX, pointerOffsetY)
-            updateHandleWindowVisibility(interactionVisible)
-            updateTargetWindowVisibility(interactionVisible)
-        }
-        val translationState by viewModel.translationFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = null
-        )
-        val pointerPositionedVisionText by viewModel.pointerPositionedVisionTextFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = null
-        )
-        val dragHandleHaptic by viewModel.preferenceRepository.dragHandleHapticFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = false
-        )
-
-        val previousVisionText = remember { mutableStateOf<VisionText?>(null) }
-        LaunchedEffect(dragHandleHaptic, pointerStoppedPosition, pointerPositionedVisionText, textDetectMode, activePointerSide) {
-            if (!isActivePointer || pointerPositionedVisionText == null) {
-                previousVisionText.value = null
-            } else if (dragHandleHaptic
-                && pointerStoppedPosition != null
-                && pointerPositionedVisionText != previousVisionText.value
-                && (textDetectMode == TextDetectMode.WORD
-                        || textDetectMode == TextDetectMode.SENTENCE
-                        || textDetectMode == TextDetectMode.SENSE_GROUP
-                        || textDetectMode == TextDetectMode.PARAGRAPH)
-            ) {
-                context.vibrate()
-                previousVisionText.value = pointerPositionedVisionText
-            }
-        }
-
-        LaunchedEffect(textDetectMode, pointerStoppedPosition, activePointerSide) {
-            if (isActivePointer && pointerStoppedPosition != null && textDetectMode == TextDetectMode.SELECT && !AreaSelectionView.INSTANCE.isRunning.get()) {
-                // Timber.tag(TAG).i("AreaSelectionView.INSTANCE.cast $pointerStoppedPosition")
-                if (dragHandleHaptic) {
-                    context.vibrate()
-                }
-                AreaSelectionView.INSTANCE.cast(context, pointerStoppedPosition!!)
-            }
-        }
-
-        LaunchedEffect(textDetectMode, pointerStoppedPosition, activePointerSide) {
-            if (isActivePointer && pointerStoppedPosition != null && textDetectMode == TextDetectMode.FIXED_AREA && !FixedAreaView.INSTANCE.isRunning.get()) {
-                // Timber.tag(TAG).i("FixedAreaView.INSTANCE.cast $pointerStoppedPosition")
-                if (dragHandleHaptic) {
-                    context.vibrate()
-                }
-                FixedAreaView.INSTANCE.cast(context, pointerStoppedPosition!!)
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .alpha(if (captureStatus == CaptureStatus.Requested || (textDetectMode == TextDetectMode.FIXED_AREA && fixedAreaViewState == FixedAreaView.State.Translating)) 0.01f else 1.0f)
-                .size(dimensionResource(id = R.dimen.target_handle_width)),
-            contentAlignment = Alignment.Center
-        ) {
-            val alpha by rememberInfiniteTransition(label = "service live anim").animateFloat(
-                initialValue = 1.0f,
-                targetValue = 0.9f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 800, easing = LinearEasing),
-                    repeatMode = RepeatMode.Reverse
-                ), label = "service live anim spec"
-            )
-
-            /**
-             * !!! Important
-             */
-            Image(
-                painter = painterResource(id = if (isDarkMode) R.drawable.drag_handle_dark else R.drawable.drag_handle),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(dimensionResource(id = R.dimen.target_handle_thumb_dimen))
-                    .alpha(alpha)
-            )
-        }
-
-        LaunchedEffect(motionEventState, translationState, menuOperatingState, activePointerSide) {
-//            Timber.tag(TAG).d("LaunchedEffect motionEventState == MotionEvent.ACTION_UP : ${motionEventState == MotionEvent.ACTION_UP}")
-            Timber.tag(TAG).d("LaunchedEffect translationState [$translationState]")
-            if (!isActivePointer) {
-                cancelDockDragHandle()
-            } else if (menuOperatingState) {
-                cancelDockDragHandle()
-            } else {
-                if (motionEventState == MotionEvent.ACTION_UP && translationState == null) {
-                    val loc = IntArray(2)
-                    view?.getLocationOnScreen(loc)
-                    val posX = loc[0]
-//                Timber.tag(TAG).d("posX [$posX] [$viewWidth] [${(screenInfo.height - viewWidth)}]")
-                    if (posX < 10.dp.toPx(context)) {
-                        scheduleDockDragHandle(context, true, 500)
-                    } else if ((screenInfo.width - viewWidth - 10.dp.toPx(context)) < posX) {
-                        scheduleDockDragHandle(context, false, 500)
-                    } else if (viewModel.dragHandleDocking) {
-                        scheduleDockDragHandle(context, posX < screenInfo.width / 2, viewModel.dockingDelay)
-                    }
-                }
-            }
+    override fun createView(overlayService: OverlayService): View {
+        val thumbDimen = overlayService.resources.getDimensionPixelSize(R.dimen.target_handle_thumb_dimen)
+        val padding = ((handleWidth - thumbDimen) / 2).coerceAtLeast(0)
+        val isDarkMode = (overlayService.resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        return ImageView(overlayService).apply {
+            setImageResource(if (isDarkMode) R.drawable.drag_handle_dark else R.drawable.drag_handle)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            setPadding(padding, padding, padding, padding)
         }
     }
 
-    private val targetComposable: @Composable () -> Unit = @Composable {
-        val context = LocalContext.current
-        val lifecycleOwner = LocalLifecycleOwner.current
+    override val composable: @Composable () -> Unit = @Composable {}
 
-        val textDetectMode by viewModel.preferenceRepository.textDetectModeFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = TextDetectMode.SENTENCE
-        )
-        val captureStatus by viewModel.captureStatusFlow.collectAsStateWithLifecycle()
-        val fixedAreaViewState by FixedAreaView.fixedAreaViewStateFlow.collectAsStateWithLifecycle()
-        val translateStatus by viewModel.translateStatusFlow.collectAsStateWithLifecycle()
-        val motionEventState by viewModel.motionEventFlow.collectAsStateWithLifecycle()
-        val activePointerSide by viewModel.activePointerSideFlow.collectAsStateWithLifecycle()
-        val isActivePointer = activePointerSide == pointerSide
-        val interactionVisible = PointerInteractionVisibilityPolicy.visibleForSide(
-            side = pointerSide,
-            activeSide = activePointerSide,
-            motionEventAction = motionEventState,
-        )
-        val defaultTargetFromHandleOffset = remember { viewModel.preferenceRepository.defaultPointerOffset }
-        val leftTargetFromHandleOffset by viewModel.preferenceRepository.pointerLeftOffsetFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = defaultTargetFromHandleOffset
-        )
-        val rightTargetFromHandleOffset by viewModel.preferenceRepository.pointerRightOffsetFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = defaultTargetFromHandleOffset
-        )
-        val targetFromHandleOffset = when (pointerSide) {
-            PointerSide.LEFT -> leftTargetFromHandleOffset
-            PointerSide.RIGHT -> rightTargetFromHandleOffset
-        }
-        val pointerOffsetX by pointerOffsetXState.collectAsStateWithLifecycle()
-        val pointerOffsetY by pointerOffsetYState.collectAsStateWithLifecycle()
-        val passThroughLayout = remember(pointerDimen, handleWidth, targetFromHandleOffset) {
-            PointerPassThroughWindowLayout.fromTargetFromHandleOffset(
-                pointerDimen = pointerDimen,
-                handleWidth = handleWidth,
-                targetFromHandleOffset = targetFromHandleOffset,
-            )
-        }
-        SideEffect {
-            updatePassThroughWindowLayout(context, passThroughLayout)
-            updateTargetLayout(context, pointerOffsetX, pointerOffsetY)
-            updateTargetWindowVisibility(interactionVisible)
-        }
+    private data class PointerInteractionState(
+        val motionEventAction: Int,
+        val activeSide: PointerSide,
+    )
 
-        val areaSelecting by viewModel.areaSelectingStateFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = false
-        )
-        val isWritingRtl = remember { mutableStateOf(false) }
-        val sourceLanguageCode by viewModel.preferenceRepository.sourceLanguageCodeFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = "auto"
-        )
-        LaunchedEffect(sourceLanguageCode) {
+    private data class TargetIconStatusState(
+        val textDetectMode: TextDetectMode,
+        val captureStatus: CaptureStatus,
+        val translateStatus: TranslateStatus,
+        val areaSelecting: Boolean,
+        val writingRtl: Boolean,
+    )
+
+    private data class PointerStoppedState(
+        val stoppedPosition: Point?,
+        val positionedVisionText: VisionText?,
+        val textDetectMode: TextDetectMode,
+        val dragHandleHaptic: Boolean,
+        val activeSide: PointerSide,
+    )
+
+    private data class DockingState(
+        val motionEventAction: Int,
+        val translationState: Pair<VisionText, com.yiqun.translator.data.remote.translation.Transaction>?,
+        val menuOperating: Boolean,
+        val activeSide: PointerSide,
+    )
+
+    private fun restartNativeStateCollectors(applicationContext: Context) {
+        nativeStateCollectorJobs.forEach { it.cancel() }
+
+        val interactionFlow = combine(
+            viewModel.motionEventFlow,
+            viewModel.activePointerSideFlow,
+        ) { motionEventAction, activeSide ->
+            PointerInteractionState(motionEventAction, activeSide)
+        }.distinctUntilChanged()
+
+        val targetIconStatusFlow = combine(
+            viewModel.preferenceRepository.textDetectModeFlow,
+            viewModel.captureStatusFlow,
+            viewModel.translateStatusFlow,
+            viewModel.areaSelectingStateFlow,
+            viewModel.preferenceRepository.sourceLanguageCodeFlow,
+        ) { textDetectMode, captureStatus, translateStatus, areaSelecting, sourceLanguageCode ->
             val writingDirection = Language.writingDirection(sourceLanguageCode, false)
-            isWritingRtl.value = writingDirection == WritingDirection.RTL
-        }
-
-        Box(
-            modifier = Modifier
-                .alpha(if (captureStatus == CaptureStatus.Requested || (textDetectMode == TextDetectMode.FIXED_AREA && fixedAreaViewState == FixedAreaView.State.Translating)) 0.01f else 1.0f)
-                .size(dimensionResource(id = R.dimen.target_pointer_dimen)),
-            contentAlignment = Alignment.Center
-        ) {
-            if (translateStatus == TranslateStatus.Requested && textDetectMode != TextDetectMode.SELECT) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(dimensionResource(id = R.dimen.target_pointer_progress_dimen)),
-                    color = Color(0xFF48baef),
-                    strokeWidth = 1.8.dp
-                )
-            }
-            Image(
-                painter = painterResource(id = if (areaSelecting) R.drawable.drag_selection_pointer else R.drawable.drag_pointer),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        if (isWritingRtl.value) rotationY = 180f
-                    },
-                alpha = if (
-                    !isActivePointer
-                    || motionEventState == MotionEvent.INVALID_POINTER_ID
-                    || motionEventState == MotionEvent.ACTION_UP
-                ) 0.0f else 1.0f,
-                colorFilter = if (areaSelecting) {
-                    if (textDetectMode == TextDetectMode.SELECT) ColorFilter.tint(Color(0x883B6FDB)) else ColorFilter.tint(Color(0x88006600))
-                } else null
+            TargetIconStatusState(
+                textDetectMode = textDetectMode,
+                captureStatus = captureStatus,
+                translateStatus = translateStatus,
+                areaSelecting = areaSelecting,
+                writingRtl = writingDirection == WritingDirection.RTL,
             )
+        }.distinctUntilChanged()
+
+        nativeStateCollectorJobs = listOf(
+            launchInOverlayViewCoroutineScope {
+                combine(
+                    viewModel.preferenceRepository.pointerLeftOffsetFlow,
+                    viewModel.preferenceRepository.pointerRightOffsetFlow,
+                ) { leftOffset, rightOffset ->
+                    when (pointerSide) {
+                        PointerSide.LEFT -> leftOffset
+                        PointerSide.RIGHT -> rightOffset
+                    }
+                }.distinctUntilChanged().collect { targetFromHandleOffset ->
+                    val passThroughLayout = PointerPassThroughWindowLayout.fromTargetFromHandleOffset(
+                        pointerDimen = pointerDimen,
+                        handleWidth = handleWidth,
+                        targetFromHandleOffset = targetFromHandleOffset,
+                    )
+                    updatePassThroughWindowLayout(applicationContext, passThroughLayout)
+                    updateTargetLayout(applicationContext)
+                }
+            },
+            launchInOverlayViewCoroutineScope {
+                interactionFlow.collect { interaction ->
+                    val interactionVisible = PointerInteractionVisibilityPolicy.visibleForSide(
+                        side = pointerSide,
+                        activeSide = interaction.activeSide,
+                        motionEventAction = interaction.motionEventAction,
+                    )
+                    updateHandleWindowVisibility(interactionVisible)
+                    updateTargetWindowVisibility(interactionVisible)
+                }
+            },
+            launchInOverlayViewCoroutineScope {
+                combine(
+                    targetIconStatusFlow,
+                    interactionFlow,
+                    FixedAreaView.fixedAreaViewStateFlow,
+                ) { status, interaction, fixedAreaState ->
+                    TargetIconRenderPolicy.stateFor(
+                        side = pointerSide,
+                        activeSide = interaction.activeSide,
+                        motionEventAction = interaction.motionEventAction,
+                        textDetectMode = status.textDetectMode,
+                        captureStatus = status.captureStatus,
+                        fixedAreaTranslating = status.textDetectMode == TextDetectMode.FIXED_AREA &&
+                                fixedAreaState == FixedAreaView.State.Translating,
+                        translateStatus = status.translateStatus,
+                        areaSelecting = status.areaSelecting,
+                        writingRtl = status.writingRtl,
+                    )
+                }.distinctUntilChanged().collect { state ->
+                    applyTargetIconRenderState(state)
+                }
+            },
+            launchInOverlayViewCoroutineScope {
+                var previousVisionText: VisionText? = null
+                var lastAreaAction: Pair<TextDetectMode, Point>? = null
+                combine(
+                    viewModel.pointerStoppedPositionFlow,
+                    viewModel.pointerPositionedVisionTextFlow,
+                    viewModel.preferenceRepository.textDetectModeFlow,
+                    viewModel.preferenceRepository.dragHandleHapticFlow,
+                    viewModel.activePointerSideFlow,
+                ) { stoppedPosition, positionedVisionText, textDetectMode, dragHandleHaptic, activeSide ->
+                    PointerStoppedState(
+                        stoppedPosition = stoppedPosition,
+                        positionedVisionText = positionedVisionText,
+                        textDetectMode = textDetectMode,
+                        dragHandleHaptic = dragHandleHaptic,
+                        activeSide = activeSide,
+                    )
+                }.collect { state ->
+                    val isActivePointer = state.activeSide == pointerSide
+                    if (!isActivePointer || state.stoppedPosition == null) {
+                        previousVisionText = null
+                        lastAreaAction = null
+                        return@collect
+                    }
+
+                    if (
+                        state.dragHandleHaptic &&
+                        state.positionedVisionText != null &&
+                        state.positionedVisionText != previousVisionText &&
+                        isPointedTranslationMode(state.textDetectMode)
+                    ) {
+                        applicationContext.vibrate()
+                        previousVisionText = state.positionedVisionText
+                    }
+
+                    val areaAction = state.textDetectMode to state.stoppedPosition
+                    when (state.textDetectMode) {
+                        TextDetectMode.SELECT -> {
+                            if (areaAction != lastAreaAction && !AreaSelectionView.INSTANCE.isRunning.get()) {
+                                if (state.dragHandleHaptic) applicationContext.vibrate()
+                                AreaSelectionView.INSTANCE.cast(applicationContext, state.stoppedPosition)
+                                lastAreaAction = areaAction
+                            }
+                        }
+
+                        TextDetectMode.FIXED_AREA -> {
+                            if (areaAction != lastAreaAction && !FixedAreaView.INSTANCE.isRunning.get()) {
+                                if (state.dragHandleHaptic) applicationContext.vibrate()
+                                FixedAreaView.INSTANCE.cast(applicationContext, state.stoppedPosition)
+                                lastAreaAction = areaAction
+                            }
+                        }
+
+                        else -> {
+                            lastAreaAction = null
+                        }
+                    }
+                }
+            },
+            launchInOverlayViewCoroutineScope {
+                combine(
+                    viewModel.motionEventFlow,
+                    viewModel.translationFlow,
+                    MenuBarView.operatingStateFlow,
+                    viewModel.activePointerSideFlow,
+                ) { motionEventAction, translationState, menuOperating, activeSide ->
+                    DockingState(motionEventAction, translationState, menuOperating, activeSide)
+                }.collect { state ->
+                    if (state.activeSide != pointerSide || state.menuOperating) {
+                        cancelDockDragHandle(applicationContext)
+                        return@collect
+                    }
+                    if (state.motionEventAction == MotionEvent.ACTION_UP && state.translationState == null) {
+                        scheduleDockAfterRelease(applicationContext)
+                    }
+                }
+            },
+        )
+    }
+
+    private fun applyTargetIconRenderState(state: TargetIconRenderState) {
+        lastTargetIconRenderState = state
+        (targetView as? TargetIconNativeView)?.render(state)
+    }
+
+    private fun isPointedTranslationMode(textDetectMode: TextDetectMode): Boolean {
+        return textDetectMode == TextDetectMode.WORD ||
+                textDetectMode == TextDetectMode.SENTENCE ||
+                textDetectMode == TextDetectMode.SENSE_GROUP ||
+                textDetectMode == TextDetectMode.PARAGRAPH
+    }
+
+    private fun scheduleDockAfterRelease(context: Context) {
+        val screenInfo = ScreenInfoHolder.get()
+        val loc = IntArray(2)
+        view?.getLocationOnScreen(loc) ?: return
+        val posX = loc[0]
+        val edgeMargin = (10f * context.resources.displayMetrics.density).roundToInt()
+        if (posX < edgeMargin) {
+            scheduleDockDragHandle(context, true, 500)
+        } else if ((screenInfo.width - viewWidth - edgeMargin) < posX) {
+            scheduleDockDragHandle(context, false, 500)
+        } else if (viewModel.dragHandleDocking) {
+            scheduleDockDragHandle(context, posX < screenInfo.width / 2, viewModel.dockingDelay)
         }
     }
 
@@ -493,13 +445,14 @@ class TargetHandleView private constructor(
                         if (applicationContext.isNetworkAvailable()) {
                             viewModel.activePointerSideFlow.value = pointerSide
                             viewModel.motionEventFlow.value = event.action
+                            (targetView as? TargetIconNativeView)?.setPointerVisible(true)
                             showOnlyInteractingPointer(pointerSide)
+                            cancelRepositionAnimation()
+                            cancelDockDragHandle(applicationContext)
                             touchStartX = event.rawX
                             touchStartY = event.rawY
                             dragStartX = layoutParams.x
                             dragStartY = layoutParams.y
-                            dragHandleDockingJob?.cancel()
-                            viewModel.dockStateFlow.value = false
                         } else {
                             launchInOverlayViewCoroutineScope {
                                 DialogView.INSTANCE.cast(
@@ -517,10 +470,11 @@ class TargetHandleView private constructor(
                     MotionEvent.ACTION_MOVE -> {
                         viewModel.activePointerSideFlow.value = pointerSide
                         viewModel.motionEventFlow.value = event.action
-                        showOnlyInteractingPointer(pointerSide)
+                        (targetView as? TargetIconNativeView)?.setPointerVisible(true)
                         val screenInfo: ScreenInfo = ScreenInfoHolder.get()
                         layoutParams.x = (dragStartX + (event.rawX - touchStartX)).toInt()
                         layoutParams.y = (dragStartY + (event.rawY - touchStartY)).toInt()
+                        clampLayoutWithinScreen(screenInfo)
                         updateLayout(applicationContext)
 
                         val loc = IntArray(2)
@@ -561,6 +515,7 @@ class TargetHandleView private constructor(
 
                     MotionEvent.ACTION_UP -> {
                         viewModel.motionEventFlow.value = event.action
+                        (targetView as? TargetIconNativeView)?.setPointerVisible(false)
                         repositionWithinScreen(applicationContext)
                         restorePointerInteractionWindows()
                         isDraggingHandle = false
@@ -568,6 +523,7 @@ class TargetHandleView private constructor(
 
                     MotionEvent.ACTION_CANCEL -> {
                         viewModel.motionEventFlow.value = MotionEvent.ACTION_UP
+                        (targetView as? TargetIconNativeView)?.setPointerVisible(false)
                         restorePointerInteractionWindows()
                         isDraggingHandle = false
                     }
@@ -646,10 +602,12 @@ class TargetHandleView private constructor(
 
     private fun updateHandleWindowVisibility(visible: Boolean) {
         val localView = view ?: return
-        localView.alpha = if (visible) 1f else 0f
+        if (!handleWindowVisibilityState.markIfChanged(visible)) return
+        val alpha = OverlayWindowAlpha.forTouchableVisibility(visible)
+        localView.alpha = alpha
         localView.visibility = if (visible) View.VISIBLE else View.GONE
         if (::layoutParams.isInitialized) {
-            layoutParams.alpha = if (visible) 1f else 0f
+            layoutParams.alpha = alpha
             layoutParams.flags = if (visible) {
                 layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
             } else {
@@ -663,10 +621,11 @@ class TargetHandleView private constructor(
 
     private fun updateTargetWindowVisibility(visible: Boolean) {
         val localTargetView = targetView ?: return
-        localTargetView.alpha = if (visible) 1f else 0f
+        if (!targetWindowVisibilityState.markIfChanged(visible)) return
+        localTargetView.alpha = OverlayWindowAlpha.forTouchableVisibility(visible)
         localTargetView.visibility = if (visible) View.VISIBLE else View.GONE
         if (::targetLayoutParams.isInitialized) {
-            targetLayoutParams.alpha = if (visible) 1f else 0f
+            targetLayoutParams.alpha = OverlayWindowAlpha.forPassThroughVisibility(visible)
             if (isServiceInitialized() && localTargetView.isAttachedToWindow) {
                 try {
                     (overlayService.applicationContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
@@ -730,6 +689,7 @@ class TargetHandleView private constructor(
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.TOP or Gravity.START
+            alpha = OverlayWindowAlpha.forPassThroughVisibility(true)
         }
         updateTargetLayout(applicationContext)
 
@@ -740,12 +700,13 @@ class TargetHandleView private constructor(
             super.cast(applicationContext)
             ensureTargetIconView(applicationContext)
         }
+        restartNativeStateCollectors(applicationContext)
     }
 
     private fun setAtStartPosition(context: Context) {
         val screenInfo: ScreenInfo = ScreenInfoHolder.get()
         SayHereView.INSTANCE.clear()
-        cancelDockDragHandle()
+        cancelDockDragHandle(context)
         layoutParams.x = startX(screenInfo)
         layoutParams.y = startY(screenInfo)
         updateLayout(context)
@@ -800,10 +761,8 @@ class TargetHandleView private constructor(
 
         launchInOverlayViewCoroutineScope {
             if (targetView == null) {
-                targetView = ComposeView(overlayService).apply {
-                    setViewTreeLifecycleOwner(overlayService)
-                    setViewTreeSavedStateRegistryOwner(overlayService)
-                    setContent(targetComposable)
+                targetView = TargetIconNativeView(overlayService).apply {
+                    render(lastTargetIconRenderState)
                 }
             }
 
@@ -907,6 +866,10 @@ class TargetHandleView private constructor(
 
     private var dockAnimator: ValueAnimator? = null
 
+    private var exposeAnimator: ValueAnimator? = null
+
+    private var repositionAnimation: SpringAnimation? = null
+
     /**
      */
     private fun onConfigurationChanged(context: Context) {
@@ -982,7 +945,8 @@ class TargetHandleView private constructor(
         if (move > 0) {
             val fromX = layoutParams.x
             val fromY = layoutParams.y
-            SpringAnimation(FloatValueHolder()).apply {
+            cancelRepositionAnimation()
+            repositionAnimation = SpringAnimation(FloatValueHolder()).apply {
                 spring = SpringForce().apply {
                     setStartValue(0f)
                     setFinalPosition(move.toFloat())
@@ -996,9 +960,33 @@ class TargetHandleView private constructor(
                 }
                 addEndListener { animation, canceled, value, velocity ->
                     // Timber.tag(TAG).d("springAnim End $animation $canceled $value $velocity")
+                    if (repositionAnimation === animation) {
+                        repositionAnimation = null
+                    }
                 }
-            }.start()
+            }
+            repositionAnimation?.start()
         }
+    }
+
+    private fun clampLayoutWithinScreen(screenInfo: ScreenInfo) {
+        val windowLayout = passThroughWindowLayout ?: return
+        val (clampedX, clampedY) = PointerWindowBounds.clampLayoutPosition(
+            x = layoutParams.x,
+            y = layoutParams.y,
+            screenWidth = screenInfo.width,
+            screenHeight = screenInfo.height,
+            layout = windowLayout,
+            edgeCorrectionX = pointerOffsetXState.value,
+            edgeCorrectionY = pointerOffsetYState.value,
+        )
+        layoutParams.x = clampedX
+        layoutParams.y = clampedY
+    }
+
+    private fun cancelRepositionAnimation() {
+        repositionAnimation?.cancel()
+        repositionAnimation = null
     }
 
     /**
@@ -1031,6 +1019,7 @@ class TargetHandleView private constructor(
 
         dockAnimator?.cancel()
 
+        var dockCanceled = false
         dockAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 500
 
@@ -1053,15 +1042,26 @@ class TargetHandleView private constructor(
             }
 
             addListener(object : Animator.AnimatorListener {
-                override fun onAnimationStart(animation: Animator) {}
-
-                override fun onAnimationEnd(animation: Animator) {
-                    exposeTargetHandleKnob(context, start)
-                    viewModel.dockStateFlow.value = true
-                    dockAnimator = null
+                override fun onAnimationStart(animation: Animator) {
+                    dockCanceled = false
                 }
 
-                override fun onAnimationCancel(animation: Animator) {}
+                override fun onAnimationEnd(animation: Animator) {
+                    if (!dockCanceled) {
+                        exposeTargetHandleKnob(context, start)
+                        viewModel.dockStateFlow.value = true
+                    }
+                    if (dockAnimator === animation) {
+                        dockAnimator = null
+                    }
+                }
+
+                override fun onAnimationCancel(animation: Animator) {
+                    dockCanceled = true
+                    if (dockAnimator === animation) {
+                        dockAnimator = null
+                    }
+                }
 
                 override fun onAnimationRepeat(animation: Animator) {}
             })
@@ -1070,11 +1070,19 @@ class TargetHandleView private constructor(
         }
     }
 
-    private fun cancelDockDragHandle() {
+    private fun cancelDockDragHandle(context: Context? = null) {
         dragHandleDockingJob?.cancel()
         dockAnimator?.cancel()
+        exposeAnimator?.cancel()
         dockAnimator = null
+        exposeAnimator = null
         viewModel.dockStateFlow.value = false
+        if (context != null && ::layoutParams.isInitialized) {
+            clampLayoutWithinScreen(ScreenInfoHolder.get())
+            if (isServiceInitialized()) {
+                updateLayout(context)
+            }
+        }
     }
 
     /**
@@ -1084,7 +1092,8 @@ class TargetHandleView private constructor(
         val startX = layoutParams.x
         val hideDepth = (context.resources.getDimensionPixelSize(R.dimen.target_handle_width) * if (start) .30 else .32).toInt()
         val deltaX: Int = if (start) hideDepth else -hideDepth
-        ValueAnimator.ofFloat(0f, 1f).apply {
+        exposeAnimator?.cancel()
+        exposeAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
             duration = 300
             interpolator = android.view.animation.DecelerateInterpolator()
 
@@ -1100,6 +1109,9 @@ class TargetHandleView private constructor(
                 override fun onAnimationStart(animation: Animator) {}
 
                 override fun onAnimationEnd(animation: Animator) {
+                    if (exposeAnimator === animation) {
+                        exposeAnimator = null
+                    }
                     launchInAVDCoroutineScope {
                         if (start && !viewModel.preferenceRepository.isSayHereLShownFlow.first()) {
                             SayHereView.INSTANCE.cast(
@@ -1117,7 +1129,11 @@ class TargetHandleView private constructor(
                     }
                 }
 
-                override fun onAnimationCancel(animation: Animator) {}
+                override fun onAnimationCancel(animation: Animator) {
+                    if (exposeAnimator === animation) {
+                        exposeAnimator = null
+                    }
+                }
 
                 override fun onAnimationRepeat(animation: Animator) {}
             })
@@ -1127,8 +1143,131 @@ class TargetHandleView private constructor(
     }
 
     override fun clear() {
-        dragHandleDockingJob?.cancel()
+        nativeStateCollectorJobs.forEach { it.cancel() }
+        nativeStateCollectorJobs = emptyList()
+        lastTargetIconRenderState = TargetIconRenderState()
+        cancelDockDragHandle()
+        cancelRepositionAnimation()
+        handleWindowVisibilityState.reset()
+        targetWindowVisibilityState.reset()
         removeTargetIconView()
         super.clear()
+    }
+}
+
+private class TargetIconNativeView(context: Context) : View(context) {
+    private val pointerDrawable: Drawable? = context.getDrawable(R.drawable.drag_pointer)?.mutate()
+    private val selectionPointerDrawable: Drawable? = context.getDrawable(R.drawable.drag_selection_pointer)?.mutate()
+    private val progressDimen = context.resources.getDimensionPixelSize(R.dimen.target_pointer_progress_dimen)
+    private val progressRect = RectF()
+    private val progressPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+        strokeWidth = 1.8f * context.resources.displayMetrics.density
+        color = Color.rgb(0x48, 0xba, 0xef)
+    }
+
+    private var renderState = TargetIconRenderState()
+    private var progressRotation = 0f
+    private var progressAnimator: ValueAnimator? = null
+
+    fun render(state: TargetIconRenderState) {
+        if (renderState == state) return
+        renderState = state
+        updateProgressAnimator()
+        invalidate()
+    }
+
+    fun setPointerVisible(visible: Boolean) {
+        render(renderState.copy(pointerVisible = visible))
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        updateProgressAnimator()
+    }
+
+    override fun onDetachedFromWindow() {
+        stopProgressAnimator()
+        super.onDetachedFromWindow()
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        val contentAlpha = TargetIconRenderPolicy.contentAlpha(renderState)
+        if (renderState.progressVisible) {
+            drawProgress(canvas, contentAlpha)
+        }
+        if (renderState.pointerVisible) {
+            drawPointer(canvas, contentAlpha)
+        }
+    }
+
+    private fun drawProgress(canvas: Canvas, contentAlpha: Float) {
+        val left = (width - progressDimen) / 2f
+        val top = (height - progressDimen) / 2f
+        progressRect.set(left, top, left + progressDimen, top + progressDimen)
+        progressPaint.alpha = (255 * contentAlpha).roundToInt().coerceIn(0, 255)
+        canvas.drawArc(progressRect, progressRotation, 270f, false, progressPaint)
+    }
+
+    private fun drawPointer(canvas: Canvas, contentAlpha: Float) {
+        val drawable = when (renderState.tint) {
+            TargetIconTint.NONE -> pointerDrawable
+            TargetIconTint.SELECT,
+            TargetIconTint.FIXED_AREA -> selectionPointerDrawable ?: pointerDrawable
+        } ?: return
+
+        drawable.bounds = android.graphics.Rect(0, 0, width, height)
+        drawable.alpha = (255 * contentAlpha).roundToInt().coerceIn(0, 255)
+        drawable.colorFilter = when (renderState.tint) {
+            TargetIconTint.SELECT -> PorterDuffColorFilter(
+                Color.argb(0x88, 0x3b, 0x6f, 0xdb),
+                PorterDuff.Mode.SRC_IN
+            )
+
+            TargetIconTint.FIXED_AREA -> PorterDuffColorFilter(
+                Color.argb(0x88, 0x00, 0x66, 0x00),
+                PorterDuff.Mode.SRC_IN
+            )
+
+            TargetIconTint.NONE -> null
+        }
+
+        val saveCount = canvas.save()
+        if (renderState.writingRtl) {
+            canvas.scale(-1f, 1f, width / 2f, height / 2f)
+        }
+        drawable.draw(canvas)
+        canvas.restoreToCount(saveCount)
+        drawable.colorFilter = null
+    }
+
+    private fun updateProgressAnimator() {
+        if (renderState.progressVisible && isAttachedToWindow) {
+            startProgressAnimator()
+        } else {
+            stopProgressAnimator()
+        }
+    }
+
+    private fun startProgressAnimator() {
+        if (progressAnimator != null) return
+        progressAnimator = ValueAnimator.ofFloat(0f, 360f).apply {
+            duration = 900L
+            repeatCount = ValueAnimator.INFINITE
+            interpolator = LinearInterpolator()
+            addUpdateListener { animator ->
+                progressRotation = animator.animatedValue as Float
+                invalidate()
+            }
+            start()
+        }
+    }
+
+    private fun stopProgressAnimator() {
+        progressAnimator?.cancel()
+        progressAnimator = null
+        progressRotation = 0f
     }
 }

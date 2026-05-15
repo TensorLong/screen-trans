@@ -16,25 +16,32 @@ abstract class AVDRepository {
     private var referenceCount = 0
 
     fun acquire() {
+        var shouldNotifyFirstReference = false
         synchronized(lock) {
             if (referenceCount == 0) {
                 avdCoroutineScope = CoroutineScope(Dispatchers.IO + Job())
+                shouldNotifyFirstReference = true
             }
             referenceCount++
+        }
+        if (shouldNotifyFirstReference) {
+            onFirstReference()
         }
     }
 
     fun release() {
+        var shouldNotifyZeroReferences = false
         synchronized(lock) {
             if (referenceCount > 0) {
                 referenceCount--
                 if (referenceCount == 0) {
-                    avdCoroutineScope.launch {
-                        onZeroReferences()
-                        avdCoroutineScope.cancel()
-                    }
+                    shouldNotifyZeroReferences = true
                 }
             }
+        }
+        if (shouldNotifyZeroReferences) {
+            onZeroReferences()
+            avdCoroutineScope.cancel()
         }
     }
 
@@ -42,9 +49,12 @@ abstract class AVDRepository {
         return avdCoroutineScope.launch(block = block)
     }
 
+    protected open fun onFirstReference() {
+
+    }
+
     protected open fun onZeroReferences() {
 
     }
 
 }
-
