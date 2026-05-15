@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Вказівник</string>
     <string name="settings_menu_pointer_docking_delay">Затримка з\'єднання</string>
     <string name="settings_menu_haptic_feedback_to_detection">Вібрація при виявленні</string>
-    <string name="settings_menu_cat_menubar">Меню</string>
-    <string name="settings_menu_menubar_transparency">Прозорість меню</string>
-    <string name="settings_menu_menubar_composition">Функції меню</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Переклад</string>
     <string name="settings_menu_translation_transparency">Прозорість перекладу</string>

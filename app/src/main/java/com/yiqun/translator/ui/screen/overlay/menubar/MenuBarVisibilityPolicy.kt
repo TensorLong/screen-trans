@@ -15,16 +15,7 @@ object MenuBarVisibilityPolicy {
         return activityLive && surface == SettingsSurface.HOME && !pointerInteractionActive
     }
 
-    fun visibleOutsideSettings(
-        captureRequested: Boolean,
-        pointerInteractionActive: Boolean,
-        dragHandleDocked: Boolean,
-        menuHandling: Boolean,
-        fixedAreaTranslating: Boolean,
-    ): Boolean {
-        return !captureRequested &&
-                !pointerInteractionActive &&
-                (!dragHandleDocked || menuHandling) &&
-                !fixedAreaTranslating
+    fun visibleOutsideSettings(): Boolean {
+        return false
     }
 }

@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">சுட்டி</string>
     <string name="settings_menu_pointer_docking_delay">இணைக்கும் தாமதம்</string>
     <string name="settings_menu_haptic_feedback_to_detection">அறிதல் போது कंपनம்</string>
-    <string name="settings_menu_cat_menubar">மெனு பட்டி</string>
-    <string name="settings_menu_menubar_transparency">மெனு வெளிப்படைத்தன்மை</string>
-    <string name="settings_menu_menubar_composition">மெனு செயல்பாடுகள்</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">மொழிபெயர்ப்பு</string>
     <string name="settings_menu_translation_transparency">மொழிபெயர்ப்பின் வெளிப்படைத்தன்மை</string>

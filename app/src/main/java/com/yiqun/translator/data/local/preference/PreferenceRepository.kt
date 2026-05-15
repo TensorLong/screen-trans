@@ -13,7 +13,6 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.yiqun.translator.data.remote.translation.TranslationKitType
 import com.yiqun.translator.data.local.vision.TextDetectMode
-import com.yiqun.translator.ui.screen.overlay.menubar.MenuConfig
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.yiqun.translator.R
@@ -63,9 +62,6 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
         val POINTER_LEFT_OFFSET = stringPreferencesKey("pointer_left_offset")
         val POINTER_RIGHT_OFFSET = stringPreferencesKey("pointer_right_offset")
         val DUAL_POINTER_ENABLED = booleanPreferencesKey("dual_pointer_enabled")
-        val MENU_BAR_VISIBILITY = booleanPreferencesKey("menu_bar_visibility")
-        val MENU_BAR_TRANSPARENCY = floatPreferencesKey("menu_bar_transparency")
-        val MENU_BAR_COMPOSITION = stringPreferencesKey("menu_bar_composition")
         val TRANSLATION_TRANSPARENCY = floatPreferencesKey("translation_transparency")
         val TRANSLATION_CLOSE_DELAY = longPreferencesKey("translation_close_delay")
         val REPLY_TRANSPARENCY = floatPreferencesKey("reply_transparency")
@@ -179,19 +175,6 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
         )
     }
 
-    val menuBarVisibilityFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
-        preferences[MENU_BAR_VISIBILITY] ?: true
-    }
-
-    val menuBarTransparencyFlow: Flow<Float> = preferenceFlow.map { preferences ->
-        preferences[MENU_BAR_TRANSPARENCY] ?: 0.905f
-    }
-
-    val menuBarConfigFlow: Flow<MenuConfig> = preferenceFlow.map { preferences ->
-        val menuBarConfigString = preferences[MENU_BAR_COMPOSITION]
-        menuBarConfigString?.let { MenuConfig.valueOf(menuBarConfigString) } ?: MenuConfig.WHOLE
-    }
-
     val translationTransparencyFlow: Flow<Float> = preferenceFlow.map { preferences ->
         preferences[TRANSLATION_TRANSPARENCY] ?: 0.905f
     }
@@ -258,7 +241,6 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
     }
 
 }
-
 
 
 

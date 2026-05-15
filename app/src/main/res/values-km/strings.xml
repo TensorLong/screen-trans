@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">ព្រួញ</string>
     <string name="settings_menu_pointer_docking_delay">ពេលយឺតភ្ជាប់</string>
     <string name="settings_menu_haptic_feedback_to_detection">រំញ័រពេលរកឃើញ</string>
-    <string name="settings_menu_cat_menubar">របារមេនុយ</string>
-    <string name="settings_menu_menubar_transparency">តម្លាភាពមេនុយ</string>
-    <string name="settings_menu_menubar_composition">មុខងារមេនុយ</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ការបកប្រែ</string>
     <string name="settings_menu_translation_transparency">តម្លាភាពបកប្រែ</string>

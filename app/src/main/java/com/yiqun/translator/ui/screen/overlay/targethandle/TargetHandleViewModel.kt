@@ -628,7 +628,8 @@ class TargetHandleViewModel(
         captureJob?.cancel()
         captureJob = viewModelScope.launch {
             Timber.tag(TAG).d("requestCapture viewModelScope.launch -------------- 0")
-            delay(50)
+            val startDelayMs = RecognitionDelayPolicy.captureStartDelayMs()
+            if (startDelayMs > 0) delay(startDelayMs)
             Timber.tag(TAG).d("requestCapture viewModelScope.launch -------------- 1")
             val screenInfo = ScreenInfoHolder.get()
             val cropRect = PointedCaptureCrop.boundsFor(
@@ -789,7 +790,7 @@ class TargetHandleViewModel(
     private val POINTER_STOPPED_MARGIN_DISTANCE: Int = applicationContext.resources.getDimensionPixelSize(R.dimen.targethandle_view_pointer_stopped_distance)
 
     private val POINTER_STOPPED_MARGIN_DURATION: Long
-        get() = if (textDetectMode == TextDetectMode.SELECT) 220 else 80
+        get() = RecognitionDelayPolicy.pointerStoppedDelayMs(textDetectMode)
 
     /**
      */

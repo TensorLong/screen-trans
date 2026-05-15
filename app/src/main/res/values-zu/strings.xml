@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Isikhombisi</string>
     <string name="settings_menu_pointer_docking_delay">Ukuhamba kancane kokuxhuma</string>
     <string name="settings_menu_haptic_feedback_to_detection">Ukudonsa lapho kutholakala</string>
-    <string name="settings_menu_cat_menubar">Imenyu yeBar</string>
-    <string name="settings_menu_menubar_transparency">Ukuvuleka kweMenyu</string>
-    <string name="settings_menu_menubar_composition">Imisebenzi yeMenyu</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Ukuguqula</string>
     <string name="settings_menu_translation_transparency">Ukuvuleka kweguqulo</string>

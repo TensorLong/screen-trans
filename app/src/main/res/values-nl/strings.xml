@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Aanwijzer</string>
     <string name="settings_menu_pointer_docking_delay">Vertraging bij vastmaken</string>
     <string name="settings_menu_haptic_feedback_to_detection">Trilling bij detectie</string>
-    <string name="settings_menu_cat_menubar">Menubalk</string>
-    <string name="settings_menu_menubar_transparency">Menu-transparantie</string>
-    <string name="settings_menu_menubar_composition">Menufuncties</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Vertaling</string>
     <string name="settings_menu_translation_transparency">Transparantie vertaling</string>

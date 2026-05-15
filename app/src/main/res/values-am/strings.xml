@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">መጠቆሚያ</string>
     <string name="settings_menu_pointer_docking_delay">የመስቀቴ መዘግየት</string>
     <string name="settings_menu_haptic_feedback_to_detection">ስለ መያዣ መረጃ</string>
-    <string name="settings_menu_cat_menubar">ምናሌ</string>
-    <string name="settings_menu_menubar_transparency">የምናሌ ትርፍና</string>
-    <string name="settings_menu_menubar_composition">ምናሌ ባህሪዎች</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ትርጉም</string>
     <string name="settings_menu_translation_transparency">የትርጉም ትርፍና</string>

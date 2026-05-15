@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">نشانگر</string>
     <string name="settings_menu_pointer_docking_delay">تأخیر اتصال</string>
     <string name="settings_menu_haptic_feedback_to_detection">ویبره هنگام شناسایی</string>
-    <string name="settings_menu_cat_menubar">نوار منو</string>
-    <string name="settings_menu_menubar_transparency">شفافیت منو</string>
-    <string name="settings_menu_menubar_composition">عملکردهای منو</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ترجمه</string>
     <string name="settings_menu_translation_transparency">شفافیت ترجمه</string>

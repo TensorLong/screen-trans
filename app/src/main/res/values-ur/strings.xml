@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">اشارہ</string>
     <string name="settings_menu_pointer_docking_delay">جوڑنے کی تاخیر</string>
     <string name="settings_menu_haptic_feedback_to_detection">پہچاننے پر کمپن</string>
-    <string name="settings_menu_cat_menubar">مینو بار</string>
-    <string name="settings_menu_menubar_transparency">مینو کی شفافیت</string>
-    <string name="settings_menu_menubar_composition">مینو کی خصوصیات</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ترجمہ</string>
     <string name="settings_menu_translation_transparency">ترجمہ کی شفافیت</string>

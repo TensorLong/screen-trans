@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">পয়েন্টার</string>
     <string name="settings_menu_pointer_docking_delay">ডক বিলম্ব</string>
     <string name="settings_menu_haptic_feedback_to_detection">সনাক্তে কম্পন</string>
-    <string name="settings_menu_cat_menubar">মেনু বার</string>
-    <string name="settings_menu_menubar_transparency">মেনু স্বচ্ছতা</string>
-    <string name="settings_menu_menubar_composition">মেনু বিকল্প</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">অনুবাদ</string>
     <string name="settings_menu_translation_transparency">অনুবাদ স্বচ্ছতা</string>

@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Көрсеткіш</string>
     <string name="settings_menu_pointer_docking_delay">Тіру кідірісі</string>
     <string name="settings_menu_haptic_feedback_to_detection">Анықтауда діріл</string>
-    <string name="settings_menu_cat_menubar">Мәзір жолағы</string>
-    <string name="settings_menu_menubar_transparency">Мәзір мөлдірлігі</string>
-    <string name="settings_menu_menubar_composition">Мәзір мүмкіндіктері</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Аударма</string>
     <string name="settings_menu_translation_transparency">Аударма мөлдірлігі</string>

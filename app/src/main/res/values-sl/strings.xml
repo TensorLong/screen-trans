@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Kazalec</string>
     <string name="settings_menu_pointer_docking_delay">Zakasnitev povezovanja</string>
     <string name="settings_menu_haptic_feedback_to_detection">Vibracija ob zaznavi</string>
-    <string name="settings_menu_cat_menubar">Meni vrstica</string>
-    <string name="settings_menu_menubar_transparency">Prosojnost menija</string>
-    <string name="settings_menu_menubar_composition">Funkcije menija</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Prevod</string>
     <string name="settings_menu_translation_transparency">Prosojnost prevoda</string>

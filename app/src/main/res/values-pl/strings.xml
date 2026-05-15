@@ -62,9 +62,6 @@
   <string name="settings_menu_cat_pointer">Wskaźnik</string>
   <string name="settings_menu_pointer_docking_delay">Opóźnienie dokowania</string>
   <string name="settings_menu_haptic_feedback_to_detection">Wibracja przy wykryciu</string>
-  <string name="settings_menu_cat_menubar">Pasek menu</string>
-  <string name="settings_menu_menubar_transparency">Przezroczystość menu</string>
-  <string name="settings_menu_menubar_composition">Funkcje menu</string>
   <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">Tłumaczenie</string>
   <string name="settings_menu_translation_transparency">Przezroczystość tłumaczenia</string>

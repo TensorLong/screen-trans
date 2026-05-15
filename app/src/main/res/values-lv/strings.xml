@@ -62,9 +62,6 @@
   <string name="settings_menu_cat_pointer">Rādītājs</string>
   <string name="settings_menu_pointer_docking_delay">Dok. aizkave</string>
   <string name="settings_menu_haptic_feedback_to_detection">Vibrācija pie noteikšanas</string>
-  <string name="settings_menu_cat_menubar">Izvēlnes josla</string>
-  <string name="settings_menu_menubar_transparency">Izvēlnes caurspīdīgums</string>
-  <string name="settings_menu_menubar_composition">Izvēlnes funkcijas</string>
   <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">Tulkot</string>
   <string name="settings_menu_translation_transparency">Tulk. caurspīdīgums</string>

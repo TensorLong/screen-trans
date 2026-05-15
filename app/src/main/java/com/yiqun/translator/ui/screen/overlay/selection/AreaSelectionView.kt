@@ -312,7 +312,9 @@ open class AreaSelectionView : OverlayView() {
     private fun requestTranslate(context: Context, selectedArea: Rect) {
         translateJob?.cancel()
         translateJob = launchInOverlayViewCoroutineScope {
-            val captureResponse: CaptureResponse = targetHandleViewModel.captureRepository.request()
+            val captureResponse: CaptureResponse = targetHandleViewModel.captureRepository.request(
+                AreaCapturePolicy.captureRect(selectedArea)
+            )
             Timber.tag(TAG).d("captureResponse $captureResponse")
             if (captureResponse !is CaptureResponse.Success) {
                 Timber.tag(TAG).d("CaptureResponse.Error ${(captureResponse as CaptureResponse.Error).t}")
@@ -326,8 +328,7 @@ open class AreaSelectionView : OverlayView() {
                 return@launchInOverlayViewCoroutineScope
             }
 
-            val selectedAreaBitmap = createOverlaidBitmap(captureResponse.bitmap, selectedArea)
-            captureResponse.bitmap.recycle()
+            val selectedAreaBitmap = captureResponse.bitmap
 
 //                    TestCapturedActivity.start(context, selectedAreaBitmap)
 
@@ -336,6 +337,8 @@ open class AreaSelectionView : OverlayView() {
                 targetHandleViewModel.visionRepository.request(
                     bitmap = selectedAreaBitmap,
                     sourceLanguageCode = sourceLanguageCode,
+                    coordinateOffsetX = AreaCapturePolicy.coordinateOffsetX(captureResponse.screenRect),
+                    coordinateOffsetY = AreaCapturePolicy.coordinateOffsetY(captureResponse.screenRect),
                 )
             } finally {
                 selectedAreaBitmap.recycle()
@@ -350,6 +353,41 @@ open class AreaSelectionView : OverlayView() {
             targetHandleViewModel.visionResultFlow.value = visionResponse.result
         }
     }
+}
+
+object AreaCapturePolicy {
+    data class Bounds(
+        val left: Int,
+        val top: Int,
+        val right: Int,
+        val bottom: Int,
+    )
+
+    fun captureBounds(left: Int, top: Int, right: Int, bottom: Int): Bounds {
+        return Bounds(left, top, right, bottom)
+    }
+
+    fun captureRect(selectedArea: Rect): Rect {
+        val bounds = captureBounds(
+            left = selectedArea.left,
+            top = selectedArea.top,
+            right = selectedArea.right,
+            bottom = selectedArea.bottom,
+        )
+        return Rect(bounds.left, bounds.top, bounds.right, bounds.bottom)
+    }
+
+    fun coordinateOffsetX(bounds: Bounds): Int = bounds.left
+
+    fun coordinateOffsetY(bounds: Bounds): Int = bounds.top
+
+    fun coordinateOffsetX(captureRect: Rect): Int = coordinateOffsetX(
+        captureBounds(captureRect.left, captureRect.top, captureRect.right, captureRect.bottom)
+    )
+
+    fun coordinateOffsetY(captureRect: Rect): Int = coordinateOffsetY(
+        captureBounds(captureRect.left, captureRect.top, captureRect.right, captureRect.bottom)
+    )
 }
 
 fun createOverlaidBitmap(originalBitmap: Bitmap, rect: Rect): Bitmap {
@@ -395,8 +433,6 @@ fun createOverlaidBitmap(originalBitmap: Bitmap, rect: Rect): Bitmap {
         }
     }
 }
-
-
 
 
 

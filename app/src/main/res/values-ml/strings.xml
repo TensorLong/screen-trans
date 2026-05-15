@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">കാണിക</string>
     <string name="settings_menu_pointer_docking_delay">ഡോക്ക് വൈകിപ്പ്</string>
     <string name="settings_menu_haptic_feedback_to_detection">കണ്ടാല്‍ വൈബ്രേഷന്‍</string>
-    <string name="settings_menu_cat_menubar">മെനു പട്ട</string>
-    <string name="settings_menu_menubar_transparency">മെനു പാരദര്‍ശിത്വം</string>
-    <string name="settings_menu_menubar_composition">മെനു ഫംഗ്ഷനുകൾ</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ഭാഷാന്തരം</string>
     <string name="settings_menu_translation_transparency">പരിഭാഷ പാരദര്‍ശിത്വം</string>

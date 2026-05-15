@@ -189,7 +189,7 @@ class GoogleWebKit @Inject constructor(@GoogleWebRetrofit private val googleWebS
     }
 
     companion object {
-        const val BASE_URL = "https://translate.google.com"
+        const val BASE_URL = "https://translate.googleapis.com/"
 
         val supportedLanguageCodes = arrayOf(
             "af", // Afrikaans

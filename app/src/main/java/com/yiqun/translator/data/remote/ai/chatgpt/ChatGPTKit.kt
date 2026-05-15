@@ -93,35 +93,28 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
             Timber.tag(TAG).w("senseGroupAt: word [$word] not in sentence [$sentence]")
             return null
         }
+        val endpointUrl = resolveEndpointUrl(CHAT_COMPLETIONS_PATH)
+        val model = resolveModel()
+        SenseGroupRequestCache.get(
+            model = model,
+            endpointUrl = endpointUrl,
+            word = word,
+            sentence = sentence,
+            pointedTokenOffset = pointedTokenOffset,
+            sourceLanguageCode = sourceLanguageCode,
+            targetLanguageCode = targetLanguageCode,
+        )?.let { cached ->
+            Timber.tag(TAG).d("senseGroupAt() request cache hit word=[$word] chunk=[${cached.text}]")
+            return cached
+        }
 
         val systemMessage = mapOf(
             "role" to "system",
             "content" to (
-                "You are a linguist. The user is reading a sentence and is pointing " +
-                "at a specific word inside it. Your job is to identify the SENSE GROUP " +
-                "(also known as a semantic chunk, thought unit, or 意群) that contains " +
-                "that pointed word, and translate JUST that chunk into the target language. " +
-                "\n\n" +
-                "A sense group is a phrase-level unit smaller than the full sentence: " +
-                "typically a noun phrase, a verb phrase, a prepositional phrase, or a " +
-                "subordinate clause. It is the minimal contiguous span of words that " +
-                "carries a self-contained meaning and gives the pointed word its " +
-                "in-context interpretation." +
-                "\n\n" +
-                "Rules (all MUST be followed):" +
-                "\n - The chunk MUST contain the pointed word." +
-                "\n - If pointed_word_start and pointed_word_end are provided, identify " +
-                "the word occurrence at exactly those character offsets. Do NOT use an " +
-                "earlier repeated occurrence of the same word." +
-                "\n - The chunk MUST appear VERBATIM in the sentence — copy the substring " +
-                "exactly, do not paraphrase, do not normalize punctuation, do not change " +
-                "case." +
-                "\n - Prefer the SMALLEST meaningful chunk. Do NOT return the entire " +
-                "sentence unless the sentence is itself a single short phrase." +
-                "\n - Translate ONLY the chunk, not the surrounding sentence." +
-                "\n\n" +
-                "Respond ONLY with valid JSON of the form:" +
-                "\n{\"chunk\":\"<verbatim span from the sentence>\",\"translation\":\"<translation in target language>\"}"
+                "Identify the smallest meaningful contiguous sense group that contains " +
+                "the pointed word. Copy the chunk verbatim from the sentence. If character " +
+                "offsets are supplied, use that exact occurrence. Return only JSON: " +
+                "{\"chunk\":\"<verbatim chunk>\"}"
             )
         )
 
@@ -133,7 +126,6 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 put("pointed_word_end", pointedTokenOffset + word.length)
             }
             put("source_language", sourceLanguageCode)
-            put("target_language", targetLanguageCode)
         }.toString()
 
         val userMessage = mapOf(
@@ -142,9 +134,9 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
         )
 
         val requestBody = mapOf(
-            "model" to resolveModel(),
+            "model" to model,
             "messages" to listOf(systemMessage, userMessage),
-            "max_tokens" to 400,
+            "max_tokens" to 80,
             "response_format" to mapOf("type" to "json_object"),
             "temperature" to 0.0,
         )
@@ -155,7 +147,7 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
 
         val response: ChatGPTResponse = try {
             chatGPTService.send(
-                url = resolveEndpointUrl(CHAT_COMPLETIONS_PATH),
+                url = endpointUrl,
                 apiKey = authorizationHeader(),
                 body = jsonRequestBody
             )
@@ -192,7 +184,18 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 return null
             }
             Timber.tag(TAG).d("senseGroupAt() OK word=[$word] chunk=[$chunkText] tr=[$translation] range=${range.first}..${range.last}")
-            SenseGroup(chunkText, translation, range)
+            SenseGroup(chunkText, translation, range).also { senseGroup ->
+                SenseGroupRequestCache.put(
+                    model = model,
+                    endpointUrl = endpointUrl,
+                    word = word,
+                    sentence = sentence,
+                    pointedTokenOffset = pointedTokenOffset,
+                    sourceLanguageCode = sourceLanguageCode,
+                    targetLanguageCode = targetLanguageCode,
+                    senseGroup = senseGroup,
+                )
+            }
         } catch (e: Exception) {
             Timber.tag(TAG).w(e, "senseGroupAt() parse failed: $raw")
             null

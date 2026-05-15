@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">सूचक</string>
     <string name="settings_menu_pointer_docking_delay">डक ढिलाइ</string>
     <string name="settings_menu_haptic_feedback_to_detection">पत्ता लाग्दा भाइब्रे</string>
-    <string name="settings_menu_cat_menubar">मेनु बार</string>
-    <string name="settings_menu_menubar_transparency">मेनु पारदर्शिता</string>
-    <string name="settings_menu_menubar_composition">मेनु कार्यहरू</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">अनुवाद</string>
     <string name="settings_menu_translation_transparency">अनुवाद पारदर्शिता</string>

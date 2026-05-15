@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Osoitin</string>
     <string name="settings_menu_pointer_docking_delay">Telakoinnin viive</string>
     <string name="settings_menu_haptic_feedback_to_detection">Värinä tunnistettaessa</string>
-    <string name="settings_menu_cat_menubar">Valikkopalkki</string>
-    <string name="settings_menu_menubar_transparency">Valikon läpinäkyvyys</string>
-    <string name="settings_menu_menubar_composition">Valikon toiminnot</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Käännös</string>
     <string name="settings_menu_translation_transparency">Käännöksen läpinäkyvyys</string>

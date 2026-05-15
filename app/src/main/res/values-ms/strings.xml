@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Penuding</string>
     <string name="settings_menu_pointer_docking_delay">Lengah sauk</string>
     <string name="settings_menu_haptic_feedback_to_detection">Getar bila dikesan</string>
-    <string name="settings_menu_cat_menubar">Bar menu</string>
-    <string name="settings_menu_menubar_transparency">Ketelusan menu</string>
-    <string name="settings_menu_menubar_composition">Fungsi menu</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Terjemahan</string>
     <string name="settings_menu_translation_transparency">Ketelusan terjemahan</string>

@@ -163,6 +163,15 @@ class TranslationRepository @Inject constructor(
         targetLanguageCode: String,
         sourceText: String,
     ): TranslationResponse {
+        TranslationRequestCache.get(
+            kitType = translationKitType,
+            sourceLanguageCode = sourceLanguageCode,
+            targetLanguageCode = targetLanguageCode,
+            sourceText = sourceText,
+        )?.let { cached ->
+            return TranslationResponse.Success(cached)
+        }
+
         val translationKit: TranslationKit = getTranslationKit(translationKitType)
         if (translationKit is GoogleMlKit) {
 //            coroutineScope {
@@ -174,18 +183,25 @@ class TranslationRepository @Inject constructor(
                 sourceLanguageCode,
                 targetLanguageCode,
                 sourceText
-            )
+            ).also(::cacheSuccessfulTranslation)
         }
 
         return translationKit.request(
             sourceLanguageCode,
             targetLanguageCode,
             sourceText
-        )
+        ).also(::cacheSuccessfulTranslation)
+    }
+
+    private fun cacheSuccessfulTranslation(response: TranslationResponse) {
+        if (response is TranslationResponse.Success) {
+            TranslationRequestCache.put(response.result)
+        }
     }
 
     private fun close() {
 //        googleMlKit.close()
+        TranslationRequestCache.clear()
     }
 
     override fun onZeroReferences() {

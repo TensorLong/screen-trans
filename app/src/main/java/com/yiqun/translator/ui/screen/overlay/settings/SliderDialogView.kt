@@ -98,8 +98,6 @@ class SliderDialogView private constructor() : OverlayView() {
         menuText: Pair<String, Point>? = null,
         menuSubtext: Pair<MutableStateFlow<String>, Point>? = null,
         dockingDelayText: Pair<MutableStateFlow<String>, Point>? = null,
-        menuBarVisibilityText: Pair<MutableStateFlow<String>, Point>? = null,
-        menuBarConfigText: Pair<MutableStateFlow<String>, Point>? = null,
         speechRateText: Pair<MutableStateFlow<Float>, Point>? = null,
         onDismissRequest: () -> Unit,
     ) {
@@ -111,12 +109,6 @@ class SliderDialogView private constructor() : OverlayView() {
         }
         dockingDelayText?.let {
             SettingsDockingDelayView.INSTANCE.cast(applicationContext, it.first, it.second)
-        }
-        menuBarVisibilityText?.let {
-            SettingsMenuBarTransparencyView.INSTANCE.cast(applicationContext, it.first, it.second)
-        }
-        menuBarConfigText?.let {
-            SettingsMenuBarConfigView.INSTANCE.cast(applicationContext, it.first, it.second)
         }
         speechRateText?.let {
             SettingsTTSSpeechRateView.INSTANCE.cast(applicationContext, it.first, it.second)
@@ -142,8 +134,6 @@ class SliderDialogView private constructor() : OverlayView() {
         SettingsMenuTextView.INSTANCE.clear()
         SettingsMenuSubtextView.INSTANCE.clear()
         SettingsDockingDelayView.INSTANCE.clear()
-        SettingsMenuBarTransparencyView.INSTANCE.clear()
-        SettingsMenuBarConfigView.INSTANCE.clear()
         SettingsTTSSpeechRateView.INSTANCE.clear()
         super.clear()
     }
@@ -220,7 +210,6 @@ class SliderDialogView private constructor() : OverlayView() {
         }
     }
 }
-
 
 
 

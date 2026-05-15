@@ -62,9 +62,6 @@
   <string name="settings_menu_cat_pointer">포인터</string>
   <string name="settings_menu_pointer_docking_delay">도킹 지연시간</string>
   <string name="settings_menu_haptic_feedback_to_detection">감지 시 진동</string>
-  <string name="settings_menu_cat_menubar">메뉴바</string>
-  <string name="settings_menu_menubar_transparency">메뉴바 투명도</string>
-  <string name="settings_menu_menubar_composition">기능 조합</string>
   <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">번역</string>
   <string name="settings_menu_translation_transparency">번역창 투명도</string>

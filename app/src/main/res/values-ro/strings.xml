@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Indicator</string>
     <string name="settings_menu_pointer_docking_delay">Întârziere andocare</string>
     <string name="settings_menu_haptic_feedback_to_detection">Vibrație la detectare</string>
-    <string name="settings_menu_cat_menubar">Bara de meniu</string>
-    <string name="settings_menu_menubar_transparency">Transparență meniu</string>
-    <string name="settings_menu_menubar_composition">Funcții meniu</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Traducere</string>
     <string name="settings_menu_translation_transparency">Transparență traducere</string>

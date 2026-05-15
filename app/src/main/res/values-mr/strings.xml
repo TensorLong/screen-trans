@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">सूचक</string>
     <string name="settings_menu_pointer_docking_delay">डॉकिंग विलंब</string>
     <string name="settings_menu_haptic_feedback_to_detection">शोधल्यावर कंपन</string>
-    <string name="settings_menu_cat_menubar">मेनू बार</string>
-    <string name="settings_menu_menubar_transparency">मेनू पारदर्शकता</string>
-    <string name="settings_menu_menubar_composition">मेनू फंक्शन्स</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">भाषांतर</string>
     <string name="settings_menu_translation_transparency">भाषांतर पारदर्शकता</string>

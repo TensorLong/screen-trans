@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Показалец</string>
     <string name="settings_menu_pointer_docking_delay">Закъснение на докинг</string>
     <string name="settings_menu_haptic_feedback_to_detection">Вибрация при откриване</string>
-    <string name="settings_menu_cat_menubar">Меню лента</string>
-    <string name="settings_menu_menubar_transparency">Прозрачност на менюто</string>
-    <string name="settings_menu_menubar_composition">Функции на менюто</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Превод</string>
     <string name="settings_menu_translation_transparency">Прозрачност на превода</string>

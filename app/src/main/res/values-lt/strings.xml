@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Žymeklis</string>
     <string name="settings_menu_pointer_docking_delay">Prijungimo delsimas</string>
     <string name="settings_menu_haptic_feedback_to_detection">Vibracija aptikus</string>
-    <string name="settings_menu_cat_menubar">Meniu juosta</string>
-    <string name="settings_menu_menubar_transparency">Meniu skaidrumas</string>
-    <string name="settings_menu_menubar_composition">Meniu funkcijos</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Vertimas</string>
     <string name="settings_menu_translation_transparency">Vertimo skaidrumas</string>

@@ -84,10 +84,8 @@ import com.yiqun.translator.data.remote.translation.TranslationKitType
 import com.yiqun.translator.ui.screen.main.SettingsActivity
 import com.yiqun.translator.ui.screen.overlay.Event
 import com.yiqun.translator.ui.screen.overlay.OverlayView
-import com.yiqun.translator.ui.screen.overlay.fixedarea.FixedAreaView
 import com.yiqun.translator.ui.screen.overlay.settings.HelpTextDetectModeView
 import com.yiqun.translator.ui.screen.overlay.settings.HelpTranslationKitView
-import com.yiqun.translator.ui.screen.overlay.settings.SliderDialogView
 import com.yiqun.translator.ui.screen.overlay.targethandle.CaptureStatus
 import com.yiqun.translator.ui.screen.overlay.targethandle.OverlayWindowAlpha
 import com.yiqun.translator.ui.screen.overlay.targethandle.PointerInteractionVisibilityPolicy
@@ -95,7 +93,6 @@ import com.yiqun.translator.ui.screen.overlay.targethandle.StableWindowVisibilit
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Singleton
@@ -107,10 +104,6 @@ class MenuBarView private constructor() : OverlayView() {
 
     companion object {
         val INSTANCE: MenuBarView by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { MenuBarView() }
-
-        /**
-         */
-        val operatingStateFlow = MutableStateFlow(false)
     }
 
     private lateinit var viewModel: MenuBarViewModel
@@ -119,18 +112,7 @@ class MenuBarView private constructor() : OverlayView() {
 
     override lateinit var layoutParams: WindowManager.LayoutParams
 
-    private var debounceSetOperatingStateJob: Job? = null
-
     private val windowVisibilityState = StableWindowVisibilityState()
-
-    private fun toggleOperatingState() {
-        operatingStateFlow.value = true
-        debounceSetOperatingStateJob?.cancel()
-        debounceSetOperatingStateJob = launchInAVDCoroutineScope {
-            delay(400)
-            operatingStateFlow.value = false
-        }
-    }
 
     override val composable: @Composable () -> Unit = @Composable {
         if (isAttachedToWindow()) {
@@ -138,8 +120,6 @@ class MenuBarView private constructor() : OverlayView() {
             val lifecycleOwner = LocalLifecycleOwner.current
             val coroutineScope = rememberCoroutineScope()
             val configuration = LocalConfiguration.current
-
-            val menuBarDragState = remember { mutableStateOf(MenuBarDragStates.Idle) }
 
             val captureStatus by targetHandleViewModel.captureStatusFlow.collectAsStateWithLifecycle()
 
@@ -156,49 +136,30 @@ class MenuBarView private constructor() : OverlayView() {
                 pointerInteractionActive = pointerInteractionActive,
             )
 
-            // Drag handle dock state
-            val dragHandleDockState by targetHandleViewModel.dockStateFlow.collectAsStateWithLifecycle()
-
             val textDetectMode by viewModel.preferenceRepository.textDetectModeFlow.collectAsStateWithLifecycle(
                 lifecycle = lifecycleOwner.lifecycle,
                 initialValue = TextDetectMode.WORD
             )
 
-            val fixedAreaViewState by FixedAreaView.fixedAreaViewStateFlow.collectAsStateWithLifecycle()
-
             LaunchedEffect(
-                menuBarDragState.value,
                 captureStatus,
                 targetHandleMotionEventState,
                 settingsActivityLiveState,
                 settingsSurface,
-                dragHandleDockState,
-                textDetectMode,
-                fixedAreaViewState
+                textDetectMode
             ) {
 
                 view?.let {
                     val menuVisible = when {
                         settingsActivityLiveState -> settingsHomeMenuVisible
-                        else -> MenuBarVisibilityPolicy.visibleOutsideSettings(
-                            captureRequested = captureStatus == CaptureStatus.Requested,
-                            pointerInteractionActive = pointerInteractionActive,
-                            dragHandleDocked = dragHandleDockState,
-                            menuHandling = menuBarDragState.value == MenuBarDragStates.Handling,
-                            fixedAreaTranslating = textDetectMode == TextDetectMode.FIXED_AREA &&
-                                    fixedAreaViewState == FixedAreaView.State.Translating,
-                        )
+                        else -> MenuBarVisibilityPolicy.visibleOutsideSettings()
                     }
 
                     Timber.tag(TAG).d(
                         "captureStatus $captureStatus " +
                                 "\ntargetHandle ${!pointerInteractionActive} " +
-                                "\ndragHandleDock ${!dragHandleDockState} " +
-                                "\nmenuBarDrag ${menuBarDragState.value != MenuBarDragStates.Handling} " +
                                 "\nmenuVisible $menuVisible " +
-                                "\ntextDetectMode $textDetectMode " +
-                                "\nfixedAreaViewMenuVisibilityControl $fixedAreaViewState" +
-                                "\n!(textDetectMode == TextDetectMode.FIXED_AREA && fixedAreaViewState == FixedAreaView.State.Translating) ${!(textDetectMode == TextDetectMode.FIXED_AREA && fixedAreaViewState == FixedAreaView.State.Translating)}"
+                                "\ntextDetectMode $textDetectMode "
                     )
 
                     if (menuVisible) {
@@ -217,37 +178,6 @@ class MenuBarView private constructor() : OverlayView() {
                         }
                     }
                 }
-            }
-
-            // Menu bar Visibility
-            val menuBarVisibility by viewModel.preferenceRepository.menuBarVisibilityFlow.collectAsStateWithLifecycle(
-                lifecycle = lifecycleOwner.lifecycle,
-                initialValue = true
-            )
-
-            // Menu bar transparency
-            val menuBarTransparency by viewModel.preferenceRepository.menuBarTransparencyFlow.collectAsStateWithLifecycle(
-                lifecycle = lifecycleOwner.lifecycle,
-                initialValue = 1.0f
-            )
-
-            val menuBarConfig by viewModel.preferenceRepository.menuBarConfigFlow.collectAsStateWithLifecycle(
-                lifecycle = lifecycleOwner.lifecycle,
-                initialValue = MenuConfig.WHOLE
-            )
-
-            val sliderDialogLiveState by SliderDialogView.liveStateFlow.collectAsStateWithLifecycle()
-
-            val alpha = when {
-                !settingsHomeMenuVisible -> menuBarTransparency
-                !sliderDialogLiveState -> 1.0f
-                menuBarVisibility -> menuBarTransparency
-                else -> 0.0f
-            }
-
-            val menuConfig = when {
-                settingsHomeMenuVisible || captureStatus == CaptureStatus.PermissionRequested -> MenuConfig.WHOLE
-                else -> menuBarConfig
             }
 
             val textDetectModeHelpAlpha = remember { Animatable(0f) }
@@ -292,17 +222,13 @@ class MenuBarView private constructor() : OverlayView() {
                 }
             }
 
-            if (!menuBarVisibility && !settingsActivityLiveState) {
-                clear()
-            }
-
             val isDarkMode = isSystemInDarkTheme()
             val contentColor = if (isDarkMode) Color(0xFF898989) else Color(0xFF676767)
 
             Box {
                 MenuBar(
-                    menuConfig = menuConfig,
-                    menuAlpha = alpha,
+                    menuConfig = MenuConfig.WHOLE,
+                    menuAlpha = 1.0f,
                     textDetectMode = textDetectMode,
                     sourceLanguageCode = sourceLanguageCode,
                     sourceLanguage = sourceLanguage,
@@ -311,31 +237,6 @@ class MenuBarView private constructor() : OverlayView() {
                     translationKitType = translationKitType,
                     updateSwapLanguage = { sourceLanguage, targetLanguage ->
                         viewModel.updateSwapLanguage(sourceLanguage, targetLanguage)
-                        toggleOperatingState()
-                    },
-                    onDragStart = { _ ->
-                        if (!settingsActivityLiveState) {
-                            menuBarDragState.value = MenuBarDragStates.Handling
-                        }
-                        operatingStateFlow.value = true
-                    },
-                    onDragEnd = {
-                        menuBarDragState.value = MenuBarDragStates.Idle
-                        operatingStateFlow.value = false
-                    },
-                    onDragCancel = {
-                        menuBarDragState.value = MenuBarDragStates.Idle
-                    },
-                    onDrag = { _: PointerInputChange, dragAmount: Offset ->
-                        if (!settingsActivityLiveState) {
-                            view?.let {
-                                val screenInfo: ScreenInfo = ScreenInfoHolder.get()
-                                layoutParams.x = (layoutParams.x + dragAmount.x.toInt()).coerceIn(-(screenInfo.width / 2 - it.width / 2), screenInfo.width / 2 - it.width / 2)
-                                layoutParams.y = (layoutParams.y + dragAmount.y.toInt()).coerceIn(0, screenInfo.height - it.height)
-                                updateLayout(context)
-                            }
-                            menuBarDragState.value = MenuBarDragStates.Handling
-                        }
                     },
                     onClickTextDetectMode = {},
                     updateTextDetectMode = { textDetectMode ->
@@ -349,11 +250,9 @@ class MenuBarView private constructor() : OverlayView() {
                                 animationSpec = tween(durationMillis = 400)
                             )
                         }
-                        toggleOperatingState()
                     },
                     launchLanguageListView = { isSourceLanguage ->
                         viewModel.launchLanguageListView(isSourceLanguage)
-                        toggleOperatingState()
                     },
                     isSwappable = { sourceLanguageCode: String, targetLanguageCode: String, kitType: TranslationKitType ->
                         viewModel.isLanguageSwappable(sourceLanguageCode, targetLanguageCode, kitType)
@@ -370,7 +269,6 @@ class MenuBarView private constructor() : OverlayView() {
                                 animationSpec = tween(durationMillis = 400)
                             )
                         }
-                        toggleOperatingState()
                     },
                     settingsButtonVisible = !settingsActivityLiveState,
                 )
@@ -1099,12 +997,6 @@ fun TranslationKitIconButton(
         }
     }
 }
-
-
-
-
-
-
 
 
 

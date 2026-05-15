@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">પોઇન્ટર</string>
     <string name="settings_menu_pointer_docking_delay">ડોક વિલંબ</string>
     <string name="settings_menu_haptic_feedback_to_detection">ખોજ પર વાઇબ્રેશન</string>
-    <string name="settings_menu_cat_menubar">મેનુ બાર</string>
-    <string name="settings_menu_menubar_transparency">મેનુ પારદર્શિતા</string>
-    <string name="settings_menu_menubar_composition">મેનુ વિકલ્પો</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">અનુવાદ</string>
     <string name="settings_menu_translation_transparency">અનુવાદ પારદર્શિતા</string>

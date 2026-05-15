@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">ਇੰਗੀਕ</string>
     <string name="settings_menu_pointer_docking_delay">ਡੌਕਿੰਗ ਦੀ ਦੇਰੀ</string>
     <string name="settings_menu_haptic_feedback_to_detection">ਖੋਜ ਵੇਲੇ ਕੰਪਨ</string>
-    <string name="settings_menu_cat_menubar">ਮੇਨੂ ਪੱਟੀ</string>
-    <string name="settings_menu_menubar_transparency">ਮੇਨੂ ਪਾਰਦਰਸ਼ਤਾ</string>
-    <string name="settings_menu_menubar_composition">ਮੇਨੂ ਫੰਕਸ਼ਨ</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ਅਨੁਵਾਦ</string>
     <string name="settings_menu_translation_transparency">ਅਨੁਵਾਦ ਪਾਰਦਰਸ਼ਤਾ</string>

@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">ညွှန်ပြ</string>
     <string name="settings_menu_pointer_docking_delay">တွဲဆက်နောက်ကျချိန်</string>
     <string name="settings_menu_haptic_feedback_to_detection">သိရှိသည့်အချိန် တုန်ခါမှု</string>
-    <string name="settings_menu_cat_menubar">မီနူးဘား</string>
-    <string name="settings_menu_menubar_transparency">မီနူး အထင်ကြည်မှု</string>
-    <string name="settings_menu_menubar_composition">မီနူး လုပ်ဆောင်ချက်များ</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ဘာသာပြန်</string>
     <string name="settings_menu_translation_transparency">ဘာသာပြန် အထင်ကြည်မှု</string>

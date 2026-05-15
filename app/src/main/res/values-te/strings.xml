@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">సూచిక</string>
     <string name="settings_menu_pointer_docking_delay">డాకింగ్ లో ఆలస్యం</string>
     <string name="settings_menu_haptic_feedback_to_detection">గమనించినప్పుడు కంపన</string>
-    <string name="settings_menu_cat_menubar">మెను బార్</string>
-    <string name="settings_menu_menubar_transparency">మెను పారదర్శకత</string>
-    <string name="settings_menu_menubar_composition">మెను ఫంక్షన్లు</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">అనువాదం</string>
     <string name="settings_menu_translation_transparency">అనువాదం పారదర్శకత</string>

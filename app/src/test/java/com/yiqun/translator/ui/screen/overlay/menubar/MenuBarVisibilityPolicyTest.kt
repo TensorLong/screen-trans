@@ -52,28 +52,16 @@ class MenuBarVisibilityPolicyTest {
     }
 
     @Test
-    fun menuBarIsHiddenDuringPointerInteraction() {
+    fun menuBarIsHiddenOutsideSettingsDuringPointerInteraction() {
         assertFalse(
-            MenuBarVisibilityPolicy.visibleOutsideSettings(
-                captureRequested = false,
-                pointerInteractionActive = true,
-                dragHandleDocked = false,
-                menuHandling = false,
-                fixedAreaTranslating = false,
-            )
+            MenuBarVisibilityPolicy.visibleOutsideSettings()
         )
     }
 
     @Test
-    fun menuBarIsRestoredWhenPointerInteractionEnds() {
-        assertTrue(
-            MenuBarVisibilityPolicy.visibleOutsideSettings(
-                captureRequested = false,
-                pointerInteractionActive = false,
-                dragHandleDocked = false,
-                menuHandling = false,
-                fixedAreaTranslating = false,
-            )
+    fun menuBarStaysHiddenOutsideSettingsWhenPointerInteractionEnds() {
+        assertFalse(
+            MenuBarVisibilityPolicy.visibleOutsideSettings()
         )
     }
 }

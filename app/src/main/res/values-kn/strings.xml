@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">ಸೂಚಕ</string>
     <string name="settings_menu_pointer_docking_delay">ಡಾಕ್ ವಿಳಂಬ</string>
     <string name="settings_menu_haptic_feedback_to_detection">ಗುರುತಿಸುವಾಗ ಕಂಪನೆ</string>
-    <string name="settings_menu_cat_menubar">ಮೆನು ಪಟ್ಟಿಗೆ</string>
-    <string name="settings_menu_menubar_transparency">ಮೆನು ಪಾರದರ್ಶಕತೆ</string>
-    <string name="settings_menu_menubar_composition">ಮೆನು ವೈಶಿಷ್ಟ್ಯಗಳು</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">ಅನುವಾದ</string>
     <string name="settings_menu_translation_transparency">ಅನುವಾದ ಪಾರದರ್ಶಕತೆ</string>

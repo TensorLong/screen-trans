@@ -62,9 +62,6 @@
   <string name="settings_menu_cat_pointer">İmleç</string>
   <string name="settings_menu_pointer_docking_delay">Bağlantı gecikmesi</string>
   <string name="settings_menu_haptic_feedback_to_detection">Tespit edildiğinde titreşim</string>
-  <string name="settings_menu_cat_menubar">Menü Çubuğu</string>
-  <string name="settings_menu_menubar_transparency">Menü Şeffaflığı</string>
-  <string name="settings_menu_menubar_composition">Menü Fonksiyonları</string>
   <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">Çeviri</string>
   <string name="settings_menu_translation_transparency">Çeviri Şeffaflığı</string>

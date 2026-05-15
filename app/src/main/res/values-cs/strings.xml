@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Ukazatel</string>
     <string name="settings_menu_pointer_docking_delay">Zpoždění dokování</string>
     <string name="settings_menu_haptic_feedback_to_detection">Vibrace při detekci</string>
-    <string name="settings_menu_cat_menubar">Panel menu</string>
-    <string name="settings_menu_menubar_transparency">Průhlednost menu</string>
-    <string name="settings_menu_menubar_composition">Funkce menu</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Překlad</string>
     <string name="settings_menu_translation_transparency">Průhlednost překladu</string>

@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Pekare</string>
     <string name="settings_menu_pointer_docking_delay">Fördröjning vid anslutning</string>
     <string name="settings_menu_haptic_feedback_to_detection">Vibration vid upptäckt</string>
-    <string name="settings_menu_cat_menubar">Menyrad</string>
-    <string name="settings_menu_menubar_transparency">Menyns transparens</string>
-    <string name="settings_menu_menubar_composition">Menyns funktioner</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Översättning</string>
     <string name="settings_menu_translation_transparency">Översättningens transparens</string>

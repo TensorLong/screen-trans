@@ -15,7 +15,7 @@ interface GoogleWebService {
     )
     @GET("translate_a/single")
     suspend fun send(
-        @Query("client") client: String = "webapp",
+        @Query("client") client: String = "gtx",
         @Query("dt") dt: String = "t",
         @Query("ie") ie: String = "UTF-8",
         @Query("oe") oe: String = "UTF-8",

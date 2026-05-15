@@ -10,7 +10,6 @@ import com.yiqun.translator.data.remote.firebase.AnalyticsRepository
 import com.yiqun.translator.data.remote.firebase.RemoteConfigRepository
 import com.yiqun.translator.data.remote.translation.TranslationKitType
 import com.yiqun.translator.data.remote.translation.TranslationRepository
-import com.yiqun.translator.ui.screen.overlay.menubar.MenuConfig
 import com.yiqun.translator.ui.screen.overlay.targethandle.PointerOffset
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
@@ -56,18 +55,6 @@ class SettingsViewModel @Inject constructor(
 
     fun updateDualPointerEnabled(enabled: Boolean) {
         preferenceRepository.update(PreferenceRepository.DUAL_POINTER_ENABLED, enabled)
-    }
-
-    fun updateMenuBarVisibility(menuVisibility: Boolean) {
-        preferenceRepository.update(PreferenceRepository.MENU_BAR_VISIBILITY, menuVisibility)
-    }
-
-    fun updateMenuBarTransparency(transparency: Float) {
-        preferenceRepository.update(PreferenceRepository.MENU_BAR_TRANSPARENCY, transparency)
-    }
-
-    fun updateMenuBarConfig(menuBarConfig: MenuConfig) {
-        preferenceRepository.update(PreferenceRepository.MENU_BAR_COMPOSITION, menuBarConfig.name)
     }
 
     fun updateTranslationTransparency(transparency: Float) {

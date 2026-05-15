@@ -42,6 +42,7 @@ import com.yiqun.translator.ui.screen.main.SettingsActivity
 import com.yiqun.translator.ui.screen.overlay.Event
 import com.yiqun.translator.ui.screen.overlay.OverlayView
 import com.yiqun.translator.ui.screen.overlay.dialog.DialogView
+import com.yiqun.translator.ui.screen.overlay.detectmode.DetectModeMenuView
 import com.yiqun.translator.ui.screen.overlay.fixedarea.FixedAreaView
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuBarView
 import com.yiqun.translator.ui.screen.overlay.selection.AreaSelectionView
@@ -360,10 +361,9 @@ class TargetHandleView private constructor(
                 combine(
                     viewModel.motionEventFlow,
                     viewModel.translationFlow,
-                    MenuBarView.operatingStateFlow,
                     viewModel.activePointerSideFlow,
-                ) { motionEventAction, translationState, menuOperating, activeSide ->
-                    DockingState(motionEventAction, translationState, menuOperating, activeSide)
+                ) { motionEventAction, translationState, activeSide ->
+                    DockingState(motionEventAction, translationState, false, activeSide)
                 }.collect { state ->
                     val shouldScheduleDock = dockingReleaseTracker.shouldScheduleDockAfterRelease(
                         side = pointerSide,
@@ -428,7 +428,11 @@ class TargetHandleView private constructor(
                             delay(200)
                             if (!VisionTextView.INSTANCE.isRunning.get()) {
                                 applicationContext.vibrate()
-                                SettingsActivity.start(applicationContext)
+                                DetectModeMenuView.INSTANCE.cast(
+                                    applicationContext = applicationContext,
+                                    anchorCenterX = layoutParams.x + handleCenterX,
+                                    anchorCenterY = layoutParams.y + handleCenterY,
+                                )
                             }
                         }
                     }

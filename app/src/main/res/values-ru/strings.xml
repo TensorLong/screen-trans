@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Указатель</string>
     <string name="settings_menu_pointer_docking_delay">Задержка закрепления</string>
     <string name="settings_menu_haptic_feedback_to_detection">Вибрация при обнаружении</string>
-    <string name="settings_menu_cat_menubar">Панель меню</string>
-    <string name="settings_menu_menubar_transparency">Прозрачность меню</string>
-    <string name="settings_menu_menubar_composition">Функции меню</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Перевод</string>
     <string name="settings_menu_translation_transparency">Прозрачность перевода</string>

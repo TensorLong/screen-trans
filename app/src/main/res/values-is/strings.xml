@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Bendill</string>
     <string name="settings_menu_pointer_docking_delay">Töf við festingu</string>
     <string name="settings_menu_haptic_feedback_to_detection">Titringur við greiningu</string>
-    <string name="settings_menu_cat_menubar">Valmyndarslá</string>
-    <string name="settings_menu_menubar_transparency">Gegnsæi valmyndar</string>
-    <string name="settings_menu_menubar_composition">Valmynda aðgerðir</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Þýðing</string>
     <string name="settings_menu_translation_transparency">Gegnsæi þýðingar</string>

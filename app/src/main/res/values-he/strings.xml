@@ -62,9 +62,6 @@
   <string name="settings_menu_cat_pointer">מצביע</string>
   <string name="settings_menu_pointer_docking_delay">עיכוב עגינה</string>
   <string name="settings_menu_haptic_feedback_to_detection">רטט בזיהוי</string>
-  <string name="settings_menu_cat_menubar">תפריט עליון</string>
-  <string name="settings_menu_menubar_transparency">שקיפות תפריט</string>
-  <string name="settings_menu_menubar_composition">אפשרויות תפריט</string>
   <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">תרגום</string>
   <string name="settings_menu_translation_transparency">שקיפות תרגום</string>

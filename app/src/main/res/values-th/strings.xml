@@ -62,9 +62,6 @@
   <string name="settings_menu_cat_pointer">ตัวชี้</string>
   <string name="settings_menu_pointer_docking_delay">ความล่าช้าในการเชื่อมต่อ</string>
   <string name="settings_menu_haptic_feedback_to_detection">การสั่นเมื่อถูกตรวจพบ</string>
-  <string name="settings_menu_cat_menubar">แถบเมนู</string>
-  <string name="settings_menu_menubar_transparency">ความโปร่งใสของเมนู</string>
-  <string name="settings_menu_menubar_composition">ฟังก์ชั่นเมนู</string>
   <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">การแปล</string>
   <string name="settings_menu_translation_transparency">ความโปร่งใสของการแปล</string>

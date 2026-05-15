@@ -62,9 +62,6 @@
   <string name="settings_menu_cat_pointer">المؤشر</string>
   <string name="settings_menu_pointer_docking_delay">تأخير الإرساء</string>
   <string name="settings_menu_haptic_feedback_to_detection">اهتزاز عند الكشف</string>
-  <string name="settings_menu_cat_menubar">شريط القوائم</string>
-  <string name="settings_menu_menubar_transparency">شفافية القائمة</string>
-  <string name="settings_menu_menubar_composition">خيارات القائمة</string>
   <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">الترجمة</string>
   <string name="settings_menu_translation_transparency">شفافية الترجمة</string>

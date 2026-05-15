@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Көрсөтмө</string>
     <string name="settings_menu_pointer_docking_delay">Туташуу кечигүүсү</string>
     <string name="settings_menu_haptic_feedback_to_detection">Аныктаганда вибрация</string>
-    <string name="settings_menu_cat_menubar">Меню тилкеси</string>
-    <string name="settings_menu_menubar_transparency">Менюнун ачыктыгы</string>
-    <string name="settings_menu_menubar_composition">Меню функциялары</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Котормо</string>
     <string name="settings_menu_translation_transparency">Котормонун ачыктыгы</string>

@@ -99,8 +99,11 @@
 -dontwarn androidx.compose.**
 
 # Coroutines
+-keep class kotlin.** { *; }
 -dontwarn kotlinx.coroutines.**
 -keep class kotlinx.coroutines.** { *; }
+-keep class kotlin.coroutines.** { *; }
+-keep class kotlin.coroutines.intrinsics.** { *; }
 
 # Hilt/Dagger
 -dontwarn dagger.**
@@ -161,6 +164,22 @@
 -dontwarn com.google.mlkit.**
 -dontwarn com.google.android.gms.**
 
+# Instrumentation performance tests call these production entry points directly
+# against the minified debug APK.
+-keep class com.yiqun.translator.data.local.vision.VisionRepository { *; }
+-keep class com.yiqun.translator.data.local.vision.AutoRecognitionPolicy { *; }
+-keep class com.yiqun.translator.data.local.vision.TextDetectMode { *; }
+-keep class com.yiqun.translator.data.local.vision.model.** { *; }
+-keep class com.yiqun.translator.data.remote.translation.TranslationRequestCache { *; }
+-keep class com.yiqun.translator.data.remote.ai.chatgpt.SenseGroupRequestCache { *; }
+-keep class com.yiqun.translator.data.remote.ai.chatgpt.SenseGroup { *; }
+-keep class com.yiqun.translator.data.remote.translation.Transaction { *; }
+-keep class com.yiqun.translator.data.remote.translation.TranslationKitType { *; }
+-keep class com.yiqun.translator.ui.screen.overlay.targethandle.RecognitionDelayPolicy { *; }
+-keep class com.yiqun.translator.ui.screen.overlay.fixedarea.FixedAreaRecognitionPolicy { *; }
+-keep class com.yiqun.translator.ui.screen.overlay.selection.AreaCapturePolicy { *; }
+-keep class com.yiqun.translator.ui.screen.overlay.selection.AreaSelectionViewKt { *; }
+
 # ExoPlayer
 -keep class com.google.android.exoplayer2.** { *; }
 -dontwarn com.google.android.exoplayer2.**
@@ -189,14 +208,6 @@
 -keepnames class * implements org.jetbrains.kotlin.compiler.plugin.*
 -keepnames class * implements org.jetbrains.kotlin.diagnostics.*
 -keepnames class * implements org.jetbrains.kotlin.fir.extensions.*
-
-
-
-
-
-
-
-
 
 
 

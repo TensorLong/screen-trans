@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Курсор</string>
     <string name="settings_menu_pointer_docking_delay">Затрымка мацавання</string>
     <string name="settings_menu_haptic_feedback_to_detection">Вібрацыя пры выяўленні</string>
-    <string name="settings_menu_cat_menubar">Панэль меню</string>
-    <string name="settings_menu_menubar_transparency">Празрыстасць меню</string>
-    <string name="settings_menu_menubar_composition">Функцыі меню</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Пераклад</string>
     <string name="settings_menu_translation_transparency">Празрыстасць перакладу</string>

@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Заагч</string>
     <string name="settings_menu_pointer_docking_delay">Холболтын саатал</string>
     <string name="settings_menu_haptic_feedback_to_detection">Илрэхэд доргилт</string>
-    <string name="settings_menu_cat_menubar">Цэсний мөр</string>
-    <string name="settings_menu_menubar_transparency">Цэсний тунгалаг байдал</string>
-    <string name="settings_menu_menubar_composition">Цэсний функцууд</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Орчуулга</string>
     <string name="settings_menu_translation_transparency">Орчуулгын тунгалаг</string>

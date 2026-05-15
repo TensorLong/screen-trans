@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Pokazivač</string>
     <string name="settings_menu_pointer_docking_delay">Kašnjenje spajanja</string>
     <string name="settings_menu_haptic_feedback_to_detection">Vibracija pri otkrivanju</string>
-    <string name="settings_menu_cat_menubar">Izbornik</string>
-    <string name="settings_menu_menubar_transparency">Prozirnost izbornika</string>
-    <string name="settings_menu_menubar_composition">Funkcije izbornika</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Prijevod</string>
     <string name="settings_menu_translation_transparency">Prozirnost prijevoda</string>

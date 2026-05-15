@@ -396,6 +396,18 @@ object PointerInteractionVisibilityPolicy {
     }
 }
 
+object RecognitionDelayPolicy {
+    fun pointerStoppedDelayMs(textDetectMode: TextDetectMode): Long {
+        return when (textDetectMode) {
+            TextDetectMode.SELECT,
+            TextDetectMode.FIXED_AREA -> 90L
+            else -> 30L
+        }
+    }
+
+    fun captureStartDelayMs(): Long = 0L
+}
+
 class PointerDockingReleaseTracker {
     private var draggedSide: PointerSide? = null
 

@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Indicatur</string>
     <string name="settings_menu_pointer_docking_delay">Retard d\'acuplament</string>
     <string name="settings_menu_haptic_feedback_to_detection">Vibrar tar detectaziun</string>
-    <string name="settings_menu_cat_menubar">Trav d’uschigliada</string>
-    <string name="settings_menu_menubar_transparency">Transparenza da menu</string>
-    <string name="settings_menu_menubar_composition">Funcziuns dal menu</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Translaziun</string>
     <string name="settings_menu_translation_transparency">Transparenza translaziun</string>

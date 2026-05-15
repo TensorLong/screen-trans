@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Pointer</string>
     <string name="settings_menu_pointer_docking_delay">Delay ng Dock</string>
     <string name="settings_menu_haptic_feedback_to_detection">Vibrate sa detect</string>
-    <string name="settings_menu_cat_menubar">Menu Bar</string>
-    <string name="settings_menu_menubar_transparency">Menu Transparency</string>
-    <string name="settings_menu_menubar_composition">Mga Gamit sa Menu</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Pagsasalin</string>
     <string name="settings_menu_translation_transparency">Labo ng Salin</string>

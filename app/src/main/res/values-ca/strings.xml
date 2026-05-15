@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Cursor</string>
     <string name="settings_menu_pointer_docking_delay">Retard d\'acoblament</string>
     <string name="settings_menu_haptic_feedback_to_detection">Vibració en detectar</string>
-    <string name="settings_menu_cat_menubar">Barra de menú</string>
-    <string name="settings_menu_menubar_transparency">Transparència del menú</string>
-    <string name="settings_menu_menubar_composition">Funcions del menú</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Traducció</string>
     <string name="settings_menu_translation_transparency">Transparència traducció</string>

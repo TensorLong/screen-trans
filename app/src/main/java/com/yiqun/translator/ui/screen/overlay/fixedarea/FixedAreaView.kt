@@ -63,6 +63,7 @@ import com.yiqun.translator.ui.screen.overlay.selection.createOverlaidBitmap
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleView
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleViewModel
 import com.yiqun.translator.ui.screen.permissions.ScreenCapturePermissionRequesterActivity
+import com.yiqun.translator.ui.screen.overlay.selection.AreaCapturePolicy
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -443,8 +444,8 @@ open class FixedAreaView : OverlayView() {
         fixedAreaViewStateFlow.value = State.Translating
         translateJob = launchInOverlayViewCoroutineScope {
             while (fixedAreaViewStateFlow.value == State.Translating || fixedAreaViewStateFlow.value == State.TranslatingHandling) {
-                delay(100)
                 requestVision(context, selectedArea)
+                delay(FixedAreaRecognitionPolicy.pollingDelayMs())
             }
         }
     }
@@ -452,7 +453,9 @@ open class FixedAreaView : OverlayView() {
     private var detectedString = ""
 
     private suspend fun requestVision(context: Context, selectedArea: Rect) {
-        val captureResponse: CaptureResponse = targetHandleViewModel.captureRepository.request()
+        val captureResponse: CaptureResponse = targetHandleViewModel.captureRepository.request(
+            AreaCapturePolicy.captureRect(selectedArea)
+        )
         Timber.tag(TAG).d("captureResponse $captureResponse")
         if (captureResponse !is CaptureResponse.Success) {
             Timber.tag(TAG).d("CaptureResponse.Error ${(captureResponse as CaptureResponse.Error).t}")
@@ -466,8 +469,7 @@ open class FixedAreaView : OverlayView() {
             return
         }
 
-        val selectedAreaBitmap = createOverlaidBitmap(captureResponse.bitmap, selectedArea)
-        captureResponse.bitmap.recycle()
+        val selectedAreaBitmap = captureResponse.bitmap
 
         // TestCapturedActivity.start(context, selectedAreaBitmap)
 
@@ -476,6 +478,8 @@ open class FixedAreaView : OverlayView() {
             targetHandleViewModel.visionRepository.request(
                 bitmap = selectedAreaBitmap,
                 sourceLanguageCode = sourceLanguageCode,
+                coordinateOffsetX = AreaCapturePolicy.coordinateOffsetX(captureResponse.screenRect),
+                coordinateOffsetY = AreaCapturePolicy.coordinateOffsetY(captureResponse.screenRect),
             )
         } finally {
             selectedAreaBitmap.recycle()
@@ -534,7 +538,11 @@ open class FixedAreaView : OverlayView() {
     }
 }
 
+object FixedAreaRecognitionPolicy {
+    fun firstRecognitionDelayMs(): Long = 0L
 
+    fun pollingDelayMs(): Long = 100L
+}
 
 
 

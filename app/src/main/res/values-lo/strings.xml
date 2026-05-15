@@ -62,9 +62,6 @@
   <string name="settings_menu_cat_pointer">ເຄື່ອງຊີ້</string>
   <string name="settings_menu_pointer_docking_delay">ຄວາມລ່າຊ້າ Dock</string>
   <string name="settings_menu_haptic_feedback_to_detection">ສັ່ນເມື່ອພົບ</string>
-  <string name="settings_menu_cat_menubar">ແຖບເມນູ</string>
-  <string name="settings_menu_menubar_transparency">ຄວາມໂປ່ງໃສເມນູ</string>
-  <string name="settings_menu_menubar_composition">ຟັງຊັນເມນູ</string>
   <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">ການແປ</string>
   <string name="settings_menu_translation_transparency">ຄວາມໂປ່ງໃສແປ</string>

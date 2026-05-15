@@ -62,9 +62,6 @@
   <string name="settings_menu_cat_pointer">Покажувач</string>
   <string name="settings_menu_pointer_docking_delay">Кашнење при спојување</string>
   <string name="settings_menu_haptic_feedback_to_detection">Вибрација при детекција</string>
-  <string name="settings_menu_cat_menubar">Мени лента</string>
-  <string name="settings_menu_menubar_transparency">Прозирност на менито</string>
-  <string name="settings_menu_menubar_composition">Функции на менито</string>
   <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">Превод</string>
   <string name="settings_menu_translation_transparency">Прозирност на преводот</string>

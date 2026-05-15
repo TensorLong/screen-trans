@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Erakuslea</string>
     <string name="settings_menu_pointer_docking_delay">Atzerapena</string>
     <string name="settings_menu_haptic_feedback_to_detection">Bibr. detektatzean</string>
-    <string name="settings_menu_cat_menubar">Menu-barra</string>
-    <string name="settings_menu_menubar_transparency">Menuaren gardentasuna</string>
-    <string name="settings_menu_menubar_composition">Menu-funtzioak</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Itzulpena</string>
     <string name="settings_menu_translation_transparency">Itzulpenaren gardentasuna</string>

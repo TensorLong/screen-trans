@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Peker</string>
     <string name="settings_menu_pointer_docking_delay">Tilkoblingsforsinkelse</string>
     <string name="settings_menu_haptic_feedback_to_detection">Vibrasjon ved deteksjon</string>
-    <string name="settings_menu_cat_menubar">Menylinje</string>
-    <string name="settings_menu_menubar_transparency">Menygjennomsiktighet</string>
-    <string name="settings_menu_menubar_composition">Menyfunksjoner</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Oversettelse</string>
     <string name="settings_menu_translation_transparency">Gjennomsiktighet for oversettelse</string>

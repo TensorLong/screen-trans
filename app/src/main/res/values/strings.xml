@@ -73,9 +73,6 @@
     <string name="settings_menu_pointer_right">Right Pointer</string>
     <string name="settings_menu_pointer_docking_delay">Pointer Docking Delay</string>
     <string name="settings_menu_haptic_feedback_to_detection">Haptic Feedback on Detection</string>
-    <string name="settings_menu_cat_menubar">Menu Bar</string>
-    <string name="settings_menu_menubar_transparency">Menu Bar Transparency</string>
-    <string name="settings_menu_menubar_composition">Menu Functions</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_ai_api_settings">AI API Settings</string>
     <string name="settings_menu_ai_api_key_label">API Key</string>

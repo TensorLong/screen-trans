@@ -62,9 +62,6 @@
   <string name="settings_menu_cat_pointer">Ponteiro</string>
   <string name="settings_menu_pointer_docking_delay">Atraso de acoplagem</string>
   <string name="settings_menu_haptic_feedback_to_detection">Vibração ao detetar</string>
-  <string name="settings_menu_cat_menubar">Barra de menu</string>
-  <string name="settings_menu_menubar_transparency">Transparência do menu</string>
-  <string name="settings_menu_menubar_composition">Funções do menu</string>
   <string name="settings_menu_cat_ai">AI API</string>
   <string name="settings_menu_cat_translation">Tradução</string>
   <string name="settings_menu_translation_transparency">Transparência da tradução</string>

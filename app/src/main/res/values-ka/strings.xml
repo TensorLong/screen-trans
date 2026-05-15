@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">კურსორი</string>
     <string name="settings_menu_pointer_docking_delay">შენიშვნის დაყოვნება</string>
     <string name="settings_menu_haptic_feedback_to_detection">ვიბრაცია აღმოჩენისას</string>
-    <string name="settings_menu_cat_menubar">მენიუს ზოლი</string>
-    <string name="settings_menu_menubar_transparency">მენიუს გამჭვირვალობა</string>
-    <string name="settings_menu_menubar_composition">მენიუს ფუნქციები</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">თარგმანი</string>
     <string name="settings_menu_translation_transparency">თარგმნის გამჭვირვალობა</string>

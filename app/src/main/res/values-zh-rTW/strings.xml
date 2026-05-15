@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">指標</string>
     <string name="settings_menu_pointer_docking_delay">連接延遲</string>
     <string name="settings_menu_haptic_feedback_to_detection">偵測時震動</string>
-    <string name="settings_menu_cat_menubar">選單列</string>
-    <string name="settings_menu_menubar_transparency">選單透明度</string>
-    <string name="settings_menu_menubar_composition">選單功能</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">翻譯</string>
     <string name="settings_menu_translation_transparency">翻譯透明度</string>

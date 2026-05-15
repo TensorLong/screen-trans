@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Tregues</string>
     <string name="settings_menu_pointer_docking_delay">Vonese lidhjeje</string>
     <string name="settings_menu_haptic_feedback_to_detection">Vibrim kur zbulohet</string>
-    <string name="settings_menu_cat_menubar">Shirit menu</string>
-    <string name="settings_menu_menubar_transparency">Përshkueshmëria e menusë</string>
-    <string name="settings_menu_menubar_composition">Funksionet e menusë</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Përkthim</string>
     <string name="settings_menu_translation_transparency">Përshkueshmëria e përkthimit</string>

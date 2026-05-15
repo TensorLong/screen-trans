@@ -52,7 +52,6 @@ import androidx.compose.material.icons.filled.AllInclusive
 import androidx.compose.material.icons.filled.FiberNew
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VoiceChat
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
@@ -129,9 +128,7 @@ import com.yiqun.translator.ui.common.fontDimensionResource
 import com.yiqun.translator.ui.screen.AVDActivity
 import com.yiqun.translator.ui.screen.intro.SplashActivity
 import com.yiqun.translator.ui.screen.overlay.languagelist.LanguageListView
-import com.yiqun.translator.ui.screen.overlay.menubar.MenuBar
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuBarView
-import com.yiqun.translator.ui.screen.overlay.menubar.MenuConfig
 import com.yiqun.translator.ui.screen.overlay.menubar.SettingsSurface
 import com.yiqun.translator.ui.screen.overlay.settings.HelpTextDetectModeView
 import com.yiqun.translator.ui.screen.overlay.settings.HelpTranslationKitView
@@ -402,8 +399,6 @@ class SettingsActivity : AVDActivity() {
         val configuration = LocalConfiguration.current
         val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
 
-        val menuExpandAnimationDuration = 300
-
         val contentPadding = 9.dp
         val cornerRound = 32.dp
         val startPadding = paddingValues.calculateLeftPadding(layoutDirection).toPx(context)
@@ -446,28 +441,6 @@ class SettingsActivity : AVDActivity() {
         )
         val supportsDualPointer = PointerDisplayPolicy.defaultDualPointerEnabled(DeviceFormFactorResolver.resolve(configuration))
         var showPointerCalibration by remember { mutableStateOf(false) }
-
-        // Menubar Visibility
-        val menuBarVisibility by viewModel.preferenceRepository.menuBarVisibilityFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = true
-        )
-
-        // Menubar transparency
-        val menuBarTransparencyTextOffset = remember { mutableStateOf(Point(0, 0)) }
-        val menuBarTransparencySubtextOffset = remember { mutableStateOf(Point(0, 0)) }
-        val menuBarTransparency by viewModel.preferenceRepository.menuBarTransparencyFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = 1.0f
-        )
-
-        // Menubar Composition
-        val menuBarConfigTextOffset = remember { mutableStateOf(Point(0, 0)) }
-        val menuBarConfigSubOffset = remember { mutableStateOf(Point(0, 0)) }
-        val menuBarConfig by viewModel.preferenceRepository.menuBarConfigFlow.collectAsStateWithLifecycle(
-            lifecycle = lifecycleOwner.lifecycle,
-            initialValue = MenuConfig.WHOLE
-        )
 
         // Translation transparency
         val translationTransparencyTextOffset = remember { mutableStateOf(Point(0, 0)) }
@@ -641,8 +614,8 @@ class SettingsActivity : AVDActivity() {
                             viewModel.analyticsRepository.settingsReport(
                                 dockDelay = dockingDelay.toString(),
                                 haptic = dragHandleHaptic.toString(),
-                                menuTransparency = (menuBarTransparency * 100).roundToInt().toString(),
-                                menuComposition = menuBarConfig.name,
+                                menuTransparency = "removed",
+                                menuComposition = "removed",
                                 transTransparency = (translationTransparency * 100).roundToInt().toString(),
                                 closeDelay = translationCloseDelay.toString(),
                                 replyTransparency = (replyTransparency * 100).roundToInt().toString(),
@@ -916,248 +889,6 @@ class SettingsActivity : AVDActivity() {
                                     )
                                 }
                             }
-
-                            MenuCategory(
-                                painter = painterResource(id = R.drawable.ic_menubar),
-                                categoryName = getString(R.string.settings_menu_cat_menubar),
-                                iconSize = 25.dp,
-                                isRtl = isRtl,
-                            )
-
-                            MenuItem(
-                                menuItemPosition = if (menuBarVisibility) MenuItemPosition.Top else MenuItemPosition.Single,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        settingStringFlow.value = getTransparencyValueText(menuBarTransparency)
-                                        SliderDialogView.INSTANCE.cast(
-                                            applicationContext = applicationContext,
-                                            initialValue = 1.0f - menuBarTransparency,
-                                            valueRange = 0.0f..0.50f,
-                                            onValueChange = { value ->
-                                                Timber.tag(TAG).d("Menubar transparency onValueChange : $value")
-                                                viewModel.updateMenuBarTransparency(1.0f - value)
-                                                viewModel.updateMenuBarVisibility(value < 0.5f)
-                                                settingStringFlow.value = getTransparencyValueText(1.0f - value)
-                                            },
-                                            menuText = Pair(getString(R.string.settings_menu_menubar_transparency), menuBarTransparencyTextOffset.value),
-                                            menuBarVisibilityText = Pair(settingStringFlow, menuBarTransparencySubtextOffset.value),
-                                            onDismissRequest = {
-                                                SliderDialogView.INSTANCE.clear()
-                                            },
-                                        )
-                                        MenuBarView.INSTANCE.cast(applicationContext, true)
-                                    }
-                                }
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 50.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    MenuText(
-                                        text = getString(R.string.settings_menu_menubar_transparency),
-                                        onTextPositioned = { offset ->
-                                            menuBarTransparencyTextOffset.value = Point(offset.x - startPadding, offset.y)
-                                        },
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .size(38.dp)
-                                            .onGloballyPositioned { layoutCoordinates ->
-                                                val offset = layoutCoordinates.positionOnScreen()
-                                                val startPadding = paddingValues
-                                                    .calculateLeftPadding(layoutDirection)
-                                                    .toPx(context)
-                                                val posX = offset.x.toInt() + layoutCoordinates.size.width - startPadding
-                                                menuBarTransparencySubtextOffset.value = Point(posX, offset.y.toInt())
-                                            },
-                                        contentAlignment = Alignment.CenterEnd
-                                    ) {
-                                        if ((1.0f - menuBarTransparency) > 0.49f) {
-                                            Icon(
-                                                imageVector = Icons.Default.VisibilityOff,
-                                                contentDescription = "Menubar transparency",
-                                                modifier = Modifier
-                                                    .size(32.dp)
-                                                    .padding(end = 8.dp),
-                                                tint = subContentColor
-                                            )
-                                        } else {
-                                            Text(
-                                                modifier = Modifier.padding(end = 6.dp),
-                                                text = getTransparencyValueText(menuBarTransparency),
-                                                color = subContentColor,
-                                                style = MaterialTheme.typography.bodyMedium.copy(fontSize = fontDimensionResource(R.dimen.settings_menu_subtext_size)),
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            AnimatedVisibility(
-                                visible = menuBarVisibility,
-                                enter = expandVertically(animationSpec = tween(menuExpandAnimationDuration)),
-                                exit = shrinkVertically(animationSpec = tween(menuExpandAnimationDuration)),
-                                content = {
-                                    fun onClick() {
-                                        coroutineScope.launch {
-                                            settingStringFlow.value = menuBarConfig.name
-                                            SliderDialogView.INSTANCE.cast(
-                                                applicationContext = applicationContext,
-                                                initialValue = when (menuBarConfig) {
-                                                    MenuConfig.WHOLE -> 0.0f
-                                                    MenuConfig.DETECT_MODE_LANGUAGE -> 1.0f
-                                                    MenuConfig.LANGUAGE_TRANSLATION_KIT -> 2.0f
-                                                    MenuConfig.LANGUAGE -> 3.0f
-                                                    MenuConfig.WHOLE_SHORT -> 4.0f
-                                                    MenuConfig.DETECT_MODE_LANGUAGE_SHORT -> 5.0f
-                                                    MenuConfig.LANGUAGE_SHORT_TRANSLATION_KIT -> 6.0f
-                                                    MenuConfig.LANGUAGE_SHORT -> 7.0f
-                                                    MenuConfig.DETECT_MODE_TRANSLATION_KIT -> 8.0f
-                                                    MenuConfig.DETECT_MODE -> 9.0f
-                                                    MenuConfig.TRANSLATION_KIT -> 10.0f
-
-                                                    MenuConfig.V_DETECT_MODE -> 11.0f
-                                                    MenuConfig.V_DETECT_MODE_TRANSLATION_KIT -> 12.0f
-                                                    MenuConfig.V_LANGUAGE -> 13.0f
-                                                    MenuConfig.V_LANGUAGE_TRANSLATION_KIT -> 14.0f
-                                                    MenuConfig.V_DETECT_MODE_LANGUAGE -> 15.0f
-                                                    MenuConfig.V_WHOLE -> 16.0f
-                                                },
-                                                valueRange = 0.0f..16.0f,
-                                                steps = 15,
-                                                onValueChange = { value ->
-                                                    Timber.tag(TAG).d("onValueChange $value")
-                                                    val updatedMenuBarConfig =
-                                                        when (value.roundToInt().toFloat()) {
-                                                            0.0f -> MenuConfig.WHOLE
-                                                            1.0f -> MenuConfig.DETECT_MODE_LANGUAGE
-                                                            2.0f -> MenuConfig.LANGUAGE_TRANSLATION_KIT
-                                                            3.0f -> MenuConfig.LANGUAGE
-                                                            4.0f -> MenuConfig.WHOLE_SHORT
-                                                            5.0f -> MenuConfig.DETECT_MODE_LANGUAGE_SHORT
-                                                            6.0f -> MenuConfig.LANGUAGE_SHORT_TRANSLATION_KIT
-                                                            7.0f -> MenuConfig.LANGUAGE_SHORT
-                                                            8.0f -> MenuConfig.DETECT_MODE_TRANSLATION_KIT
-                                                            9.0f -> MenuConfig.DETECT_MODE
-                                                            10.0f -> MenuConfig.TRANSLATION_KIT
-
-                                                            11.0f -> MenuConfig.V_DETECT_MODE
-                                                            12.0f -> MenuConfig.V_DETECT_MODE_TRANSLATION_KIT
-                                                            13.0f -> MenuConfig.V_LANGUAGE
-                                                            14.0f -> MenuConfig.V_LANGUAGE_TRANSLATION_KIT
-                                                            15.0f -> MenuConfig.V_DETECT_MODE_LANGUAGE
-                                                            16.0f -> MenuConfig.V_WHOLE
-
-                                                            else -> MenuConfig.WHOLE
-                                                        }
-                                                    viewModel.updateMenuBarConfig(updatedMenuBarConfig)
-                                                    settingStringFlow.value = updatedMenuBarConfig.name
-                                                },
-                                                menuText = Pair(getString(R.string.settings_menu_menubar_composition), menuBarConfigTextOffset.value),
-                                                menuBarConfigText = Pair(settingStringFlow, menuBarConfigSubOffset.value),
-                                                onDismissRequest = {
-                                                    SliderDialogView.INSTANCE.clear()
-                                                },
-                                            )
-                                        }
-                                    }
-
-                                    Box(
-                                        modifier = Modifier
-                                            .wrapContentSize()
-                                            .background(
-                                                color = if (isDarkMode) Color(0xFF171717) else Color(0xFFfafafa),
-                                                shape = RoundedCornerShape(bottomStart = cornerRound, bottomEnd = cornerRound)
-                                            )
-                                    ) {
-                                        HorizontalDivider(
-                                            modifier = Modifier.padding(horizontal = 18.dp),
-                                            thickness = 0.7.dp,
-                                            color = dividerColor
-                                        )
-
-                                        Button(
-                                            onClick = { onClick() },
-                                            colors = ButtonDefaults.textButtonColors(contentColor = buttonColor),
-                                            shape = RoundedCornerShape(bottomStart = cornerRound, bottomEnd = cornerRound),
-                                            modifier = Modifier.wrapContentSize()
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .heightIn(min = 60.dp)
-                                                    .onGloballyPositioned { layoutCoordinates ->
-                                                        val offset = layoutCoordinates.positionOnScreen()
-                                                        val startPadding = paddingValues
-                                                            .calculateLeftPadding(layoutDirection)
-                                                            .toPx(context)
-                                                        val posX = offset.x.toInt() + layoutCoordinates.size.width - startPadding
-                                                        menuBarConfigSubOffset.value = Point(posX, offset.y.toInt())
-                                                    },
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                MenuText(
-                                                    text = getString(R.string.settings_menu_menubar_composition),
-                                                    onTextPositioned = { offset ->
-                                                        menuBarConfigTextOffset.value = Point(offset.x - startPadding, offset.y)
-                                                    },
-                                                    modifier = Modifier
-                                                        .align(Alignment.TopStart)
-                                                        .padding(top = 14.dp, start = 5.dp)
-                                                )
-                                                val scaleFactor = 0.48f
-                                                Box(
-                                                    modifier = Modifier
-                                                        .align(Alignment.TopEnd)
-                                                        .padding(top = 15.dp, bottom = 15.dp, end = 8.dp)
-                                                        .wrapContentSize()
-                                                        .layout { measurable, constraints ->
-                                                            val placeable = measurable.measure(constraints)
-
-                                                            val width = (placeable.width * scaleFactor).toInt()
-                                                            val height = (placeable.height * scaleFactor).toInt()
-
-                                                            layout(width, height) {
-                                                                placeable.placeRelative(0, 0)
-                                                            }
-                                                        }
-                                                ) {
-                                                    MenuBar(
-                                                        menuConfig = menuBarConfig,
-                                                        scaleFactor = scaleFactor,
-                                                        shadowPadding = 0.dp,
-                                                        borderWidth = 1.2.dp,
-                                                        textDetectMode = textDetectMode,
-                                                        sourceLanguageCode = sourceLanguageCode,
-                                                        sourceLanguage = sourceLanguage,
-                                                        targetLanguageCode = targetLanguageCode,
-                                                        targetLanguage = targetLanguage,
-                                                        translationKitType = kitType,
-                                                        isSwappable = { sourceLanguageCode, targetLanguageCode, kitType ->
-                                                            viewModel.isLanguageSwappable(sourceLanguageCode, targetLanguageCode, kitType)
-                                                        },
-                                                        modifier = Modifier.semantics {
-                                                            contentDescription = "Menu composition"
-                                                        }
-                                                    )
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .matchParentSize()
-                                                            .clickable(
-                                                                onClick = { onClick() },
-                                                                indication = null,
-                                                                interactionSource = remember { MutableInteractionSource() }
-                                                            )
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            )
 
                             MenuCategory(
                                 painter = painterResource(id = R.drawable.ic_ai),

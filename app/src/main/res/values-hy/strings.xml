@@ -62,9 +62,6 @@
     <string name="settings_menu_cat_pointer">Ցուցիչ</string>
     <string name="settings_menu_pointer_docking_delay">Հապաղում միացման</string>
     <string name="settings_menu_haptic_feedback_to_detection">Ցնցում հայտնաբերման դեպքում</string>
-    <string name="settings_menu_cat_menubar">Մենյուի գիծ</string>
-    <string name="settings_menu_menubar_transparency">Մենյուի թափանցիկություն</string>
-    <string name="settings_menu_menubar_composition">Մենյուի գործառույթներ</string>
     <string name="settings_menu_cat_ai">AI API</string>
     <string name="settings_menu_cat_translation">Թարգմանություն</string>
     <string name="settings_menu_translation_transparency">Թարգմանության թափանցիկություն</string>
