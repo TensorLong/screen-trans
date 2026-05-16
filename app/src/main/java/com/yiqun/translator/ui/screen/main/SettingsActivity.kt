@@ -128,6 +128,7 @@ import com.yiqun.translator.ui.common.fontDimensionResource
 import com.yiqun.translator.ui.screen.AVDActivity
 import com.yiqun.translator.ui.screen.intro.SplashActivity
 import com.yiqun.translator.ui.screen.overlay.languagelist.LanguageListView
+import com.yiqun.translator.ui.screen.overlay.menubar.MenuBarAttachmentPolicy
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuBarView
 import com.yiqun.translator.ui.screen.overlay.menubar.SettingsSurface
 import com.yiqun.translator.ui.screen.overlay.settings.HelpTextDetectModeView
@@ -302,9 +303,7 @@ class SettingsActivity : AVDActivity() {
         acquireTtsForVisibleSettings()
 
         lifecycleScope.launch {
-            if (!MenuBarView.INSTANCE.isRunning.get()) {
-                MenuBarView.INSTANCE.cast(applicationContext)
-            }
+            syncMenuBarWindow()
             TargetHandleView.castConfigured(
                 applicationContext = applicationContext,
                 dualPointerMode = viewModel.preferenceRepository.dualPointerEnabledFlow.first()
@@ -329,10 +328,23 @@ class SettingsActivity : AVDActivity() {
         VoiceListView.INSTANCE.clear()
         HelpTextDetectModeView.INSTANCE.clear()
         HelpTranslationKitView.INSTANCE.clear()
+        if (MenuBarView.INSTANCE.isRunning.get()) {
+            MenuBarView.INSTANCE.clear()
+        }
         liveStateFlow.value = false
         aiApiSettingsDialogLiveStateFlow.value = false
         releaseTtsForVisibleSettings()
         super.onPause()
+    }
+
+    private suspend fun syncMenuBarWindow(surface: SettingsSurface = settingsSurfaceFlow.value) {
+        if (MenuBarAttachmentPolicy.shouldAttach(liveStateFlow.value, surface)) {
+            if (!MenuBarView.INSTANCE.isRunning.get()) {
+                MenuBarView.INSTANCE.cast(applicationContext)
+            }
+        } else if (MenuBarView.INSTANCE.isRunning.get()) {
+            MenuBarView.INSTANCE.clear()
+        }
     }
 
     private fun acquireTtsForVisibleSettings() {
@@ -472,11 +484,13 @@ class SettingsActivity : AVDActivity() {
             mutableStateOf(ApiKeyInfo.chatgptKeyAvailable(context))
         }
         LaunchedEffect(showPointerCalibration, showAiApiSettingsDialog) {
-            settingsSurfaceFlow.value = when {
+            val surface = when {
                 showPointerCalibration -> SettingsSurface.POINTER_DISTANCE
                 showAiApiSettingsDialog -> SettingsSurface.AI_API
                 else -> SettingsSurface.HOME
             }
+            settingsSurfaceFlow.value = surface
+            syncMenuBarWindow(surface)
             aiApiSettingsDialogLiveStateFlow.value = showAiApiSettingsDialog
         }
         var pointerCalibrationWasOpen by remember { mutableStateOf(false) }
@@ -1792,7 +1806,7 @@ class SettingsActivity : AVDActivity() {
                 Timber.tag(TAG).d("appReview() startReviewFlow reviewErrorCode $reviewErrorCode")
             }
             lifecycleScope.launch {
-                MenuBarView.INSTANCE.cast(applicationContext)
+                syncMenuBarWindow()
                 TargetHandleView.castConfigured(
                     applicationContext = applicationContext,
                     dualPointerMode = viewModel.preferenceRepository.dualPointerEnabledFlow.first()

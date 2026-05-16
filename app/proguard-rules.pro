@@ -172,6 +172,7 @@
 -keep class com.yiqun.translator.data.local.vision.model.** { *; }
 -keep class com.yiqun.translator.data.remote.translation.TranslationRequestCache { *; }
 -keep class com.yiqun.translator.data.remote.ai.chatgpt.SenseGroupRequestCache { *; }
+-keep class com.yiqun.translator.data.remote.ai.chatgpt.SenseGroupChunkPolicy { *; }
 -keep class com.yiqun.translator.data.remote.ai.chatgpt.SenseGroup { *; }
 -keep class com.yiqun.translator.data.remote.translation.Transaction { *; }
 -keep class com.yiqun.translator.data.remote.translation.TranslationKitType { *; }
@@ -208,8 +209,6 @@
 -keepnames class * implements org.jetbrains.kotlin.compiler.plugin.*
 -keepnames class * implements org.jetbrains.kotlin.diagnostics.*
 -keepnames class * implements org.jetbrains.kotlin.fir.extensions.*
-
-
 
 
 

@@ -20,6 +20,7 @@ import com.yiqun.translator.data.local.vision.model.Sentence
 import com.yiqun.translator.data.local.vision.model.VisionResponse
 import com.yiqun.translator.data.local.vision.model.Word
 import com.yiqun.translator.data.remote.ai.chatgpt.SenseGroupRequestCache
+import com.yiqun.translator.data.remote.ai.chatgpt.SenseGroupChunkPolicy
 import com.yiqun.translator.data.remote.translation.TranslationRequestCache
 import com.yiqun.translator.data.remote.translation.TranslationKitType
 import com.yiqun.translator.data.remote.translation.Transaction
@@ -441,10 +442,7 @@ class RecognitionModesEndToEndPerformanceInstrumentedTest {
         )?.text?.let { cached ->
             return cached
         }
-        val systemContent = "Identify the smallest meaningful contiguous sense group that contains " +
-                "the pointed word. Copy the chunk verbatim from the sentence. If character " +
-                "offsets are supplied, use that exact occurrence. Return only JSON: " +
-                "{\"chunk\":\"<verbatim chunk>\"}"
+        val systemContent = SenseGroupChunkPolicy.SYSTEM_PROMPT
         val userPayload = JSONObject()
             .put("word", word)
             .put("sentence", sentence)
@@ -458,7 +456,14 @@ class RecognitionModesEndToEndPerformanceInstrumentedTest {
             userContent = userPayload.toString(),
             maxTokens = 80,
         ).also { result ->
-            if (result.chunk.isNotBlank()) {
+            val refinedChunk = SenseGroupChunkPolicy.refineChunk(
+                sentence = sentence,
+                modelChunk = result.chunk,
+                word = word,
+                pointedTokenOffset = offset,
+            ).orEmpty()
+            val refinedRange = chunkCharRange(sentence, refinedChunk, offset)
+            if (refinedChunk.isNotBlank() && refinedRange != null) {
                 SenseGroupRequestCache.put(
                     model = model,
                     endpointUrl = endpointUrl,
@@ -467,10 +472,17 @@ class RecognitionModesEndToEndPerformanceInstrumentedTest {
                     pointedTokenOffset = offset,
                     sourceLanguageCode = SOURCE_LANGUAGE_FOR_AI,
                     targetLanguageCode = TARGET_LANGUAGE,
-                    senseGroup = com.yiqun.translator.data.remote.ai.chatgpt.SenseGroup(result.chunk, "", 0..result.chunk.length),
+                    senseGroup = com.yiqun.translator.data.remote.ai.chatgpt.SenseGroup(refinedChunk, "", refinedRange),
                 )
             }
-        }.chunk
+        }.let { result ->
+            SenseGroupChunkPolicy.refineChunk(
+                sentence = sentence,
+                modelChunk = result.chunk,
+                word = word,
+                pointedTokenOffset = offset,
+            ).orEmpty()
+        }
     }
 
     private suspend fun openRouterSenseGroup(
@@ -616,6 +628,35 @@ class RecognitionModesEndToEndPerformanceInstrumentedTest {
         val kernelTicks = fields[12].toLong()
         val ticksPerSecond = Os.sysconf(OsConstants._SC_CLK_TCK)
         return ((userTicks + kernelTicks) * 1000.0 / ticksPerSecond).roundToInt().toLong()
+    }
+
+    private fun chunkCharRange(
+        sentence: String,
+        chunkText: String,
+        pointedTokenOffset: Int?,
+    ): IntRange? {
+        val chunk = chunkText.takeIf { it.isNotEmpty() } ?: return null
+        val occurrences = mutableListOf<IntRange>()
+        var searchFrom = 0
+        while (searchFrom <= sentence.length) {
+            val start = sentence.indexOf(chunk, startIndex = searchFrom)
+            if (start < 0) break
+            val end = start + chunk.length
+            occurrences.add(start..end)
+            searchFrom = (start + 1).coerceAtMost(sentence.length + 1)
+        }
+        if (occurrences.isEmpty()) return null
+        if (pointedTokenOffset == null) return occurrences.first()
+
+        return occurrences.firstOrNull { offset ->
+            pointedTokenOffset >= offset.first && pointedTokenOffset < offset.last
+        } ?: occurrences.minByOrNull { range ->
+            when {
+                pointedTokenOffset < range.first -> range.first - pointedTokenOffset
+                pointedTokenOffset >= range.last -> pointedTokenOffset - range.last + 1
+                else -> 0
+            }
+        }
     }
 
     private fun List<RunResult>.averageOf(selector: (RunResult) -> Number): Double {

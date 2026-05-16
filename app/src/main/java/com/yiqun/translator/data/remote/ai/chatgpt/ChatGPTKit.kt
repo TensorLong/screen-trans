@@ -110,12 +110,7 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
 
         val systemMessage = mapOf(
             "role" to "system",
-            "content" to (
-                "Identify the smallest meaningful contiguous sense group that contains " +
-                "the pointed word. Copy the chunk verbatim from the sentence. If character " +
-                "offsets are supplied, use that exact occurrence. Return only JSON: " +
-                "{\"chunk\":\"<verbatim chunk>\"}"
-            )
+            "content" to SenseGroupChunkPolicy.SYSTEM_PROMPT
         )
 
         val userPayload = JSONObject().apply {
@@ -164,8 +159,16 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
 
         return try {
             val json = JSONObject(raw)
-            val chunkText = json.optString("chunk", "").trim()
+            val rawChunkText = json.optString("chunk", "").trim()
+            val chunkText = SenseGroupChunkPolicy.refineChunk(
+                sentence = sentence,
+                modelChunk = rawChunkText,
+                word = word,
+                pointedTokenOffset = pointedTokenOffset,
+            ).orEmpty()
             val translation = json.optString("translation", "").trim()
+                .takeIf { rawChunkText == chunkText }
+                .orEmpty()
             if (chunkText.isEmpty()) {
                 Timber.tag(TAG).w("senseGroupAt() empty chunk in response: $raw")
                 return null

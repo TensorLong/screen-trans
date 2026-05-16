@@ -19,3 +19,12 @@ object MenuBarVisibilityPolicy {
         return false
     }
 }
+
+object MenuBarAttachmentPolicy {
+    fun shouldAttach(
+        activityLive: Boolean,
+        surface: SettingsSurface,
+    ): Boolean {
+        return activityLive && surface == SettingsSurface.HOME
+    }
+}

@@ -32,6 +32,7 @@ class DetectModeMenuView private constructor() : OverlayView() {
     }
 
     private lateinit var viewModel: MenuBarViewModel
+    private var selectedMode: TextDetectMode? = null
 
     override var layoutParams: WindowManager.LayoutParams = menuLayoutParams()
 
@@ -40,12 +41,20 @@ class DetectModeMenuView private constructor() : OverlayView() {
     override fun createView(overlayService: OverlayService): View {
         return DetectModeMenuNativeView(
             context = overlayService,
+            currentMode = selectedMode,
             dismiss = { clear() },
             updateTextDetectMode = { mode ->
                 viewModel.updateTextDetectMode(mode)
                 clear()
             },
-        )
+        ).also { menuView ->
+            launchInOverlayViewCoroutineScope {
+                viewModel.preferenceRepository.textDetectModeFlow.collect { mode ->
+                    selectedMode = mode
+                    menuView.setSelectedMode(mode)
+                }
+            }
+        }
     }
 
     override fun onServiceConnected(overlayService: OverlayService) {
@@ -112,9 +121,13 @@ class DetectModeMenuView private constructor() : OverlayView() {
 
 private class DetectModeMenuNativeView(
     context: Context,
+    currentMode: TextDetectMode?,
     private val dismiss: () -> Unit,
     private val updateTextDetectMode: (TextDetectMode) -> Unit,
 ) : LinearLayout(context) {
+
+    private val selectionIndicators = mutableMapOf<TextDetectMode, TextView>()
+    private var selectedMode: TextDetectMode? = currentMode
 
     init {
         orientation = VERTICAL
@@ -129,6 +142,7 @@ private class DetectModeMenuNativeView(
         MenuBarDropdownOptions.textDetectModes.forEach { mode ->
             addView(modeRow(mode))
         }
+        setSelectedMode(currentMode)
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
@@ -141,6 +155,7 @@ private class DetectModeMenuNativeView(
 
     private fun modeRow(mode: TextDetectMode): View {
         return LinearLayout(context).apply {
+            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, dp(44))
             orientation = HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             minimumHeight = dp(44)
@@ -166,10 +181,28 @@ private class DetectModeMenuNativeView(
                     includeFontPadding = false
                     gravity = Gravity.CENTER_VERTICAL
                 },
-                LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply {
+                LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f).apply {
                     marginStart = dp(12)
                 },
             )
+            addView(
+                TextView(context).apply {
+                    text = if (DetectModeMenuSelectionPolicy.isSelected(mode, selectedMode)) CHECK_MARK else ""
+                    setTextColor(accentColor())
+                    textSize = 18f
+                    includeFontPadding = false
+                    gravity = Gravity.CENTER
+                    selectionIndicators[mode] = this
+                },
+                LayoutParams(dp(24), LayoutParams.WRAP_CONTENT),
+            )
+        }
+    }
+
+    fun setSelectedMode(mode: TextDetectMode?) {
+        selectedMode = mode
+        selectionIndicators.forEach { (rowMode, indicator) ->
+            indicator.text = if (DetectModeMenuSelectionPolicy.isSelected(rowMode, mode)) CHECK_MARK else ""
         }
     }
 
@@ -186,7 +219,19 @@ private class DetectModeMenuNativeView(
         }
     }
 
+    private fun accentColor(): Int {
+        return if (isDarkMode()) {
+            Color.rgb(121, 196, 255)
+        } else {
+            Color.rgb(0, 107, 184)
+        }
+    }
+
     private fun dp(value: Int): Int = (value * context.resources.displayMetrics.density).roundToInt()
 
     private fun dpFloat(value: Float): Float = value * context.resources.displayMetrics.density
+
+    private companion object {
+        const val CHECK_MARK = "\u2713"
+    }
 }

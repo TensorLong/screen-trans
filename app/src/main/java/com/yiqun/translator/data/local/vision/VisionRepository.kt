@@ -5,6 +5,7 @@ import android.graphics.Rect
 import androidx.lifecycle.Lifecycle
 import com.yiqun.translator.data.local.vision.model.Char
 import com.yiqun.translator.extensions._cutDecimal
+import com.yiqun.translator.extensions._unionWith
 import com.yiqun.translator.extensions.isValid
 import com.yiqun.translator.data.remote.translation.Language
 import com.yiqun.translator.data.local.vision.model.Line
@@ -34,11 +35,17 @@ import kotlin.math.min
 import kotlin.properties.Delegates
 
 private const val TRACE_VISION_LOGS = false
+private const val SYMBOL_GAP_WORD_SPLIT_FONT_HEIGHT_RATIO = 6.0
 
 enum class AutoRecognitionPolicy {
     FULL,
     LATIN_FIRST,
 }
+
+private data class RecognizedSourceLineWords(
+    val words: List<Word>,
+    val boundingBox: Rect,
+)
 
 @Singleton
 class VisionRepository @Inject constructor() {
@@ -232,17 +239,17 @@ class VisionRepository @Inject constructor() {
         if (TRACE_VISION_LOGS) Timber.tag(TAG).i("#### textToParagraphs() ####  ${"\n" + text.text}")
         setReferenceConstantValue(false, sourceLanguageCode)
 
-        val elements: List<Text.Element> = convertTextLinesToTextElements(text.textBlocks.flatMap { textBlock -> textBlock.lines }, writingDirection)
+        val textLines = sortTextLines(text.textBlocks.flatMap { textBlock -> textBlock.lines }, writingDirection)
 
         if (TRACE_VISION_LOGS) {
-            elements.forEach {
+            textLines.flatMap { it.elements }.forEach {
                 Timber.tag(TAG).i("element : ${it.boundingBox} ${it.text} ${(it.boundingBox!!.width().toDouble() / it.boundingBox!!.height())._cutDecimal()}")
             }
         }
 
-        val words: List<Word> = convertTextElementsToWords(bitmap, elements, writingDirection, coordinateOffsetX, coordinateOffsetY)
+        val sourceLineWords = convertTextLinesToWords(bitmap, textLines, writingDirection, coordinateOffsetX, coordinateOffsetY)
 
-        val lines: List<Line> = groupWordsIntoLines(bitmap, words, writingDirection, coordinateOffsetX, coordinateOffsetY)
+        val lines: List<Line> = groupWordsIntoLines(bitmap, sourceLineWords, writingDirection, coordinateOffsetX, coordinateOffsetY)
 
         if (TRACE_VISION_LOGS) {
             lines.forEach { Timber.tag(TAG).i("groupWordsIntoLines result : ${it.boundingBox}, ${it.representation}, ${it.words}") }
@@ -345,9 +352,9 @@ class VisionRepository @Inject constructor() {
         /** ####################################### horizontalParagraphs ###################################### */
         setReferenceConstantValue(false, sourceLanguageCode)
         val horizontalWritingDirection = Language.writingDirection(sourceLanguageCode, false)
-        val elements: List<Text.Element> = convertTextLinesToTextElements(horizontalTextLines, horizontalWritingDirection)
-        val words: List<Word> = convertTextElementsToWords(bitmap, elements, horizontalWritingDirection, coordinateOffsetX, coordinateOffsetY)
-        val lines: List<Line> = groupWordsIntoLines(bitmap, words, horizontalWritingDirection, coordinateOffsetX, coordinateOffsetY)
+        val horizontalSortedTextLines = sortTextLines(horizontalTextLines, horizontalWritingDirection)
+        val sourceLineWords = convertTextLinesToWords(bitmap, horizontalSortedTextLines, horizontalWritingDirection, coordinateOffsetX, coordinateOffsetY)
+        val lines: List<Line> = groupWordsIntoLines(bitmap, sourceLineWords, horizontalWritingDirection, coordinateOffsetX, coordinateOffsetY)
         var horizontalParagraphs: List<Paragraph> = groupLinesIntoParagraphs(lines, horizontalWritingDirection)
         horizontalParagraphs = horizontalParagraphs.flatMap { paragraph ->
             val splitParagraphs = detectAndSplitParagraphs(paragraph, horizontalWritingDirection)
@@ -377,7 +384,7 @@ class VisionRepository @Inject constructor() {
 
     /**
      */
-    private fun convertTextLinesToTextElements(textLines: List<Text.Line>, writingDirection: WritingDirection): List<Text.Element> {
+    private fun sortTextLines(textLines: List<Text.Line>, writingDirection: WritingDirection): List<Text.Line> {
         return when (writingDirection) {
             WritingDirection.LTR -> {
                 textLines
@@ -388,7 +395,6 @@ class VisionRepository @Inject constructor() {
                             if (topComparison != 0) topComparison else line1.boundingBox!!.left.compareTo(line2.boundingBox!!.left)
                         }
                     )
-                    .flatMap { line -> line.elements }
             }
 
             WritingDirection.RTL -> {
@@ -400,7 +406,6 @@ class VisionRepository @Inject constructor() {
                             if (topComparison != 0) topComparison else line2.boundingBox!!.right.compareTo(line1.boundingBox!!.right)
                         }
                     )
-                    .flatMap { line -> line.elements }
             }
 
             WritingDirection.TTB_LTR -> {
@@ -413,7 +418,6 @@ class VisionRepository @Inject constructor() {
                             if (leftComparison != 0) leftComparison else line1.boundingBox!!.top.compareTo(line2.boundingBox!!.top)
                         }
                     )
-                    .flatMap { line -> line.elements }
             }
 
             WritingDirection.TTB_RTL -> {
@@ -426,152 +430,325 @@ class VisionRepository @Inject constructor() {
                             if (rightComparison != 0) rightComparison else line1.boundingBox!!.top.compareTo(line2.boundingBox!!.top)
                         }
                     )
-                    .flatMap { line -> line.elements }
             }
         }
     }
 
     /**
      */
-    private fun convertTextElementsToWords(
+    private fun convertTextLinesToWords(
         bitmap: Bitmap,
-        elements: List<Text.Element>,
+        textLines: List<Text.Line>,
         writingDirection: WritingDirection,
         coordinateOffsetX: Int,
         coordinateOffsetY: Int,
-    ): List<Word> {
-        val words = mutableListOf<Word>()
+    ): List<RecognizedSourceLineWords> {
+        val sourceLineWords = ArrayList<RecognizedSourceLineWords>(textLines.size)
         val bitmapWidth = bitmap.width
         val bitmapHeight = bitmap.height
+        val wordComparator = VisionSingleLineText.getComparator(writingDirection)
 
-        for (element in elements) {
-            element.boundingBox?.let { boundingBox ->
-                val left = if (boundingBox.left < 0) 0 else boundingBox.left
-                val top = if (boundingBox.top < 0) 0 else boundingBox.top
-                val right = if (boundingBox.right > bitmapWidth) bitmapWidth else boundingBox.right
-                val bottom = if (boundingBox.bottom > bitmapHeight) bitmapHeight else boundingBox.bottom
+        for (textLine in textLines) {
+            val textLineBoundingBox = textLine.boundingBox ?: continue
+            val words = ArrayList<Word>(textLine.elements.size)
+            for (element in textLine.elements) {
+                element.boundingBox?.let { boundingBox ->
+                    val left = if (boundingBox.left < 0) 0 else boundingBox.left
+                    val top = if (boundingBox.top < 0) 0 else boundingBox.top
+                    val right = if (boundingBox.right > bitmapWidth) bitmapWidth else boundingBox.right
+                    val bottom = if (boundingBox.bottom > bitmapHeight) bitmapHeight else boundingBox.bottom
 
-                val correctedBoundingBox = VisionCoordinateMapper.toScreenRect(
-                    rectOf(left, top, right, bottom),
-                    coordinateOffsetX,
-                    coordinateOffsetY,
-                )
+                    val correctedBoundingBox = VisionCoordinateMapper.toScreenRect(
+                        rectOf(left, top, right, bottom),
+                        coordinateOffsetX,
+                        coordinateOffsetY,
+                    )
 
-                if (correctedBoundingBox.width() > 0 && correctedBoundingBox.height() > 0) {
-                    val chars = element.symbols
-                        .filter { it.boundingBox.isValid() }
-                        .map {
-                            Char(
-                                VisionCoordinateMapper.toScreenRect(it.boundingBox!!, coordinateOffsetX, coordinateOffsetY),
-                                it.text,
-                                writingDirection
+                    if (correctedBoundingBox.width() > 0 && correctedBoundingBox.height() > 0) {
+                        val chars = element.symbols
+                            .filter { it.boundingBox.isValid() }
+                            .map {
+                                Char(
+                                    VisionCoordinateMapper.toScreenRect(it.boundingBox!!, coordinateOffsetX, coordinateOffsetY),
+                                    it.text,
+                                    writingDirection
+                                )
+                            }
+
+                        if (chars.isNotEmpty()) {
+                            words.addAll(
+                                splitElementIntoWords(
+                                    elementBoundingBox = correctedBoundingBox,
+                                    elementText = element.text,
+                                    chars = chars,
+                                    writingDirection = writingDirection,
+                                )
                             )
                         }
-
-                    if (chars.isNotEmpty()) {
-                        words.add(Word(correctedBoundingBox, element.text, writingDirection, chars))
                     }
                 }
             }
+            if (words.isNotEmpty()) {
+                if (words.size > 1) {
+                    words.sortWith(wordComparator)
+                }
+                sourceLineWords.add(
+                    RecognizedSourceLineWords(
+                        words = words,
+                        boundingBox = VisionCoordinateMapper.toScreenRect(
+                            textLineBoundingBox,
+                            coordinateOffsetX,
+                            coordinateOffsetY,
+                        ),
+                    )
+                )
+            }
         }
-        return words
+        return sourceLineWords
+    }
+
+    private fun splitElementIntoWords(
+        elementBoundingBox: Rect,
+        elementText: String,
+        chars: List<Char>,
+        writingDirection: WritingDirection,
+    ): List<Word> {
+        if (chars.size <= 1) {
+            return listOf(Word(elementBoundingBox, elementText, writingDirection, chars))
+        }
+
+        val sortedChars = chars.sortedWith(VisionSingleLineText.getComparator(writingDirection))
+        val groups = mutableListOf<MutableList<Char>>()
+        var currentGroup = mutableListOf<Char>()
+
+        sortedChars.forEach { char ->
+            val previous = currentGroup.lastOrNull()
+            if (previous != null && shouldSplitSymbolGap(previous, char)) {
+                groups.add(currentGroup)
+                currentGroup = mutableListOf()
+            }
+            currentGroup.add(char)
+        }
+        if (currentGroup.isNotEmpty()) {
+            groups.add(currentGroup)
+        }
+
+        if (groups.size == 1) {
+            return listOf(Word(elementBoundingBox, elementText, writingDirection, chars))
+        }
+
+        return groups.map { group ->
+            Word(
+                boundingBox = group.map { it.boundingBox }.reduce { acc, rect -> acc._unionWith(rect) },
+                representation = group.joinToString(separator = "") { it.representation },
+                writingDirection = writingDirection,
+                chars = group,
+            )
+        }
+    }
+
+    private fun shouldSplitSymbolGap(previous: Char, next: Char): Boolean {
+        val averageFontHeight = previous.getAverageFontHeight(next)
+        if (averageFontHeight <= 0.0) return false
+        val gapRatio = next.getWriteDirectionDistance(previous).toDouble() / averageFontHeight
+        return gapRatio >= SYMBOL_GAP_WORD_SPLIT_FONT_HEIGHT_RATIO
     }
 
     /**
      */
     private fun groupWordsIntoLines(
         bitmap: Bitmap,
-        words: List<Word>,
+        sourceLineWords: List<RecognizedSourceLineWords>,
         writingDirection: WritingDirection,
         coordinateOffsetX: Int,
         coordinateOffsetY: Int,
     ): List<Line> {
         val lines = mutableListOf<Line>()
 
-        words
-            .sortedWith(VisionSingleLineText.getComparator(writingDirection))
-            .forEach { word ->
-                var addedToLine = false
+        sourceLineWords.forEach { recognizedSourceLine ->
+            val splitSourceLine = lines.firstOrNull {
+                it.acceptsSplitSourceLineFragment(recognizedSourceLine.boundingBox, writingDirection)
+            }
+            var sourceLine: Line? = splitSourceLine
 
-                for (line in lines) {
-                    val closestWord = line.words.minByOrNull { it.getWriteDirectionDistance(word) }!!
-
-                    val averageFontHeight: Double = word.getAverageFontHeight(closestWord)
-
-                    val axisDistance = word.getAxisDistance(closestWord)
-
-                    if (axisDistance > averageFontHeight) break
-
-                    val writeDirectionDistance: Double = word.getWriteDirectionDistance(closestWord).toDouble()
-
-                    val writeDirectionDistanceFontHeightRatio: Double = writeDirectionDistance / averageFontHeight
-
-                    // [condition 0]
-                    if (writeDirectionDistanceFontHeightRatio <= WORD_WRITE_DIRECTION_DISTANCE_FONT_HEIGHT_RATIO_LIMIT) { // 0.63
-                        val axisSimilarityRatio = word.getAxisSimilarityRatio(closestWord)
-
-                        val fontHeightSimilarityRatio = word.getFontHeightSimilarityRatio(closestWord)
-
-                        val axisFontHeightSimilarityRatio = axisSimilarityRatio * fontHeightSimilarityRatio
-
-                        // [condition 0-0]
-                        if (axisFontHeightSimilarityRatio >= WORD_AXIS_FONT_HEIGHT_SIMILARITY_MINIMUM_RATIO) { // 0.85
-                            if (TRACE_VISION_LOGS) {
-                                Timber.tag(TAG).d(
-                                    "groupWordsIntoLines add 0-0 : "
-                                            + "${writeDirectionDistance._cutDecimal()}, "
-                                            + "${averageFontHeight._cutDecimal()}, "
-                                            + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
-                                            + "${axisSimilarityRatio._cutDecimal()}, "
-                                            + "${fontHeightSimilarityRatio._cutDecimal()}, "
-                                            + "${axisFontHeightSimilarityRatio._cutDecimal()}, "
-                                            + "${line.representation}(${line.boundingBox}) + ${word.representation}(${word.boundingBox})"
-                                )
-                            }
+            recognizedSourceLine.words
+                .forEach { word ->
+                    sourceLine?.let { line ->
+                        if (line === splitSourceLine || line.acceptsRecognizedLineWord(word)) {
                             line.addWord(word)
-                            addedToLine = true
-                            break
+                            return@forEach
                         }
-                        // [condition 0-1]
+                    }
+
+                    var addedToLine = false
+
+                    for (line in lines) {
+                        val closestWord = line.words.minByOrNull { it.getWriteDirectionDistance(word) }!!
+
+                        val averageFontHeight: Double = word.getAverageFontHeight(closestWord)
+
+                        val axisDistance = word.getAxisDistance(closestWord)
+
+                        if (axisDistance > averageFontHeight) break
+
+                        val writeDirectionDistance: Double = word.getWriteDirectionDistance(closestWord).toDouble()
+
+                        val writeDirectionDistanceFontHeightRatio: Double = writeDirectionDistance / averageFontHeight
+
+                        // [condition 0]
+                        if (writeDirectionDistanceFontHeightRatio <= WORD_WRITE_DIRECTION_DISTANCE_FONT_HEIGHT_RATIO_LIMIT) { // 0.63
+                            val axisSimilarityRatio = word.getAxisSimilarityRatio(closestWord)
+
+                            val fontHeightSimilarityRatio = word.getFontHeightSimilarityRatio(closestWord)
+
+                            val axisFontHeightSimilarityRatio = axisSimilarityRatio * fontHeightSimilarityRatio
+
+                            // [condition 0-0]
+                            if (axisFontHeightSimilarityRatio >= WORD_AXIS_FONT_HEIGHT_SIMILARITY_MINIMUM_RATIO) { // 0.85
+                                if (TRACE_VISION_LOGS) {
+                                    Timber.tag(TAG).d(
+                                        "groupWordsIntoLines add 0-0 : "
+                                                + "${writeDirectionDistance._cutDecimal()}, "
+                                                + "${averageFontHeight._cutDecimal()}, "
+                                                + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
+                                                + "${axisSimilarityRatio._cutDecimal()}, "
+                                                + "${fontHeightSimilarityRatio._cutDecimal()}, "
+                                                + "${axisFontHeightSimilarityRatio._cutDecimal()}, "
+                                                + "${line.representation}(${line.boundingBox}) + ${word.representation}(${word.boundingBox})"
+                                    )
+                                }
+                                line.addWord(word)
+                                if (sourceLine == null) {
+                                    sourceLine = line
+                                }
+                                addedToLine = true
+                                break
+                            }
+                            // [condition 0-1]
+                            else {
+                                if (TRACE_VISION_LOGS) {
+                                    Timber.tag(TAG).v(
+                                        "groupWordsIntoLines drop 0-1 : "
+                                                + "${writeDirectionDistance._cutDecimal()}, "
+                                                + "${averageFontHeight._cutDecimal()}, "
+                                                + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
+                                                + "${axisSimilarityRatio._cutDecimal()}, "
+                                                + "${fontHeightSimilarityRatio._cutDecimal()}, "
+                                                + "${axisFontHeightSimilarityRatio._cutDecimal()}, "
+                                                + "${line.representation}(${line.boundingBox}) + ${word.representation}(${word.boundingBox})"
+                                    )
+                                }
+                            }
+                        }
+                        // [condition 1]
                         else {
                             if (TRACE_VISION_LOGS) {
                                 Timber.tag(TAG).v(
-                                    "groupWordsIntoLines drop 0-1 : "
+                                    "groupWordsIntoLines drop 1 : "
                                             + "${writeDirectionDistance._cutDecimal()}, "
                                             + "${averageFontHeight._cutDecimal()}, "
                                             + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
-                                            + "${axisSimilarityRatio._cutDecimal()}, "
-                                            + "${fontHeightSimilarityRatio._cutDecimal()}, "
-                                            + "${axisFontHeightSimilarityRatio._cutDecimal()}, "
                                             + "${line.representation}(${line.boundingBox}) + ${word.representation}(${word.boundingBox})"
                                 )
                             }
                         }
                     }
-                    // [condition 1]
-                    else {
-                        if (TRACE_VISION_LOGS) {
-                            Timber.tag(TAG).v(
-                                "groupWordsIntoLines drop 1 : "
-                                        + "${writeDirectionDistance._cutDecimal()}, "
-                                        + "${averageFontHeight._cutDecimal()}, "
-                                        + "${writeDirectionDistanceFontHeightRatio._cutDecimal()}, "
-                                        + "${line.representation}(${line.boundingBox}) + ${word.representation}(${word.boundingBox})"
-                            )
+
+                    if (!addedToLine) {
+                        val splitLine = lines.firstOrNull { it.acceptsSplitSourceLineFragment(word) }
+                        if (splitLine != null) {
+                            splitLine.addWord(word)
+                            sourceLine = splitLine
+                        } else {
+                            val newLine = Line(mutableListOf(word), writingDirection)
+                            lines.add(0, newLine)
+                            if (sourceLine == null) {
+                                sourceLine = newLine
+                            }
                         }
                     }
                 }
-
-                if (!addedToLine) {
-                    lines.add(0, Line(mutableListOf(word), writingDirection))
-                }
-            }
+        }
 
         lines.forEach {
             it.setFontAndBackgroundColors(bitmap, coordinateOffsetX, coordinateOffsetY)
         }
 
         return lines
+    }
+
+    private fun Line.acceptsRecognizedLineWord(word: Word): Boolean {
+        val closestWord = words.minByOrNull { it.getWriteDirectionDistance(word) } ?: return false
+        return RecognizedLineWordAffinityPolicy.accepts(
+            axisSimilarityRatio = word.getAxisSimilarityRatio(closestWord),
+            fontHeightSimilarityRatio = word.getFontHeightSimilarityRatio(closestWord),
+        )
+    }
+
+    private fun Line.acceptsSplitSourceLineFragment(word: Word): Boolean {
+        val closestWord = words.minByOrNull { it.getWriteDirectionDistance(word) } ?: return false
+        val averageFontHeight = word.getAverageFontHeight(closestWord)
+        if (averageFontHeight <= 0.0) return false
+        val writeDirectionDistanceFontHeightRatio = word.getWriteDirectionDistance(closestWord).toDouble() / averageFontHeight
+        return RecognizedLineWordAffinityPolicy.acceptsSplitSourceLineFragment(
+            axisSimilarityRatio = word.getAxisSimilarityRatio(closestWord),
+            fontHeightSimilarityRatio = word.getFontHeightSimilarityRatio(closestWord),
+            writeDirectionDistanceFontHeightRatio = writeDirectionDistanceFontHeightRatio,
+        )
+    }
+
+    private fun Line.acceptsSplitSourceLineFragment(
+        sourceLineBoundingBox: Rect,
+        writingDirection: WritingDirection,
+    ): Boolean {
+        val sourceFontHeight = sourceLineBoundingBox.fontHeightFor(writingDirection)
+        val averageFontHeight = (fontHeight + sourceFontHeight) / 2.0
+        if (averageFontHeight <= 0.0) return false
+        val axisDistance = boundingBox.axisDistance(sourceLineBoundingBox, writingDirection)
+        val axisSimilarityRatio = averageFontHeight / (averageFontHeight + axisDistance)
+        val fontHeightSimilarityRatio = sourceFontHeight.divideByLarger(fontHeight)
+        val writeDirectionDistanceFontHeightRatio =
+            boundingBox.writeDirectionDistance(sourceLineBoundingBox, writingDirection).toDouble() / averageFontHeight
+        return RecognizedLineWordAffinityPolicy.acceptsSplitSourceLineFragment(
+            axisSimilarityRatio = axisSimilarityRatio,
+            fontHeightSimilarityRatio = fontHeightSimilarityRatio,
+            writeDirectionDistanceFontHeightRatio = writeDirectionDistanceFontHeightRatio,
+        )
+    }
+
+    private fun Rect.fontHeightFor(writingDirection: WritingDirection): Double {
+        return when (writingDirection) {
+            WritingDirection.LTR, WritingDirection.RTL -> height().toDouble()
+            WritingDirection.TTB_LTR, WritingDirection.TTB_RTL -> width().toDouble()
+        }
+    }
+
+    private fun Rect.axisDistance(other: Rect, writingDirection: WritingDirection): Int {
+        return when (writingDirection) {
+            WritingDirection.LTR, WritingDirection.RTL -> abs(centerY() - other.centerY())
+            WritingDirection.TTB_LTR, WritingDirection.TTB_RTL -> abs(centerX() - other.centerX())
+        }
+    }
+
+    private fun Rect.writeDirectionDistance(other: Rect, writingDirection: WritingDirection): Int {
+        return when (writingDirection) {
+            WritingDirection.LTR, WritingDirection.RTL -> when {
+                other.left > right -> other.left - right
+                left > other.right -> left - other.right
+                else -> 0
+            }
+
+            WritingDirection.TTB_LTR, WritingDirection.TTB_RTL -> when {
+                other.top > bottom -> other.top - bottom
+                top > other.bottom -> top - other.bottom
+                else -> 0
+            }
+        }
+    }
+
+    private fun Double.divideByLarger(other: Double): Double {
+        val larger = maxOf(this, other)
+        return if (larger == 0.0) 0.0 else minOf(this, other) / larger
     }
 
     /**
@@ -613,11 +790,25 @@ class VisionRepository @Inject constructor() {
 
                     val lineSpacing = closestLine.getLineReturnDirectionDistance(line)
 
-                    if (lineSpacing > closestLine.fontHeight * 1.6) continue
-
                     val averageFontHeight: Double = line.getAverageFontHeight(closestLine)
 
                     val fontHeightSimilarityRatio = line.getFontHeightSimilarityRatio(closestLine)
+
+                    if (
+                        acceptsWrappedSentenceContinuation(
+                            previousLine = closestLine,
+                            nextLine = line,
+                            averageFontHeight = averageFontHeight,
+                            fontHeightSimilarityRatio = fontHeightSimilarityRatio,
+                        )
+                    ) {
+                        paragraph.addLine(line)
+                        assignedLines.add(line)
+                        addedToParagraph = true
+                        break
+                    }
+
+                    if (lineSpacing > closestLine.fontHeight * 1.6) continue
 
                     if (fontHeightSimilarityRatio >= LINE_FONT_HEIGHT_SIMILARITY_MINIMUM_RATIO) {
                         if (isWriteDirectionOverlaps) {
@@ -786,6 +977,32 @@ class VisionRepository @Inject constructor() {
             }
 
         return paragraphs
+    }
+
+    private fun acceptsWrappedSentenceContinuation(
+        previousLine: Line,
+        nextLine: Line,
+        averageFontHeight: Double,
+        fontHeightSimilarityRatio: Double,
+    ): Boolean {
+        if (averageFontHeight <= 0.0) return false
+        if (fontHeightSimilarityRatio < LINE_FONT_HEIGHT_SIMILARITY_MINIMUM_RATIO) return false
+        if (previousLine.endsWithSentenceTerminal()) return false
+        val lineReturnDistance = previousLine.getLineReturnDirectionDistance(nextLine)
+        if (lineReturnDistance > averageFontHeight * 2.4) return false
+        val startPositionDistance = abs(previousLine.startPosition - nextLine.startPosition)
+        return startPositionDistance <= averageFontHeight * 2.5
+    }
+
+    private fun Line.endsWithSentenceTerminal(): Boolean {
+        val terminals = setOf('.', '?', '!', '。', '።', '।', '།', '؟', ';')
+        val text = representation.trim()
+        if (text.isEmpty()) return false
+        return if (writingDirection == WritingDirection.RTL) {
+            text.first() in terminals
+        } else {
+            text.last() in terminals
+        }
     }
 
     /**

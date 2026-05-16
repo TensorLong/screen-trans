@@ -150,31 +150,35 @@ class MenuBarView private constructor() : OverlayView() {
             ) {
 
                 view?.let {
-                    val menuVisible = when {
-                        settingsActivityLiveState -> settingsHomeMenuVisible
-                        else -> MenuBarVisibilityPolicy.visibleOutsideSettings()
-                    }
-
-                    Timber.tag(TAG).d(
-                        "captureStatus $captureStatus " +
-                                "\ntargetHandle ${!pointerInteractionActive} " +
-                                "\nmenuVisible $menuVisible " +
-                                "\ntextDetectMode $textDetectMode "
-                    )
-
-                    if (menuVisible) {
-                        if (it.visibility != View.VISIBLE) {
-                            it.visibility = View.VISIBLE
-                            it.alpha = 0f
-                            it.animate()
-                                .alpha(1f)
-                                .setStartDelay(200)
-                                .setDuration(150)
-                                .start()
-                        }
+                    if (!MenuBarAttachmentPolicy.shouldAttach(settingsActivityLiveState, settingsSurface)) {
+                        this@MenuBarView.clear()
                     } else {
-                        if (it.visibility == View.VISIBLE) {
-                            it.visibility = View.GONE
+                        val menuVisible = when {
+                            settingsActivityLiveState -> settingsHomeMenuVisible
+                            else -> MenuBarVisibilityPolicy.visibleOutsideSettings()
+                        }
+
+                        Timber.tag(TAG).d(
+                            "captureStatus $captureStatus " +
+                                    "\ntargetHandle ${!pointerInteractionActive} " +
+                                    "\nmenuVisible $menuVisible " +
+                                    "\ntextDetectMode $textDetectMode "
+                        )
+
+                        if (menuVisible) {
+                            if (it.visibility != View.VISIBLE) {
+                                it.visibility = View.VISIBLE
+                                it.alpha = 0f
+                                it.animate()
+                                    .alpha(1f)
+                                    .setStartDelay(200)
+                                    .setDuration(150)
+                                    .start()
+                            }
+                        } else {
+                            if (it.visibility == View.VISIBLE) {
+                                it.visibility = View.GONE
+                            }
                         }
                     }
                 }
@@ -997,8 +1001,6 @@ fun TranslationKitIconButton(
         }
     }
 }
-
-
 
 
 

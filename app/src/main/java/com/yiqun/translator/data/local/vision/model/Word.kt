@@ -11,7 +11,7 @@ data class Word(
     override val representation: String,
     override val writingDirection: WritingDirection,
     val chars: List<Char>,
-    private val presetFontHeight: Double? = null
+    private val presetFontHeight: Double? = null,
 ) : VisionSingleLineText {
     override val fontHeight: Double
         get() = presetFontHeight ?: super.fontHeight
