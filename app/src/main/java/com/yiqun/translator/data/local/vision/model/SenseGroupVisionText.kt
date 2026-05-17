@@ -26,6 +26,7 @@ data class SenseGroupVisionText(
     val senseGroup: SenseGroup,
     override val boundingBox: Rect,
     val highlightBoxes: List<Rect>,
+    val pointedWordBox: Rect?,
     override val writingDirection: WritingDirection,
     override val fontHeight: Double,
 ) : VisionText {
@@ -58,6 +59,7 @@ data class SenseGroupVisionText(
                 senseGroup = senseGroup,
                 boundingBox = boundingBox,
                 highlightBoxes = safeBoxes,
+                pointedWordBox = fallbackBox,
                 writingDirection = parentSentence.writingDirection,
                 fontHeight = parentSentence.fontHeight,
             )

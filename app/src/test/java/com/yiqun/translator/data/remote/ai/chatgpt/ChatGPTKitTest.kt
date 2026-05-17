@@ -104,4 +104,22 @@ class ChatGPTKitTest {
         assertEquals(secondTheOffset, range?.first)
         assertEquals(secondTheOffset + "the".length, range?.last)
     }
+
+    @Test
+    fun parseSenseGroupResponseReadsSourceAndTargetChunks() {
+        val sentence = "They will make careful choices."
+        val offset = sentence.indexOf("make")
+
+        val group = ChatGPTKit.parseSenseGroupResponse(
+            raw = """{"source_chunk":"will make careful choices","target_chunk":"将做出谨慎选择"}""",
+            sentence = sentence,
+            word = "make",
+            pointedTokenOffset = offset,
+        )
+
+        assertEquals("will make careful choices", group?.text)
+        assertEquals("将做出谨慎选择", group?.translation)
+        assertEquals(sentence.indexOf("will"), group?.charRange?.first)
+        assertEquals(sentence.indexOf("choices") + "choices".length, group?.charRange?.last)
+    }
 }

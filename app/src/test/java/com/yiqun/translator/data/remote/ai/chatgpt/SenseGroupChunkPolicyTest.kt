@@ -18,6 +18,14 @@ class SenseGroupChunkPolicyTest {
     }
 
     @Test
+    fun systemPromptUsesSourceAndTargetChunkContract() {
+        assertEquals(
+            "Return JSON only. First translate the whole sentence naturally into the target language using context. Then choose the smallest target-language sense group for the pointed word. If a target verb needs its object or complement to express the event, include it; avoid bare verbs. Also return the exact aligned source words. Never choose the whole sentence unless unavoidable. Format: {\"source_chunk\":\"...\",\"target_chunk\":\"...\"}",
+            SenseGroupChunkPolicy.SYSTEM_PROMPT,
+        )
+    }
+
+    @Test
     fun refineChunkShrinksWholeSentenceVerbAnswer() {
         val sentence = "The committee made a careful decision after reviewing the evidence."
         val offset = sentence.indexOf("made")
@@ -60,6 +68,21 @@ class SenseGroupChunkPolicyTest {
         )
 
         assertEquals("reviewing the evidence", chunk)
+    }
+
+    @Test
+    fun refineChunkKeepsTightAdjectiveNounPhrase() {
+        val sentence = "They will make careful choice."
+        val offset = sentence.indexOf("careful")
+
+        val chunk = SenseGroupChunkPolicy.refineChunk(
+            sentence = sentence,
+            modelChunk = "careful choice",
+            word = "careful",
+            pointedTokenOffset = offset,
+        )
+
+        assertEquals("careful choice", chunk)
     }
 
     @Test

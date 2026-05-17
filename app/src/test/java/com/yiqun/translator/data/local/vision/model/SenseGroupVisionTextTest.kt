@@ -49,6 +49,42 @@ class SenseGroupVisionTextTest {
         assertRect(Rect(0, 0, 55, 30), visionText.boundingBox)
     }
 
+    @Test
+    fun fromTreatsSameChunkAtDifferentPointedWordsAsDistinctSelections() {
+        val will = word("will", Rect(20, 0, 50, 10))
+        val make = word("make", Rect(55, 0, 90, 10))
+        val sentence = Sentence(
+            lines = mutableListOf(
+                Line(
+                    mutableListOf(
+                        word("They", Rect(0, 0, 15, 10)),
+                        will,
+                        make,
+                        word("careful", Rect(95, 0, 140, 10)),
+                        word("choices", Rect(145, 0, 190, 10)),
+                    ),
+                    WritingDirection.LTR,
+                ),
+            ),
+            writingDirection = WritingDirection.LTR,
+            fontHeight = 10.0,
+        )
+        val chunkStart = sentence.representation.indexOf("will")
+        val chunkEnd = chunkStart + "will make careful choices".length
+        val group = SenseGroup(
+            text = "will make careful choices",
+            translation = "将做出谨慎选择",
+            charRange = chunkStart..chunkEnd,
+        )
+
+        val willSelection = SenseGroupVisionText.from(sentence, group, will.boundingBox)
+        val makeSelection = SenseGroupVisionText.from(sentence, group, make.boundingBox)
+
+        assertEquals(willSelection.representation, makeSelection.representation)
+        assertRect(Rect(20, 0, 50, 10), willSelection.pointedWordBox!!)
+        assertRect(Rect(55, 0, 90, 10), makeSelection.pointedWordBox!!)
+    }
+
     private fun word(text: String, rect: Rect): Word {
         return Word(
             boundingBox = rect,

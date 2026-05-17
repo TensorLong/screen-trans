@@ -2,9 +2,7 @@ package com.yiqun.translator.data.remote.ai.chatgpt
 
 object SenseGroupChunkPolicy {
     const val SYSTEM_PROMPT =
-        "Return JSON only. Choose the smallest contiguous sense group containing the pointed word. " +
-                "Copy it exactly from the sentence. For verbs, include only auxiliaries, particles, and required object/complement; exclude subject, time/place extras, and independent clauses. " +
-                "If the word alone is meaningful, return that word. Never return a whole sentence unless every word is necessary. Format: {\"chunk\":\"...\"}"
+        "Return JSON only. First translate the whole sentence naturally into the target language using context. Then choose the smallest target-language sense group for the pointed word. If a target verb needs its object or complement to express the event, include it; avoid bare verbs. Also return the exact aligned source words. Never choose the whole sentence unless unavoidable. Format: {\"source_chunk\":\"...\",\"target_chunk\":\"...\"}"
 
     private val clauseBoundaries = setOf(
         "and", "but", "or", "because", "although", "though", "while", "when", "where", "which",
@@ -47,6 +45,11 @@ object SenseGroupChunkPolicy {
 
     private val nounLeftBoundaries = leftVerbHelpers + commonVerbs + clauseBoundaries + setOf(
         "in", "on", "at", "by", "with", "from", "for", "over", "under", "into", "onto", "through"
+    )
+
+    private val nounRightBoundaries = leftVerbHelpers + commonVerbs + clauseBoundaries + setOf(
+        "in", "on", "at", "by", "with", "from", "for", "over", "under", "into", "onto", "through",
+        "of", "as", "than"
     )
 
     fun refineChunk(
@@ -174,7 +177,16 @@ object SenseGroupChunkPolicy {
             startIndex--
             consumedLeft++
         }
-        return tokens[startIndex].first to tokens[pointedIndex].second
+
+        var endIndex = pointedIndex
+        var consumedRight = 0
+        while (endIndex + 1 < tokens.size && consumedRight < 3) {
+            val next = tokenText(sentence, tokens[endIndex + 1]).lowercase()
+            if (next in nounRightBoundaries) break
+            endIndex++
+            consumedRight++
+        }
+        return tokens[startIndex].first to tokens[endIndex].second
     }
 
     private fun isLikelyVerb(token: String): Boolean {

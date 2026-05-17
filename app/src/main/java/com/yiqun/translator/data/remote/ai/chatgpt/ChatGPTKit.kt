@@ -4,10 +4,11 @@ import android.content.Context
 import com.yiqun.translator.data.local.secure.ApiKeyInfo
 import com.yiqun.translator.di.ChatGPTRetrofit
 import com.google.gson.Gson
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
 import retrofit2.HttpException
 import timber.log.Timber
 import javax.inject.Inject
@@ -108,100 +109,84 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
             return cached
         }
 
-        val systemMessage = mapOf(
-            "role" to "system",
-            "content" to SenseGroupChunkPolicy.SYSTEM_PROMPT
-        )
-
-        val userPayload = JSONObject().apply {
-            put("word", word)
-            put("sentence", sentence)
-            if (pointedTokenOffset != null) {
-                put("pointed_word_start", pointedTokenOffset)
-                put("pointed_word_end", pointedTokenOffset + word.length)
-            }
-            put("source_language", sourceLanguageCode)
-        }.toString()
-
-        val userMessage = mapOf(
-            "role" to "user",
-            "content" to userPayload
-        )
-
-        val requestBody = mapOf(
-            "model" to model,
-            "messages" to listOf(systemMessage, userMessage),
-            "max_tokens" to 80,
-            "response_format" to mapOf("type" to "json_object"),
-            "temperature" to 0.0,
-        )
-        Timber.tag(TAG).d("senseGroupAt() word=[$word] sentence=[$sentence]")
-
-        val jsonRequestBody = Gson().toJson(requestBody)
-            .toRequestBody("application/json".toMediaType())
-
-        val response: ChatGPTResponse = try {
-            chatGPTService.send(
-                url = endpointUrl,
-                apiKey = authorizationHeader(),
-                body = jsonRequestBody
+        return SenseGroupRequestCache.getOrLoad(
+            model = model,
+            endpointUrl = endpointUrl,
+            word = word,
+            sentence = sentence,
+            pointedTokenOffset = pointedTokenOffset,
+            sourceLanguageCode = sourceLanguageCode,
+            targetLanguageCode = targetLanguageCode,
+        ) {
+            val systemMessage = mapOf(
+                "role" to "system",
+                "content" to SenseGroupChunkPolicy.SYSTEM_PROMPT
             )
-        } catch (e: Exception) {
-            logApiFailure("senseGroupAt()", e)
-            return null
-        }
 
-        val raw = response.choices.firstOrNull()?.message?.content
-        if (raw.isNullOrBlank()) {
-            Timber.tag(TAG).w("senseGroupAt() empty response")
-            return null
-        }
+            val userPayload = buildMap<String, Any> {
+                put("word", word)
+                put("sentence", sentence)
+                if (pointedTokenOffset != null) {
+                    put("pointed_word_start", pointedTokenOffset)
+                    put("pointed_word_end", pointedTokenOffset + word.length)
+                }
+                put("source_language", sourceLanguageCode)
+                put("target_language", targetLanguageCode)
+            }.let { Gson().toJson(it) }
 
-        return try {
-            val json = JSONObject(raw)
-            val rawChunkText = json.optString("chunk", "").trim()
-            val chunkText = SenseGroupChunkPolicy.refineChunk(
-                sentence = sentence,
-                modelChunk = rawChunkText,
-                word = word,
-                pointedTokenOffset = pointedTokenOffset,
-            ).orEmpty()
-            val translation = json.optString("translation", "").trim()
-                .takeIf { rawChunkText == chunkText }
-                .orEmpty()
-            if (chunkText.isEmpty()) {
-                Timber.tag(TAG).w("senseGroupAt() empty chunk in response: $raw")
-                return null
-            }
-            val range = chunkCharRange(sentence, chunkText, pointedTokenOffset)
-            if (range == null) {
-                Timber.tag(TAG).w("senseGroupAt() chunk [$chunkText] not found in sentence [$sentence]")
-                return null
-            }
-            if (pointedTokenOffset != null && !range.containsExclusive(pointedTokenOffset)) {
-                Timber.tag(TAG).w("senseGroupAt() chunk [$chunkText] does not contain pointed offset [$pointedTokenOffset]")
-                return null
-            }
-            if (!chunkText.contains(word)) {
-                Timber.tag(TAG).w("senseGroupAt() chunk [$chunkText] does not contain word [$word]")
-                return null
-            }
-            Timber.tag(TAG).d("senseGroupAt() OK word=[$word] chunk=[$chunkText] tr=[$translation] range=${range.first}..${range.last}")
-            SenseGroup(chunkText, translation, range).also { senseGroup ->
-                SenseGroupRequestCache.put(
-                    model = model,
-                    endpointUrl = endpointUrl,
-                    word = word,
-                    sentence = sentence,
-                    pointedTokenOffset = pointedTokenOffset,
-                    sourceLanguageCode = sourceLanguageCode,
-                    targetLanguageCode = targetLanguageCode,
-                    senseGroup = senseGroup,
+            val userMessage = mapOf(
+                "role" to "user",
+                "content" to userPayload
+            )
+
+            val requestBody = mapOf(
+                "model" to model,
+                "messages" to listOf(systemMessage, userMessage),
+                "max_tokens" to 80,
+                "response_format" to mapOf("type" to "json_object"),
+                "temperature" to 0.0,
+            )
+            Timber.tag(TAG).d("senseGroupAt() word=[$word] sentence=[$sentence]")
+
+            val jsonRequestBody = Gson().toJson(requestBody)
+                .toRequestBody("application/json".toMediaType())
+
+            val response: ChatGPTResponse = try {
+                chatGPTService.send(
+                    url = endpointUrl,
+                    apiKey = authorizationHeader(),
+                    body = jsonRequestBody
                 )
+            } catch (e: Exception) {
+                logApiFailure("senseGroupAt()", e)
+                return@getOrLoad null
             }
-        } catch (e: Exception) {
-            Timber.tag(TAG).w(e, "senseGroupAt() parse failed: $raw")
-            null
+
+            val raw = response.choices.firstOrNull()?.message?.content
+            if (raw.isNullOrBlank()) {
+                Timber.tag(TAG).w("senseGroupAt() empty response")
+                return@getOrLoad null
+            }
+
+            try {
+                val senseGroup = parseSenseGroupResponse(
+                    raw = raw,
+                    sentence = sentence,
+                    word = word,
+                    pointedTokenOffset = pointedTokenOffset,
+                )
+                if (senseGroup == null) {
+                    Timber.tag(TAG).w("senseGroupAt() empty chunk in response: $raw")
+                    return@getOrLoad null
+                }
+                Timber.tag(TAG).d(
+                    "senseGroupAt() OK word=[$word] chunk=[${senseGroup.text}] tr=[${senseGroup.translation}] range=${senseGroup.charRange.first}..${senseGroup.charRange.last}"
+                )
+                senseGroup
+            } catch (e: Exception) {
+                Timber.tag(TAG).w(e, "senseGroupAt() parse failed: $raw")
+                null
+            }
         }
     }
 
@@ -238,6 +223,40 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 .filter { it.isNotEmpty() }
                 .distinct()
                 .sorted()
+        }
+
+        fun parseSenseGroupResponse(
+            raw: String,
+            sentence: String,
+            word: String,
+            pointedTokenOffset: Int? = null,
+        ): SenseGroup? {
+            val response = JsonParser.parseString(raw).asJsonObject
+            val rawSourceChunk = response.stringOrEmpty("source_chunk")
+                .ifEmpty { response.stringOrEmpty("chunk") }
+            val chunkText = SenseGroupChunkPolicy.refineChunk(
+                sentence = sentence,
+                modelChunk = rawSourceChunk,
+                word = word,
+                pointedTokenOffset = pointedTokenOffset,
+            ).orEmpty()
+            if (chunkText.isEmpty()) return null
+
+            val range = chunkCharRange(sentence, chunkText, pointedTokenOffset) ?: return null
+            if (pointedTokenOffset != null && !range.containsExclusive(pointedTokenOffset)) return null
+            if (!chunkText.contains(word)) return null
+
+            val translationCandidate = response.stringOrEmpty("target_chunk")
+                .ifEmpty { response.stringOrEmpty("translation") }
+            val translation = translationCandidate
+                .takeIf { rawSourceChunk == chunkText }
+                .orEmpty()
+
+            return SenseGroup(chunkText, translation, range)
+        }
+
+        private fun JsonObject.stringOrEmpty(name: String): String {
+            return get(name)?.takeIf { it.isJsonPrimitive }?.asString?.trim().orEmpty()
         }
 
         fun chunkCharRange(

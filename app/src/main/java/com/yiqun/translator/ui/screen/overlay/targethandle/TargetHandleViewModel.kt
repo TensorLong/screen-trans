@@ -1061,9 +1061,6 @@ class TargetHandleViewModel(
     private fun collectVisionTextForTranslationView() {
         viewModelScope.launch {
             pointerPositionedVisionTextFlow
-                .distinctUntilChanged { old, new ->
-                    old?.representation == new?.representation
-                }
                 .filterNotNull()
                 .collect { pointerPositionedVisionText ->
                     VisionTextView.INSTANCE.cast(applicationContext, pointerPositionedVisionText)
