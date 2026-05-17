@@ -121,7 +121,6 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 put("pointed_word_end", pointedTokenOffset + word.length)
             }
             put("source_language", sourceLanguageCode)
-            put("target_language", targetLanguageCode)
         }.toString()
 
         val userMessage = mapOf(
@@ -160,18 +159,14 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
 
         return try {
             val json = JSONObject(raw)
-            val rawChunkText = json.optString("source_chunk", "")
-                .ifBlank { json.optString("chunk", "") }
-                .trim()
+            val rawChunkText = json.optString("chunk", "").trim()
             val chunkText = SenseGroupChunkPolicy.refineChunk(
                 sentence = sentence,
                 modelChunk = rawChunkText,
                 word = word,
                 pointedTokenOffset = pointedTokenOffset,
             ).orEmpty()
-            val translation = json.optString("target_chunk", "")
-                .ifBlank { json.optString("translation", "") }
-                .trim()
+            val translation = json.optString("translation", "").trim()
                 .takeIf { rawChunkText == chunkText }
                 .orEmpty()
             if (chunkText.isEmpty()) {

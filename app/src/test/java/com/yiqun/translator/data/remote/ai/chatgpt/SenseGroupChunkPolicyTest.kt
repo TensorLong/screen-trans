@@ -7,14 +7,6 @@ import org.junit.Test
 class SenseGroupChunkPolicyTest {
 
     @Test
-    fun systemPromptMatchesSenseGroupTranslationContract() {
-        assertEquals(
-            "Return JSON only. First translate the whole sentence naturally into the target language using context. Then choose the smallest target-language sense group for the pointed word. If a target verb needs its object or complement to express the event, include it; avoid bare verbs. Also return the exact aligned source words. Never choose the whole sentence unless unavoidable. Format: {\"source_chunk\":\"...\",\"target_chunk\":\"...\"}",
-            SenseGroupChunkPolicy.SYSTEM_PROMPT
-        )
-    }
-
-    @Test
     fun systemPromptStaysUnderOneHundredWords() {
         val wordCount = SenseGroupChunkPolicy.SYSTEM_PROMPT
             .trim()

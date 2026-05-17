@@ -82,7 +82,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -90,7 +89,6 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import timber.log.Timber
 import java.util.Locale
-import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.sqrt
 
 
@@ -576,17 +574,13 @@ class TargetHandleViewModel(
                     if (motionEvent == MotionEvent.ACTION_DOWN) {
                         Timber.tag(TAG).i("#### TargetHandle motionEvent MotionEvent.ACTION_DOWN ####")
                         if (isPointedTranslationMode(textDetectMode)) {
-                            captureJob?.cancel()
-                            pointedRecognitionGeneration.incrementAndGet()
-                            clearTranslationContext()
                             visionResultFlow.value = null
-                            visionResultGeneration.set(0L)
                             visionCaptureScreenRect = null
                             captureStatusFlow.value = CaptureStatus.Idle
                         }
                     } else if (motionEvent == MotionEvent.ACTION_UP) {
                         Timber.tag(TAG).i("#### TargetHandle motionEvent MotionEvent.ACTION_UP ####")
-                        releasePointedRecognition()
+                        cancelCapture()
                     }
                 }
         }
@@ -597,14 +591,7 @@ class TargetHandleViewModel(
             pointerStoppedPositionFlow
                 .collectLatest { pointerPosition ->
                     if (pointerPosition == null) {
-                        if (
-                            !PointedRecognitionLifecyclePolicy.shouldKeepActiveRecognition(
-                                motionEventAction = motionEventFlow.value,
-                                recognitionInFlight = captureJob?.isActive == true,
-                            )
-                        ) {
-                            captureJob?.cancel()
-                        }
+                        captureJob?.cancel()
                         return@collectLatest
                     }
                     if (!isPointedTranslationMode(textDetectMode)) {
@@ -635,9 +622,7 @@ class TargetHandleViewModel(
         startTime = System.nanoTime()
         Timber.tag(TAG).i("#### requestCapture() ####")
 
-        val requestGeneration = pointedRecognitionGeneration.incrementAndGet()
         visionResultFlow.value = null
-        visionResultGeneration.set(0L)
         captureStatusFlow.value = CaptureStatus.Requested
 
         captureJob?.cancel()
@@ -663,22 +648,9 @@ class TargetHandleViewModel(
 
                 val motionEventState = motionEventFlow.first()
                 Timber.tag(TAG).d("requestCapture motionEventState $motionEventState")
-                if (
-                    PointedRecognitionLifecyclePolicy.shouldAcceptResolvedRecognition(
-                        motionEventAction = motionEventState,
-                        requestGeneration = requestGeneration,
-                        activeGeneration = pointedRecognitionGeneration.get(),
-                    )
-                ) {
+                if (motionEventState == MotionEvent.ACTION_DOWN || motionEventState == MotionEvent.ACTION_MOVE) {
                     captureStatusFlow.value = CaptureStatus.Captured
-                    requestVision(
-                        capturedBitmap = captureResponse.bitmap,
-                        captureScreenRect = captureResponse.screenRect,
-                        pointerPosition = pointerPosition,
-                        requestGeneration = requestGeneration,
-                    )
-                } else {
-                    captureResponse.bitmap.recycle()
+                    requestVision(captureResponse.bitmap, captureResponse.screenRect, pointerPosition)
                 }
             } else if (captureResponse is CaptureResponse.Error) {
                 Timber.tag(TAG).d("CaptureResponse.Error ${captureResponse.t.toString()}")
@@ -696,39 +668,16 @@ class TargetHandleViewModel(
         }
     }
 
-    private fun releasePointedRecognition() {
-        pointerPositionFlow.value = null
-        if (
-            PointedRecognitionLifecyclePolicy.shouldKeepActiveRecognition(
-                motionEventAction = motionEventFlow.value,
-                recognitionInFlight = captureJob?.isActive == true,
-            )
-        ) {
-            return
-        }
-        cancelCapture(preserveTranslationContext = true)
-    }
-
-    fun cancelCapture(preserveTranslationContext: Boolean = false) {
+    fun cancelCapture() {
         captureJob?.cancel()
         pointerPositionFlow.value = null
-        if (!preserveTranslationContext) {
-            pointedRecognitionGeneration.incrementAndGet()
-            clearTranslationContext()
-        }
+        pointerPositionedTranslationFlow.value = null
         if (captureStatusFlow.value != CaptureStatus.PermissionRequested) {
             captureStatusFlow.value = CaptureStatus.Idle
         }
         translateStatusFlow.value = TranslateStatus.Idle
         visionResultFlow.value = null
-        visionResultGeneration.set(0L)
         visionCaptureScreenRect = null
-    }
-
-    private fun clearTranslationContext() {
-        translationRequestGeneration.incrementAndGet()
-        translationVisionTextFlow.value = null
-        pointerPositionedTranslationFlow.value = null
     }
 
     fun restartCaptureRepository() {
@@ -744,12 +693,7 @@ class TargetHandleViewModel(
 
     /**
      */
-    private suspend fun requestVision(
-        capturedBitmap: Bitmap,
-        captureScreenRect: Rect,
-        pointerPosition: Point,
-        requestGeneration: Long,
-    ) {
+    private suspend fun requestVision(capturedBitmap: Bitmap, captureScreenRect: Rect, pointerPosition: Point) {
         startTime = System.nanoTime()
         Timber.tag(TAG).i("#### requestVision() ####")
 
@@ -793,16 +737,9 @@ class TargetHandleViewModel(
 //            )
 
             val motionEventState = motionEventFlow.first()
-            if (
-                PointedRecognitionLifecyclePolicy.shouldAcceptResolvedRecognition(
-                    motionEventAction = motionEventState,
-                    requestGeneration = requestGeneration,
-                    activeGeneration = pointedRecognitionGeneration.get(),
-                )
-            ) {
+            if (motionEventState == MotionEvent.ACTION_DOWN || motionEventState == MotionEvent.ACTION_MOVE) {
                 Timber.tag(TAG).i("set visionResult blocks=${visionResponse.result.text.textBlocks.size}")
                 visionCaptureScreenRect = captureScreenRect
-                visionResultGeneration.set(requestGeneration)
                 visionResultFlow.value = visionResponse.result
             }
         } else if (visionResponse is VisionResponse.Error) {
@@ -1128,7 +1065,7 @@ class TargetHandleViewModel(
                     old?.representation == new?.representation
                 }
                 .filterNotNull()
-                .collectLatest { pointerPositionedVisionText ->
+                .collect { pointerPositionedVisionText ->
                     VisionTextView.INSTANCE.cast(applicationContext, pointerPositionedVisionText)
 
                     visionResultFlow.value?.let { visionResultTransaction ->
@@ -1137,16 +1074,8 @@ class TargetHandleViewModel(
                         // Timber.tag(TAG).d("kitType $kitType")
                         // Timber.tag(TAG).d("targetLanguageCode $targetLanguageCode")
                         val motionEventState = motionEventFlow.first()
-                        if (
-                            PointedRecognitionLifecyclePolicy.shouldAcceptResolvedRecognition(
-                                motionEventAction = motionEventState,
-                                requestGeneration = visionResultGeneration.get(),
-                                activeGeneration = pointedRecognitionGeneration.get(),
-                            )
-                        ) {
+                        if (motionEventState == MotionEvent.ACTION_DOWN || motionEventState == MotionEvent.ACTION_MOVE) {
                             translateStatusFlow.value = TranslateStatus.Requested
-                            val requestGeneration = translationRequestGeneration.incrementAndGet()
-                            translationVisionTextFlow.value = pointerPositionedVisionText
 
                             Timber.tag(TAG).d("sourceText ${pointerPositionedVisionText.representation}")
 
@@ -1167,44 +1096,56 @@ class TargetHandleViewModel(
                                     detectedLanguageCode = visionResultTransaction.detectedLanguageCode,
                                     resultText = chunkTranslation,
                                 )
-                                displayTranslationIfCurrent(
-                                    requestGeneration = requestGeneration,
-                                    requestedVisionText = pointerPositionedVisionText,
-                                    transaction = transaction,
+                                TranslationView.INSTANCE.cast(
+                                    applicationContext,
+                                    transaction,
+                                    pointerPositionedVisionText
                                 )
+                                pointerPositionedTranslationFlow.value = transaction
                                 return@let
                             }
 
                             Timber.tag(TAG).d("translationKitType $translationKitType")
 
-                            when (
-                                val response = translationRepository.request(
+                            val motionEventState = motionEventFlow.first()
+                            if (motionEventState == MotionEvent.ACTION_DOWN || motionEventState == MotionEvent.ACTION_MOVE) {
+                                translationRepository.request(
                                     translationKitType,
                                     visionResultTransaction.detectedLanguageCode,
                                     targetLanguageCode,
                                     pointerPositionedVisionText.representation,
                                 )
-                            ) {
-                                is TranslationResponse.Success -> {
-                                    val transaction = Transaction(
-                                        sourceLanguageCode = response.result.sourceLanguageCode,
-                                        targetLanguageCode = response.result.targetLanguageCode,
-                                        sourceText = pointerPositionedVisionText.representation,
-                                        translationKitType = response.result.translationKitType,
-                                        detectedLanguageCode = response.result.detectedLanguageCode,
-                                        resultText = response.result.resultText,
-                                    )
-                                    Timber.tag(TAG).d("translationRepository Translated transaction $transaction")
-                                    displayTranslationIfCurrent(
-                                        requestGeneration = requestGeneration,
-                                        requestedVisionText = pointerPositionedVisionText,
-                                        transaction = transaction,
-                                    )
-                                }
+                                    .also {
+                                        val motionEventState = motionEventFlow.first()
+                                        if (motionEventState == MotionEvent.ACTION_DOWN || motionEventState == MotionEvent.ACTION_MOVE) {
+                                            translateStatusFlow.value = TranslateStatus.Translated
 
-                                is TranslationResponse.Error -> {
-                                    Timber.tag(TAG).d("Response Error ${response.t}")
-                                }
+                                            when (it) {
+                                                is TranslationResponse.Success -> {
+                                                    val transaction = Transaction(
+                                                        sourceLanguageCode = it.result.sourceLanguageCode,
+                                                        targetLanguageCode = it.result.targetLanguageCode,
+                                                        sourceText = pointerPositionedVisionText.representation,
+                                                        translationKitType = it.result.translationKitType,
+                                                        detectedLanguageCode = it.result.detectedLanguageCode,
+                                                        resultText = it.result.resultText,
+                                                    )
+                                                    Timber.tag(TAG).d("translationRepository Translated transaction $transaction")
+
+                                                    TranslationView.INSTANCE.cast(
+                                                        applicationContext,
+                                                        transaction,
+                                                        pointerPositionedVisionText
+                                                    )
+                                                    pointerPositionedTranslationFlow.value = transaction
+                                                }
+
+                                                is TranslationResponse.Error -> {
+                                                    Timber.tag(TAG).d("Response Error ${it.t}")
+                                                }
+                                            }
+                                        }
+                                    }
                             }
                         }
                     }
@@ -1212,45 +1153,8 @@ class TargetHandleViewModel(
         }
     }
 
-    private suspend fun displayTranslationIfCurrent(
-        requestGeneration: Long,
-        requestedVisionText: VisionText,
-        transaction: Transaction,
-    ) {
-        val activeVisionText = translationVisionTextFlow.value
-        if (
-            !TranslationResultVisibilityPolicy.shouldDisplayResolvedTranslation(
-                motionEventAction = motionEventFlow.value,
-                requestedSourceText = requestedVisionText.representation,
-                activeSourceText = activeVisionText?.representation,
-                translatedSourceText = transaction.sourceText,
-                requestGeneration = requestGeneration,
-                activeGeneration = translationRequestGeneration.get(),
-            )
-        ) {
-            Timber.tag(TAG).d("Drop stale translation transaction $transaction")
-            return
-        }
-
-        translateStatusFlow.value = TranslateStatus.Translated
-        TranslationView.INSTANCE.cast(
-            applicationContext,
-            transaction,
-            requestedVisionText
-        )
-        pointerPositionedTranslationFlow.value = transaction
-    }
-
     /**
      */
-    private val pointedRecognitionGeneration = AtomicLong(0L)
-
-    private val visionResultGeneration = AtomicLong(0L)
-
-    private val translationRequestGeneration = AtomicLong(0L)
-
-    private val translationVisionTextFlow = MutableStateFlow<VisionText?>(null)
-
     private val pointerPositionedTranslationFlow = MutableStateFlow<Transaction?>(null)
 
 
@@ -1289,7 +1193,7 @@ class TargetHandleViewModel(
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     val translationFlow: Flow<Pair<VisionText, Transaction>?> = combine(
-        translationVisionTextFlow,
+        pointerPositionedVisionTextFlow,
         pointerPositionedTranslationFlow,
         motionEventFlow,
         ttsRepository.ttsStatusFlow,
@@ -1305,42 +1209,12 @@ class TargetHandleViewModel(
 //        Timber.tag(TAG).d("visionText.representation == translation.sourceText : ${visionText?.representation == translation?.sourceText}")
 //        Timber.tag(TAG).d("dismissRunningCommand : $dismissRunningCommand")
 
-        val activeTranslation = if (
-            visionText != null &&
-            translation != null &&
-            visionText.representation == translation.sourceText
-        ) {
-            Pair(visionText, translation)
-        } else {
-            null
-        }
-
         if (motionEvent == null) {
             emptyFlow()
         }
 
         else if (motionEvent == MotionEvent.ACTION_UP) {
-            if (activeTranslation != null) {
-                if (ttsStatus == TTSStatus.Playing) {
-                    flowOf(activeTranslation)
-                }
-                else if (dismissRunningCommand == DismissRunningCommand.RESUME) {
-                    val translationCloseDelay = preferenceRepository.translationCloseDelayFlow.first()
-                    flow {
-                        emit(activeTranslation)
-                        delay(translationCloseDelay)
-                        emit(null)
-                    }
-                }
-                else if (dismissRunningCommand == DismissRunningCommand.PAUSE) {
-                    flowOf(activeTranslation)
-                }
-                else {
-                    resumeDismissRunning()
-                    flowOf(activeTranslation)
-                }
-            }
-            else if (ttsStatus != TTSStatus.Playing) {
+            if (ttsStatus != TTSStatus.Playing) {
                 if (dismissRunningCommand == DismissRunningCommand.RESUME) {
                     val translationCloseDelay = preferenceRepository.translationCloseDelayFlow.first()
                     delay(translationCloseDelay)
@@ -1360,11 +1234,15 @@ class TargetHandleViewModel(
         }
 
         else {
-            if (activeTranslation != null) {
+            if (
+                visionText != null &&
+                translation != null &&
+                visionText.representation == translation.sourceText
+            ) {
                 if (ttsStatus == TTSStatus.Playing) {
 //                    ttsRepository.stopTTS()
                 }
-                flowOf(activeTranslation)
+                flowOf(Pair(visionText, translation))
             }
             else {
                 if (ttsStatus == TTSStatus.Playing) {

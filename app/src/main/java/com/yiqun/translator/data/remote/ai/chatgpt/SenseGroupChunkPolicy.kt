@@ -2,7 +2,9 @@ package com.yiqun.translator.data.remote.ai.chatgpt
 
 object SenseGroupChunkPolicy {
     const val SYSTEM_PROMPT =
-        "Return JSON only. First translate the whole sentence naturally into the target language using context. Then choose the smallest target-language sense group for the pointed word. If a target verb needs its object or complement to express the event, include it; avoid bare verbs. Also return the exact aligned source words. Never choose the whole sentence unless unavoidable. Format: {\"source_chunk\":\"...\",\"target_chunk\":\"...\"}"
+        "Return JSON only. Choose the smallest contiguous sense group containing the pointed word. " +
+                "Copy it exactly from the sentence. For verbs, include only auxiliaries, particles, and required object/complement; exclude subject, time/place extras, and independent clauses. " +
+                "If the word alone is meaningful, return that word. Never return a whole sentence unless every word is necessary. Format: {\"chunk\":\"...\"}"
 
     private val clauseBoundaries = setOf(
         "and", "but", "or", "because", "although", "though", "while", "when", "where", "which",
