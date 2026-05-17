@@ -449,6 +449,7 @@ class RecognitionModesEndToEndPerformanceInstrumentedTest {
             .put("pointed_word_start", offset)
             .put("pointed_word_end", offset + word.length)
             .put("source_language", SOURCE_LANGUAGE_FOR_AI)
+            .put("target_language", TARGET_LANGUAGE)
         return openRouterSenseGroup(
             httpClient = httpClient,
             openRouterKey = openRouterKey,
@@ -521,8 +522,12 @@ class RecognitionModesEndToEndPerformanceInstrumentedTest {
                 .getString("content")
             val json = JSONObject(content)
             SenseGroupResult(
-                chunk = json.optString("chunk").trim(),
-                translation = json.optString("translation").trim(),
+                chunk = json.optString("source_chunk")
+                    .ifBlank { json.optString("chunk") }
+                    .trim(),
+                translation = json.optString("target_chunk")
+                    .ifBlank { json.optString("translation") }
+                    .trim(),
             )
         }
     }
