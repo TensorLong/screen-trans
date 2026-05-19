@@ -465,21 +465,45 @@ class VisionRepository @Inject constructor() {
                     )
 
                     if (correctedBoundingBox.width() > 0 && correctedBoundingBox.height() > 0) {
+                        var symbolTextChanged = false
+                        val allowGlyphNormalization = bitmap.config == Bitmap.Config.ARGB_8888
+                        val normalizeSymbols = allowGlyphNormalization && element.text.contains('0')
                         val chars = element.symbols
                             .filter { it.boundingBox.isValid() }
                             .map {
+                                val localBoundingBox = it.boundingBox!!
+                                val normalizedText = if (normalizeSymbols) {
+                                    LatinOcrGlyphNormalizer.normalizeSymbol(bitmap, localBoundingBox, it.text)
+                                } else {
+                                    it.text
+                                }
+                                if (normalizedText != it.text) {
+                                    symbolTextChanged = true
+                                }
                                 Char(
-                                    VisionCoordinateMapper.toScreenRect(it.boundingBox!!, coordinateOffsetX, coordinateOffsetY),
-                                    it.text,
+                                    VisionCoordinateMapper.toScreenRect(localBoundingBox, coordinateOffsetX, coordinateOffsetY),
+                                    normalizedText,
                                     writingDirection
                                 )
                             }
 
                         if (chars.isNotEmpty()) {
+                            val needsElementNormalization = allowGlyphNormalization &&
+                                    (symbolTextChanged || LatinOcrGlyphNormalizer.needsElementNormalization(element.text))
+                            val normalizedElementText = if (needsElementNormalization) {
+                                LatinOcrGlyphNormalizer.normalizeElementText(
+                                    rawText = element.text,
+                                    normalizedSymbolText = buildString {
+                                        chars.forEach { append(it.representation) }
+                                    },
+                                )
+                            } else {
+                                element.text
+                            }
                             words.addAll(
                                 splitElementIntoWords(
                                     elementBoundingBox = correctedBoundingBox,
-                                    elementText = element.text,
+                                    elementText = normalizedElementText,
                                     chars = chars,
                                     writingDirection = writingDirection,
                                 )
