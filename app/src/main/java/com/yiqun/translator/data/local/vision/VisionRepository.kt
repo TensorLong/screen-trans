@@ -32,10 +32,12 @@ import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.math.abs
 import kotlin.math.min
+import kotlin.math.roundToInt
 import kotlin.properties.Delegates
 
 private const val TRACE_VISION_LOGS = false
 private const val SYMBOL_GAP_WORD_SPLIT_FONT_HEIGHT_RATIO = 6.0
+private const val HIDDEN_TOKEN_WORD_SPLIT_FONT_HEIGHT_RATIO = 0.20
 
 enum class AutoRecognitionPolicy {
     FULL,
@@ -467,17 +469,24 @@ class VisionRepository @Inject constructor() {
                     if (correctedBoundingBox.width() > 0 && correctedBoundingBox.height() > 0) {
                         var symbolTextChanged = false
                         val allowGlyphNormalization = bitmap.config == Bitmap.Config.ARGB_8888
-                        val normalizeSymbols = allowGlyphNormalization && element.text.contains('0')
+                        val normalizeSymbols = allowGlyphNormalization &&
+                                LatinOcrGlyphNormalizer.mayNeedSymbolNormalization(element.text)
                         val chars = element.symbols
                             .filter { it.boundingBox.isValid() }
-                            .map {
-                                val localBoundingBox = it.boundingBox!!
+                            .mapIndexed { symbolIndex, symbol ->
+                                val localBoundingBox = symbol.boundingBox!!
                                 val normalizedText = if (normalizeSymbols) {
-                                    LatinOcrGlyphNormalizer.normalizeSymbol(bitmap, localBoundingBox, it.text)
+                                    LatinOcrGlyphNormalizer.normalizeSymbol(
+                                        bitmap = bitmap,
+                                        localBoundingBox = localBoundingBox,
+                                        text = symbol.text,
+                                        rawElementText = element.text,
+                                        symbolIndex = symbolIndex,
+                                    )
                                 } else {
-                                    it.text
+                                    symbol.text
                                 }
-                                if (normalizedText != it.text) {
+                                if (normalizedText != symbol.text) {
                                     symbolTextChanged = true
                                 }
                                 Char(
@@ -488,14 +497,22 @@ class VisionRepository @Inject constructor() {
                             }
 
                         if (chars.isNotEmpty()) {
-                            val needsElementNormalization = allowGlyphNormalization &&
-                                    (symbolTextChanged || LatinOcrGlyphNormalizer.needsElementNormalization(element.text))
+                            val needsElementNormalization = allowGlyphNormalization && (
+                                    symbolTextChanged ||
+                                            LatinOcrGlyphNormalizer.needsElementNormalization(element.text) ||
+                                            LatinOcrGlyphNormalizer.mayRecoverMissingSeparator(element.text)
+                                    )
                             val normalizedElementText = if (needsElementNormalization) {
                                 LatinOcrGlyphNormalizer.normalizeElementText(
                                     rawText = element.text,
                                     normalizedSymbolText = buildString {
                                         chars.forEach { append(it.representation) }
                                     },
+                                    bitmap = bitmap,
+                                    elementBoundingBox = rectOf(left, top, right, bottom),
+                                    symbolBoundingBoxes = element.symbols
+                                        .mapNotNull { it.boundingBox }
+                                        .filter { it.isValid() },
                                 )
                             } else {
                                 element.text
@@ -506,6 +523,8 @@ class VisionRepository @Inject constructor() {
                                     elementText = normalizedElementText,
                                     chars = chars,
                                     writingDirection = writingDirection,
+                                    allowHiddenTokenWordSplit = allowGlyphNormalization &&
+                                            LatinOcrGlyphNormalizer.mayNeedHiddenTokenWordSplit(element.text),
                                 )
                             )
                         }
@@ -516,9 +535,20 @@ class VisionRepository @Inject constructor() {
                 if (words.size > 1) {
                     words.sortWith(wordComparator)
                 }
+                val normalizedWords = if (bitmap.config == Bitmap.Config.ARGB_8888) {
+                    mergeHiddenSeparatorWords(
+                        bitmap = bitmap,
+                        words = words,
+                        writingDirection = writingDirection,
+                        coordinateOffsetX = coordinateOffsetX,
+                        coordinateOffsetY = coordinateOffsetY,
+                    )
+                } else {
+                    words
+                }
                 sourceLineWords.add(
                     RecognizedSourceLineWords(
-                        words = words,
+                        words = normalizedWords,
                         boundingBox = VisionCoordinateMapper.toScreenRect(
                             textLineBoundingBox,
                             coordinateOffsetX,
@@ -531,11 +561,75 @@ class VisionRepository @Inject constructor() {
         return sourceLineWords
     }
 
+    private fun mergeHiddenSeparatorWords(
+        bitmap: Bitmap,
+        words: List<Word>,
+        writingDirection: WritingDirection,
+        coordinateOffsetX: Int,
+        coordinateOffsetY: Int,
+    ): List<Word> {
+        if (writingDirection != WritingDirection.LTR || words.size < 2) return words
+
+        val merged = ArrayList<Word>(words.size)
+        var index = 0
+        while (index < words.size) {
+            val current = words[index]
+            val next = words.getOrNull(index + 1)
+            val separator = if (next != null && canMergeWithHiddenSeparator(current, next)) {
+                val gap = Rect(
+                    current.boundingBox.right - coordinateOffsetX,
+                    (min(current.boundingBox.top, next.boundingBox.top) - coordinateOffsetY),
+                    next.boundingBox.left - coordinateOffsetX,
+                    (maxOf(current.boundingBox.bottom, next.boundingBox.bottom) - coordinateOffsetY +
+                            (maxOf(current.boundingBox.height(), next.boundingBox.height()) * 0.35f).roundToInt()),
+                )
+                LatinOcrGlyphNormalizer.detectSeparator(bitmap, gap)
+            } else {
+                null
+            }
+
+            if (separator != null) {
+                val separatorBoundingBox = Rect(
+                    current.boundingBox.right,
+                    min(current.boundingBox.top, next!!.boundingBox.top),
+                    next.boundingBox.left,
+                    maxOf(current.boundingBox.bottom, next.boundingBox.bottom),
+                )
+                merged.add(
+                    Word(
+                        boundingBox = current.boundingBox._unionWith(next.boundingBox),
+                        representation = current.representation + separator + next.representation,
+                        writingDirection = writingDirection,
+                        chars = current.chars + Char(separatorBoundingBox, separator, writingDirection) + next.chars,
+                    )
+                )
+                index += 2
+            } else {
+                merged.add(current)
+                index += 1
+            }
+        }
+        return merged
+    }
+
+    private fun canMergeWithHiddenSeparator(current: Word, next: Word): Boolean {
+        if (current.representation.length != 1 || next.representation.length != 1) return false
+        val left = current.representation[0]
+        val right = next.representation[0]
+        if ((!left.isLetterOrDigit()) || (!right.isLetterOrDigit())) return false
+        if (left.isLetter() && !left.isUpperCase()) return false
+        if (right.isLetter() && !right.isUpperCase()) return false
+        val gap = next.boundingBox.left - current.boundingBox.right
+        if (gap <= 0) return false
+        return gap <= maxOf(current.boundingBox.height(), next.boundingBox.height())
+    }
+
     private fun splitElementIntoWords(
         elementBoundingBox: Rect,
         elementText: String,
         chars: List<Char>,
         writingDirection: WritingDirection,
+        allowHiddenTokenWordSplit: Boolean,
     ): List<Word> {
         if (chars.size <= 1) {
             return listOf(Word(elementBoundingBox, elementText, writingDirection, chars))
@@ -547,9 +641,16 @@ class VisionRepository @Inject constructor() {
 
         sortedChars.forEach { char ->
             val previous = currentGroup.lastOrNull()
-            if (previous != null && shouldSplitSymbolGap(previous, char)) {
-                groups.add(currentGroup)
-                currentGroup = mutableListOf()
+            if (previous != null) {
+                val shouldSplit = if (allowHiddenTokenWordSplit) {
+                    shouldSplitSymbolGapWithHiddenTokenBoundary(currentGroup, previous, char)
+                } else {
+                    shouldSplitSymbolGap(previous, char)
+                }
+                if (shouldSplit) {
+                    groups.add(currentGroup)
+                    currentGroup = mutableListOf()
+                }
             }
             currentGroup.add(char)
         }
@@ -561,10 +662,22 @@ class VisionRepository @Inject constructor() {
             return listOf(Word(elementBoundingBox, elementText, writingDirection, chars))
         }
 
+        val compactElementText = elementText.filterNot { it.isWhitespace() }
+        val canSliceNormalizedText = compactElementText.length == sortedChars.sumOf { it.representation.length }
+        var normalizedTextOffset = 0
+
         return groups.map { group ->
+            val groupTextLength = group.sumOf { it.representation.length }
+            val representation = if (canSliceNormalizedText) {
+                compactElementText.substring(normalizedTextOffset, normalizedTextOffset + groupTextLength)
+            } else {
+                group.joinToString(separator = "") { it.representation }
+            }
+            normalizedTextOffset += groupTextLength
+
             Word(
                 boundingBox = group.map { it.boundingBox }.reduce { acc, rect -> acc._unionWith(rect) },
-                representation = group.joinToString(separator = "") { it.representation },
+                representation = representation,
                 writingDirection = writingDirection,
                 chars = group,
             )
@@ -576,6 +689,32 @@ class VisionRepository @Inject constructor() {
         if (averageFontHeight <= 0.0) return false
         val gapRatio = next.getWriteDirectionDistance(previous).toDouble() / averageFontHeight
         return gapRatio >= SYMBOL_GAP_WORD_SPLIT_FONT_HEIGHT_RATIO
+    }
+
+    private fun shouldSplitSymbolGapWithHiddenTokenBoundary(
+        currentGroup: List<Char>,
+        previous: Char,
+        next: Char,
+    ): Boolean {
+        val averageFontHeight = previous.getAverageFontHeight(next)
+        if (averageFontHeight <= 0.0) return false
+        val gapRatio = next.getWriteDirectionDistance(previous).toDouble() / averageFontHeight
+        if (gapRatio >= SYMBOL_GAP_WORD_SPLIT_FONT_HEIGHT_RATIO) return true
+        if (gapRatio < HIDDEN_TOKEN_WORD_SPLIT_FONT_HEIGHT_RATIO) return false
+        val nextChar = next.representation.singleOrNull() ?: return false
+        if (!nextChar.isLowerCase()) return false
+        val prefix = currentGroup.joinToString(separator = "") { it.representation }
+        return prefix.isLikelyTokenPrefixBeforeWord()
+    }
+
+    private fun String.isLikelyTokenPrefixBeforeWord(): Boolean {
+        if (length !in 2..12 || any { it.isWhitespace() }) return false
+        val lowercaseLetters = filter { it.isLowerCase() }
+        if (lowercaseLetters.isNotEmpty() && !(lowercaseLetters.all { it == 'l' } && any { it.isDigit() })) {
+            return false
+        }
+        if (any { it.isDigit() || it in "#@$&+/<>{}[]\\_|" }) return true
+        return length <= 4 && all { it.isUpperCase() }
     }
 
     /**

@@ -19,7 +19,7 @@ import org.junit.runner.RunWith
 class VisionRepositoryGlyphAccuracyInstrumentedTest {
 
     @Test
-    fun recognizesTwentyAmbiguousLatinGlyphScenesTenTimesEach() = runBlocking {
+    fun recognizesBroadAmbiguousLatinGlyphAndSymbolScenesTenTimesEach() = runBlocking {
         val repository = VisionRepository()
         val failures = mutableListOf<String>()
 
@@ -115,26 +115,30 @@ class VisionRepositoryGlyphAccuracyInstrumentedTest {
         const val REPETITIONS = 10
 
         val scenes = listOf(
-            Scene("apostrophe_i_ll_leave", listOf("I'll leave it in Lisbon."), "I'll leave it in Lisbon.", textSize = 34f),
-            Scene("apostrophe_i_ll_lift", listOf("I'll lift little lines."), "I'll lift little lines.", textSize = 34f),
-            Scene("apostrophe_i_ll_call", listOf("I'll call Bill later."), "I'll call Bill later.", textSize = 34f),
-            Scene("apostrophe_i_ll_listen", listOf("I'll listen in class."), "I'll listen in class.", textSize = 34f),
-            Scene("digit_i_one_l_code", listOf("The code I1l stays readable."), "The code I1l stays readable.", textSize = 34f),
-            Scene("digit_i_one_l_id", listOf("The ID I1l is visible."), "The ID I1l is visible.", textSize = 34f),
-            Scene("digit_i_one_l_label", listOf("Label I1l ends today."), "Label I1l ends today.", textSize = 34f),
-            Scene("digit_i_one_l_token", listOf("Token I1l keeps its tail."), "Token I1l keeps its tail.", textSize = 34f),
-            Scene("zero_letter_o_code", listOf("The O0 code opens output."), "The O0 code opens output.", textSize = 34f),
-            Scene("zero_letter_o_output", listOf("The O0 output opens today."), "The O0 output opens today.", textSize = 34f),
-            Scene("zero_letter_o_label", listOf("Label O0 remains mixed."), "Label O0 remains mixed.", textSize = 34f),
-            Scene("zero_letter_o_token", listOf("Token O0 keeps one letter."), "Token O0 keeps one letter.", textSize = 34f),
-            Scene("serial_o_zero_i_one", listOf("Serial O0O1I1l keeps identity."), "Serial O0O1I1l keeps identity.", textSize = 34f),
-            Scene("serial_o_zero_i_one_label", listOf("Label O0O1I1l stays intact."), "Label O0O1I1l stays intact.", textSize = 34f),
-            Scene("serial_o_zero_i_one_token", listOf("Token O0O1I1l is stable."), "Token O0O1I1l is stable.", textSize = 34f),
-            Scene("serial_o_zero_i_one_code", listOf("Code O0O1I1l remains exact."), "Code O0O1I1l remains exact.", textSize = 34f),
-            Scene("double_l_word_null", listOf("The word null includes ll."), "The word null includes ll.", textSize = 34f),
-            Scene("digit_i_one_l_serial", listOf("Serial I1l remains exact."), "Serial I1l remains exact.", textSize = 34f),
-            Scene("zero_letter_o_serial", listOf("Serial O0 remains exact."), "Serial O0 remains exact.", textSize = 34f),
-            Scene("apostrophe_i_ll_remain", listOf("I'll remain exact."), "I'll remain exact.", textSize = 34f),
+            Scene("apostrophe_i_ll", listOf("I'll review exact glyphs."), "I'll review exact glyphs.", textSize = 34f),
+            Scene("pipe_digit_one_l", listOf("Token I1l remains exact."), "Token I1l remains exact.", textSize = 34f),
+            Scene("o_zero_pair", listOf("Token O0 remains exact."), "Token O0 remains exact.", textSize = 34f),
+            Scene("o_zero_i_one_serial", listOf("Token O0O1I1l remains exact."), "Token O0O1I1l remains exact.", textSize = 34f),
+            Scene("ampersand_r_b", listOf("Read R&B before lunch."), "Read R&B before lunch.", textSize = 34f),
+            Scene("ampersand_a_b", listOf("Read A&B before lunch."), "Read A&B before lunch.", textSize = 34f),
+            Scene("leading_ampersand", listOf("Read &B marker today."), "Read &B marker today.", textSize = 34f),
+            Scene("legit_eight_token", listOf("Read B8B marker today."), "Read B8B marker today.", textSize = 34f),
+            Scene("cpp_plus_plus", listOf("Use C++ before lunch."), "Use C++ before lunch.", textSize = 34f),
+            Scene("c_sharp_hash", listOf("Use C# before lunch."), "Use C# before lunch.", textSize = 34f),
+            Scene("at_handle", listOf("Read @user before lunch."), "Read @user before lunch.", textSize = 34f),
+            Scene("at_email", listOf("Mail a@b.com before lunch."), "Mail a@b.com before lunch.", textSize = 34f),
+            Scene("price_decimal_zero", listOf("Read $5.00 before lunch."), "Read $5.00 before lunch.", textSize = 34f),
+            Scene("currency_prefix", listOf("Read S$5 before lunch."), "Read S$5 before lunch.", textSize = 34f),
+            Scene("slash_separator", listOf("Read A/B before lunch."), "Read A/B before lunch.", textSize = 34f),
+            Scene("backslash_separator", listOf("Read A\\B before lunch."), "Read A\\B before lunch.", textSize = 34f),
+            Scene("underscore_separator", listOf("Read X_Y before lunch."), "Read X_Y before lunch.", textSize = 34f),
+            Scene("brace_token", listOf("Read {id} before lunch."), "Read {id} before lunch.", textSize = 34f),
+            Scene("angle_token", listOf("Read <tag> before lunch."), "Read <tag> before lunch.", textSize = 34f),
+            Scene("single_quote_token", listOf("Read 'OK' before lunch."), "Read 'OK' before lunch.", textSize = 34f),
+            Scene("double_quote_token", listOf("Read \"OK\" before lunch."), "Read \"OK\" before lunch.", textSize = 34f),
+            Scene("double_v_word", listOf("Read vv versus w before lunch."), "Read vv versus w before lunch.", textSize = 34f),
+            Scene("s_five_s_token", listOf("Read S5S before lunch."), "Read S5S before lunch.", textSize = 34f),
+            Scene("q_nine_q_token", listOf("Read Q9Q before lunch."), "Read Q9Q before lunch.", textSize = 34f),
         )
 
         fun normalize(text: String): String {
