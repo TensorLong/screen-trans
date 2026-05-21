@@ -60,6 +60,8 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
 
     private var requestedScreenRect: Rect? = null
 
+    private var requestedDiscardFrameCount: Int = 0
+
     private val handler = Handler(Looper.getMainLooper())
 
     private fun start() {
@@ -95,7 +97,12 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
             }
             mediaProjection!!.registerCallback(mediaProjectionStopCallback!!, null)
 
-            imageReader = ImageReader.newInstance(screenInfo.width, screenInfo.height, PixelFormat.RGBA_8888, 1)
+            imageReader = ImageReader.newInstance(
+                screenInfo.width,
+                screenInfo.height,
+                PixelFormat.RGBA_8888,
+                CaptureFramePolicy.imageReaderMaxImages(),
+            )
 
             virtualDisplay = mediaProjection!!.createVirtualDisplay(
                 "Sense Group Translator",
@@ -107,32 +114,6 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
                 null,
                 null,
             )
-
-            imageReader!!.setOnImageAvailableListener({ imageReader ->
-//                Timber.tag(TAG).d("---- onImageAvailable imageReader $imageReader ----")
-                val capturedImage = imageReader.acquireLatestImage()
-                try {
-                    if (captureResponseFlow.value == null) {
-                        if (capturedImage != null) {
-                            val (capturedBitmap, screenRect) = bitmapFromImage(
-                                image = capturedImage,
-                                screenInfo = screenInfo,
-                                requestedRect = requestedScreenRect,
-                            )
-//                            Timber.tag(TAG).d("capturedBitmap.allocationByteCount ${capturedBitmap.allocationByteCount}")
-                            captureResponseFlow.value = CaptureResponse.Success(capturedBitmap, screenRect)
-                        } else {
-                            captureResponseFlow.value = CaptureResponse.Error(CapturedImageInvalidException())
-                        }
-                    }
-                } catch (t: Throwable) {
-                    t.printStackTrace()
-                    Timber.tag(TAG).e("err t ${t.toString()} $mediaProjectionToken")
-                    captureResponseFlow.value = CaptureResponse.Error(NoMediaProjectionTokenException(t.toString()))
-                } finally {
-                    capturedImage?.close()
-                }
-            }, handler)
 
             state = State.Ready
         }
@@ -278,6 +259,56 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
                 first.bottom == second.bottom
     }
 
+    private fun beginFrameRequest(screenInfo: ScreenInfo) {
+        val reader = imageReader ?: return
+
+        drainQueuedFrame(reader)
+        reader.setOnImageAvailableListener({ availableReader ->
+            val capturedImage = try {
+                availableReader.acquireNextImage()
+            } catch (t: Throwable) {
+                Timber.tag(TAG).e("acquireNextImage failed ${t.toString()}")
+                null
+            }
+            try {
+                if (captureResponseFlow.value == null) {
+                    if (capturedImage != null) {
+                        if (requestedDiscardFrameCount > 0) {
+                            requestedDiscardFrameCount -= 1
+                        } else {
+                            val (capturedBitmap, screenRect) = bitmapFromImage(
+                                image = capturedImage,
+                                screenInfo = screenInfo,
+                                requestedRect = requestedScreenRect,
+                            )
+//                            Timber.tag(TAG).d("capturedBitmap.allocationByteCount ${capturedBitmap.allocationByteCount}")
+                            captureResponseFlow.value = CaptureResponse.Success(capturedBitmap, screenRect)
+                        }
+                    } else {
+                        captureResponseFlow.value = CaptureResponse.Error(CapturedImageInvalidException())
+                    }
+                }
+            } catch (t: Throwable) {
+                t.printStackTrace()
+                Timber.tag(TAG).e("err t ${t.toString()} $mediaProjectionToken")
+                captureResponseFlow.value = CaptureResponse.Error(NoMediaProjectionTokenException(t.toString()))
+            } finally {
+                capturedImage?.close()
+            }
+        }, handler)
+    }
+
+    private fun drainQueuedFrame(reader: ImageReader) {
+        while (true) {
+            val image = try {
+                reader.acquireNextImage()
+            } catch (_: Throwable) {
+                null
+            } ?: return
+            image.close()
+        }
+    }
+
     fun restart() {
         clearResources()
         state = State.Uninitialized
@@ -325,6 +356,7 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
         imageReader?.setOnImageAvailableListener(null, null)
         imageReader?.close()
         imageReader = null
+        requestedDiscardFrameCount = 0
         mediaProjectionStopCallback?.let {
             Handler(Looper.getMainLooper()).post {
                 mediaProjection?.unregisterCallback(it)
@@ -335,18 +367,24 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
         mediaProjection = null
     }
 
-    suspend fun request(cropRect: Rect? = null): CaptureResponse {
+    suspend fun request(
+        cropRect: Rect? = null,
+        discardInitialFrames: Int = 0,
+    ): CaptureResponse {
         Timber.tag(TAG).i("#### request() ####")
         captureResponseFlow.value = null
         requestedScreenRect = cropRect
+        requestedDiscardFrameCount = discardInitialFrames.coerceAtLeast(0)
 
         Timber.tag(TAG).i("State $state")
         if (state == State.Uninitialized) {
             start()
         }
 
-        var captureResponse: CaptureResponse = captureResponseFlow.filterNotNull().first()
-        if (captureResponse is CaptureResponse.Success) {
+        beginFrameRequest(ScreenInfoHolder.get())
+        try {
+            var captureResponse: CaptureResponse = captureResponseFlow.filterNotNull().first()
+            if (captureResponse is CaptureResponse.Success) {
 //            val (isCapturePrevented, checkerBitmap) = isCapturePrevented(capturedBitmap)
 //            captureWorkFlow.value =
 //                if (isCapturePrevented) {
@@ -354,9 +392,13 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
 //                } else {
 //                    Response.Success(capturedBitmap)
 //                }
+            }
+            return captureResponse
+        } finally {
+            imageReader?.setOnImageAvailableListener(null, null)
+            requestedDiscardFrameCount = 0
+            requestedScreenRect = null
         }
-        requestedScreenRect = null
-        return captureResponse
     }
 
     override fun onZeroReferences() {

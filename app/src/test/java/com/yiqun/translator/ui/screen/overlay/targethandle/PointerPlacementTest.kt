@@ -638,7 +638,7 @@ class PointerPlacementTest {
     }
 
     @Test
-    fun targetIconContentDimsDuringCaptureWithoutChangingWindowVisibility() {
+    fun targetIconContentIsHiddenDuringCaptureWithoutChangingWindowVisibility() {
         val state = TargetIconRenderPolicy.stateFor(
             side = PointerSide.LEFT,
             activeSide = PointerSide.RIGHT,
@@ -652,12 +652,12 @@ class PointerPlacementTest {
         )
 
         assertFalse(state.pointerVisible)
-        assertTrue(state.dimmed)
-        assertEquals(0.01f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+        assertTrue(state.captureHidden)
+        assertEquals(0.0f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
     }
 
     @Test
-    fun activeDraggedPointerIconStaysOpaqueDuringCapture() {
+    fun activeDraggedPointerIconIsHiddenDuringCapture() {
         val state = TargetIconRenderPolicy.stateFor(
             side = PointerSide.LEFT,
             activeSide = PointerSide.LEFT,
@@ -671,7 +671,27 @@ class PointerPlacementTest {
         )
 
         assertTrue(state.pointerVisible)
+        assertTrue(state.captureHidden)
+        assertEquals(0.0f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+    }
+
+    @Test
+    fun fixedAreaTranslationStillDimsPointerWithoutHidingIt() {
+        val state = TargetIconRenderPolicy.stateFor(
+            side = PointerSide.LEFT,
+            activeSide = PointerSide.RIGHT,
+            motionEventAction = MotionEvent.ACTION_MOVE,
+            textDetectMode = TextDetectMode.FIXED_AREA,
+            captureStatus = CaptureStatus.Idle,
+            fixedAreaTranslating = true,
+            translateStatus = TranslateStatus.Idle,
+            areaSelecting = false,
+            writingRtl = false,
+        )
+
+        assertFalse(state.pointerVisible)
+        assertFalse(state.captureHidden)
         assertTrue(state.dimmed)
-        assertEquals(1.0f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+        assertEquals(0.01f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
     }
 }

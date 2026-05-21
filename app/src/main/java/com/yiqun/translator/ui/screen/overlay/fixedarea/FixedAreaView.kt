@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yiqun.translator.R
 import com.yiqun.translator.core.OverlayService
+import com.yiqun.translator.data.local.capture.CaptureFramePolicy
 import com.yiqun.translator.data.local.capture.CapturePreventedException
 import com.yiqun.translator.data.local.capture.CaptureResponse
 import com.yiqun.translator.data.local.capture.NoMediaProjectionTokenException
@@ -57,6 +58,7 @@ import com.yiqun.translator.extensions.setFromPoints
 import com.yiqun.translator.extensions.vibrate
 import com.yiqun.translator.ui.screen.main.SettingsActivity
 import com.yiqun.translator.ui.screen.overlay.Event
+import com.yiqun.translator.ui.screen.overlay.OverlayCaptureOcclusion
 import com.yiqun.translator.ui.screen.overlay.OverlayView
 import com.yiqun.translator.ui.screen.overlay.dialog.DialogView
 import com.yiqun.translator.ui.screen.overlay.selection.createOverlaidBitmap
@@ -453,9 +455,12 @@ open class FixedAreaView : OverlayView() {
     private var detectedString = ""
 
     private suspend fun requestVision(context: Context, selectedArea: Rect) {
-        val captureResponse: CaptureResponse = targetHandleViewModel.captureRepository.request(
-            AreaCapturePolicy.captureRect(selectedArea)
-        )
+        val captureResponse: CaptureResponse = OverlayCaptureOcclusion.withHiddenOverlays {
+            targetHandleViewModel.captureRepository.request(
+                cropRect = AreaCapturePolicy.captureRect(selectedArea),
+                discardInitialFrames = CaptureFramePolicy.cleanCaptureDiscardFrameCount(),
+            )
+        }
         Timber.tag(TAG).d("captureResponse $captureResponse")
         if (captureResponse !is CaptureResponse.Success) {
             Timber.tag(TAG).d("CaptureResponse.Error ${(captureResponse as CaptureResponse.Error).t}")
@@ -543,7 +548,6 @@ object FixedAreaRecognitionPolicy {
 
     fun pollingDelayMs(): Long = 100L
 }
-
 
 
 

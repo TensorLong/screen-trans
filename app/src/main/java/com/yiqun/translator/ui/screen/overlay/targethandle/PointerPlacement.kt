@@ -470,6 +470,7 @@ enum class TargetIconTint {
 data class TargetIconRenderState(
     val pointerVisible: Boolean = false,
     val progressVisible: Boolean = false,
+    val captureHidden: Boolean = false,
     val dimmed: Boolean = false,
     val writingRtl: Boolean = false,
     val tint: TargetIconTint = TargetIconTint.NONE,
@@ -492,7 +493,8 @@ object TargetIconRenderPolicy {
                     side == activeSide,
             progressVisible = translateStatus == TranslateStatus.Requested &&
                     textDetectMode != TextDetectMode.SELECT,
-            dimmed = captureStatus == CaptureStatus.Requested || fixedAreaTranslating,
+            captureHidden = captureStatus == CaptureStatus.Requested,
+            dimmed = fixedAreaTranslating,
             writingRtl = writingRtl,
             tint = when {
                 !areaSelecting -> TargetIconTint.NONE
@@ -503,6 +505,7 @@ object TargetIconRenderPolicy {
     }
 
     fun contentAlpha(state: TargetIconRenderState): Float {
+        if (state.captureHidden) return 0.0f
         if (state.pointerVisible) return 1.0f
         return if (state.dimmed) 0.01f else 1.0f
     }
