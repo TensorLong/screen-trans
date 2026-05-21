@@ -477,6 +477,8 @@ data class TargetIconRenderState(
 )
 
 object TargetIconRenderPolicy {
+    const val CAPTURE_ALPHA = 0.0f
+
     fun stateFor(
         side: PointerSide,
         activeSide: PointerSide,
@@ -505,9 +507,9 @@ object TargetIconRenderPolicy {
     }
 
     fun contentAlpha(state: TargetIconRenderState): Float {
-        if (state.captureRequested) return 0.01f
+        if (state.captureRequested) return CAPTURE_ALPHA
         if (state.pointerVisible) return 1.0f
-        return if (state.dimmed) 0.01f else 1.0f
+        return if (state.dimmed) CAPTURE_ALPHA else 1.0f
     }
 }
 

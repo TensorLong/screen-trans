@@ -654,7 +654,7 @@ class PointerPlacementTest {
         assertFalse(state.pointerVisible)
         assertTrue(state.dimmed)
         assertTrue(state.captureRequested)
-        assertEquals(0.01f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+        assertEquals(TargetIconRenderPolicy.CAPTURE_ALPHA, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
     }
 
     @Test
@@ -674,7 +674,7 @@ class PointerPlacementTest {
         assertTrue(state.pointerVisible)
         assertTrue(state.dimmed)
         assertTrue(state.captureRequested)
-        assertEquals(0.01f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+        assertEquals(TargetIconRenderPolicy.CAPTURE_ALPHA, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
     }
 
     @Test

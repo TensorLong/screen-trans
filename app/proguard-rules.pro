@@ -177,9 +177,24 @@
 -keep class com.yiqun.translator.data.remote.translation.Transaction { *; }
 -keep class com.yiqun.translator.data.remote.translation.TranslationKitType { *; }
 -keep class com.yiqun.translator.ui.screen.overlay.targethandle.RecognitionDelayPolicy { *; }
+-keep class com.yiqun.translator.ui.screen.overlay.targethandle.TargetCaptureTransparency { *; }
+-keep class com.yiqun.translator.ui.screen.overlay.targethandle.TargetIconNativeView { *; }
+-keep class com.yiqun.translator.ui.screen.overlay.targethandle.TargetIconRenderState { *; }
+-keep class com.yiqun.translator.ui.screen.overlay.targethandle.TargetIconRenderPolicy { *; }
 -keep class com.yiqun.translator.ui.screen.overlay.fixedarea.FixedAreaRecognitionPolicy { *; }
 -keep class com.yiqun.translator.ui.screen.overlay.selection.AreaCapturePolicy { *; }
 -keep class com.yiqun.translator.ui.screen.overlay.selection.AreaSelectionViewKt { *; }
+-keep class com.yiqun.translator.data.local.capture.CaptureRepository { *; }
+-keep class com.yiqun.translator.data.local.capture.CaptureRepository$* { *; }
+-keep class com.yiqun.translator.data.local.capture.CaptureResponse { *; }
+-keep class com.yiqun.translator.data.local.capture.CaptureResponse$* { *; }
+-keep class com.yiqun.translator.data.local.preference.PreferenceRepository { *; }
+-keep class com.yiqun.translator.data.local.preference.PreferenceRepositoryKt { *; }
+-keep class com.yiqun.translator.data.local.screen.ScreenInfoHolder { *; }
+-keep class com.yiqun.translator.data.local.screen.ScreenInfo { *; }
+-keep class com.yiqun.translator.ui.screen.overlay.targethandle.OverlayWindowAlpha { *; }
+-keep class com.yiqun.translator.ui.screen.permissions.ScreenCapturePermissionRequesterActivity { *; }
+-keep class com.yiqun.translator.R$* { *; }
 
 # ExoPlayer
 -keep class com.google.android.exoplayer2.** { *; }
@@ -209,12 +224,6 @@
 -keepnames class * implements org.jetbrains.kotlin.compiler.plugin.*
 -keepnames class * implements org.jetbrains.kotlin.diagnostics.*
 -keepnames class * implements org.jetbrains.kotlin.fir.extensions.*
-
-
-
-
-
-
 
 
 

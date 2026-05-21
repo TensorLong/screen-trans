@@ -19,6 +19,7 @@ import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
@@ -47,15 +48,23 @@ import com.yiqun.translator.ui.screen.overlay.fixedarea.FixedAreaView
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuBarView
 import com.yiqun.translator.ui.screen.overlay.selection.AreaSelectionView
 import com.yiqun.translator.ui.screen.overlay.visiontext.VisionTextView
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import javax.inject.Singleton
 import java.util.LinkedHashSet
+import kotlin.coroutines.resume
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -116,6 +125,12 @@ class TargetHandleView private constructor(
 
         private fun registeredInstances(): List<TargetHandleView> {
             return synchronized(instances) { instances.toList() }
+        }
+
+        internal fun targetIconViews(): List<TargetIconNativeView> {
+            return registeredInstances().mapNotNull { handleView ->
+                handleView.targetView as? TargetIconNativeView
+            }
         }
 
         private fun showOnlyInteractingPointer(activeSide: PointerSide) {
@@ -1145,7 +1160,50 @@ class TargetHandleView private constructor(
     }
 }
 
-private class TargetIconNativeView(context: Context) : View(context) {
+object TargetCaptureTransparency {
+    private const val FRAME_COMMIT_TIMEOUT_MS = 80L
+
+    suspend fun <T> withTransparentTargets(block: suspend () -> T): T {
+        return withTransparentTargets(TargetHandleView.targetIconViews(), block)
+    }
+
+    internal suspend fun <T> withTransparentTargets(
+        targetViews: List<TargetIconNativeView>,
+        block: suspend () -> T,
+    ): T {
+        val visibleTargets = withContext(Dispatchers.Main.immediate) {
+            targetViews
+                .filter { it.isAttachedToWindow && it.isShown && it.width > 0 && it.height > 0 }
+                .toList()
+        }
+        if (visibleTargets.isEmpty()) return block()
+
+        withContext(Dispatchers.Main.immediate) {
+            visibleTargets.forEach { it.setCaptureTransparent(true) }
+        }
+        coroutineScope {
+            visibleTargets
+                .map { targetView ->
+                    async(Dispatchers.Main.immediate) {
+                        withTimeoutOrNull(FRAME_COMMIT_TIMEOUT_MS) {
+                            targetView.awaitCaptureTransparentFrameCommit()
+                        }
+                    }
+                }
+                .awaitAll()
+        }
+
+        return try {
+            block()
+        } finally {
+            withContext(Dispatchers.Main.immediate) {
+                visibleTargets.forEach { it.setCaptureTransparent(false) }
+            }
+        }
+    }
+}
+
+internal class TargetIconNativeView(context: Context) : View(context) {
     private val pointerDrawable: Drawable? = context.getDrawable(R.drawable.drag_pointer)?.mutate()
     private val selectionPointerDrawable: Drawable? = context.getDrawable(R.drawable.drag_selection_pointer)?.mutate()
     private val progressDimen = context.resources.getDimensionPixelSize(R.dimen.target_pointer_progress_dimen)
@@ -1158,6 +1216,7 @@ private class TargetIconNativeView(context: Context) : View(context) {
     }
 
     private var renderState = TargetIconRenderState()
+    private var captureTransparent = false
     private var progressRotation = 0f
     private var progressAnimator: ValueAnimator? = null
 
@@ -1166,6 +1225,79 @@ private class TargetIconNativeView(context: Context) : View(context) {
         renderState = state
         updateProgressAnimator()
         invalidate()
+    }
+
+    fun setCaptureTransparent(transparent: Boolean) {
+        if (captureTransparent == transparent) {
+            postInvalidateOnAnimation()
+            return
+        }
+        captureTransparent = transparent
+        postInvalidateOnAnimation()
+    }
+
+    suspend fun awaitCaptureTransparentFrameCommit() {
+        if (!isAttachedToWindow || !isShown || width <= 0 || height <= 0) return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            awaitFrameCommit()
+        } else {
+            awaitDrawThenAnimationFrame()
+        }
+    }
+
+    private suspend fun awaitFrameCommit() {
+        suspendCancellableCoroutine { continuation ->
+            var resumed = false
+            fun resumeOnce() {
+                if (resumed) return
+                resumed = true
+                continuation.resume(Unit)
+            }
+
+            continuation.invokeOnCancellation { resumed = true }
+            viewTreeObserver.registerFrameCommitCallback {
+                resumeOnce()
+            }
+            postInvalidateOnAnimation()
+        }
+    }
+
+    private suspend fun awaitDrawThenAnimationFrame() {
+        suspendCancellableCoroutine { continuation ->
+            var resumed = false
+            var listener: ViewTreeObserver.OnDrawListener? = null
+
+            fun resumeOnce() {
+                if (resumed) return
+                resumed = true
+                continuation.resume(Unit)
+            }
+
+            listener = ViewTreeObserver.OnDrawListener {
+                post {
+                    listener?.let { drawListener ->
+                        if (viewTreeObserver.isAlive) {
+                            viewTreeObserver.removeOnDrawListener(drawListener)
+                        }
+                    }
+                    postOnAnimation { resumeOnce() }
+                }
+            }
+
+            continuation.invokeOnCancellation {
+                resumed = true
+                post {
+                    listener?.let { drawListener ->
+                        if (viewTreeObserver.isAlive) {
+                            viewTreeObserver.removeOnDrawListener(drawListener)
+                        }
+                    }
+                }
+            }
+
+            viewTreeObserver.addOnDrawListener(listener)
+            postInvalidateOnAnimation()
+        }
     }
 
     fun setPointerVisible(visible: Boolean) {
@@ -1184,7 +1316,11 @@ private class TargetIconNativeView(context: Context) : View(context) {
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        val contentAlpha = TargetIconRenderPolicy.contentAlpha(renderState)
+        val contentAlpha = if (captureTransparent) {
+            TargetIconRenderPolicy.CAPTURE_ALPHA
+        } else {
+            TargetIconRenderPolicy.contentAlpha(renderState)
+        }
         if (renderState.progressVisible) {
             drawProgress(canvas, contentAlpha)
         }

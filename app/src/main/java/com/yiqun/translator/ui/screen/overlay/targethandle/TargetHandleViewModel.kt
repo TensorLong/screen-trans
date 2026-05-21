@@ -637,7 +637,9 @@ class TargetHandleViewModel(
                 screenHeight = screenInfo.height,
                 pointer = pointerPosition,
             )
-            val captureResponse: CaptureResponse = captureRepository.request(cropRect)
+            val captureResponse: CaptureResponse = TargetCaptureTransparency.withTransparentTargets {
+                captureRepository.request(cropRect)
+            }
             Timber.tag(TAG).d("requestCapture viewModelScope.launch -------------- 2 $captureResponse")
             if (captureResponse is CaptureResponse.Success) {
                 endTime = System.nanoTime()

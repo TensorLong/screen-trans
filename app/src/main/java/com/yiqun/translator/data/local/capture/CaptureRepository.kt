@@ -76,7 +76,7 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
          * window bounds in pixels.
          */
         val screenInfo: ScreenInfo = ScreenInfoHolder.get()
-        val dpi = context.resources.displayMetrics.density.toInt()
+        val dpi = context.resources.displayMetrics.densityDpi
         Timber.tag("CaptureRepository").i("#### start width ${screenInfo.width}  height ${screenInfo.height} dpi $dpi ####")
 
         try {

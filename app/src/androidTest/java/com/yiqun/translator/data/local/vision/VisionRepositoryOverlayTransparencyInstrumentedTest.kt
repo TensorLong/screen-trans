@@ -77,7 +77,7 @@ class VisionRepositoryOverlayTransparencyInstrumentedTest {
         const val SCREEN_WIDTH = 1200
         const val SCREEN_HEIGHT = 260
         const val EXPECTED_TEXT = "The target icon points at clear words."
-        const val TARGET_RENDER_ALPHA = 0.01f
+        const val TARGET_RENDER_ALPHA = 0.0f
         const val PASS_THROUGH_WINDOW_ALPHA = 0.8f
     }
 }
