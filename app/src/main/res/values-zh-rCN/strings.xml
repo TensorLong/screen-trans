@@ -28,6 +28,9 @@
   <!-- OverlayService -->
   <string name="service_menu_finish">结束</string>
 
+  <!-- DetectModeMenuView -->
+  <string name="detect_mode_menu_close">关闭</string>
+
   <!-- LanguageListView -->
   <string name="title_language_list_view_source">翻译源语言</string>
   <string name="title_language_list_view_target">翻译目标语言</string>

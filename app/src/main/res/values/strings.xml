@@ -28,6 +28,9 @@
     <!-- OverlayService -->
     <string name="service_menu_finish">Finish</string>
 
+    <!-- DetectModeMenuView -->
+    <string name="detect_mode_menu_close">Close</string>
+
     <!-- LanguageListView -->
     <string name="title_language_list_view_source">Translate from</string>
     <string name="title_language_list_view_target">Translate into</string>
