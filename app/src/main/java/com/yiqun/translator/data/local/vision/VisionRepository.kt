@@ -117,13 +117,7 @@ class VisionRepository @Inject constructor() {
                 autoRecognitionPolicy = autoRecognitionPolicy,
             )
 
-            val text = processResults.maxByOrNull { text ->
-                text?.textBlocks?.sumOf { block ->
-                    block.lines.sumOf { line ->
-                        line.confidence.toDouble()
-                    }
-                } ?: 0.0
-            } ?: throw Exception("No text recognized")
+            val text = selectBestTextResult(processResults, sourceLanguageCode) ?: throw Exception("No text recognized")
 
             val (detectedLanguageCode, analyzedParagraphs) = withContext(Dispatchers.Default) {
                 var _sourceLanguageCode = sourceLanguageCode
@@ -214,6 +208,26 @@ class VisionRepository @Inject constructor() {
         }
 
         deferredResults.awaitAll()
+    }
+
+    private fun selectBestTextResult(
+        processResults: List<Text?>,
+        sourceLanguageCode: String,
+    ): Text? {
+        return processResults
+            .filterNotNull()
+            .maxByOrNull { text ->
+                val confidenceScore = text.textBlocks.sumOf { block ->
+                    block.lines.sumOf { line ->
+                        line.confidence.toDouble()
+                    }
+                }
+                if (sourceLanguageCode == "auto") {
+                    confidenceScore + text.text.scriptCoverageScore()
+                } else {
+                    confidenceScore
+                }
+            }
     }
 
     private suspend fun identifyLanguage(text: String): String = suspendCancellableCoroutine { continuation ->
@@ -393,8 +407,7 @@ class VisionRepository @Inject constructor() {
                     .filter { it.boundingBox.isValid() }
                     .sortedWith(
                         Comparator { line1, line2 ->
-                            val topComparison = line1.boundingBox!!.top.compareTo(line2.boundingBox!!.top)
-                            if (topComparison != 0) topComparison else line1.boundingBox!!.left.compareTo(line2.boundingBox!!.left)
+                            compareHorizontalTextLineOrder(line1.boundingBox!!, line2.boundingBox!!, rtl = false)
                         }
                     )
             }
@@ -404,8 +417,7 @@ class VisionRepository @Inject constructor() {
                     .filter { it.boundingBox.isValid() }
                     .sortedWith(
                         Comparator { line1, line2 ->
-                            val topComparison = line1.boundingBox!!.top.compareTo(line2.boundingBox!!.top)
-                            if (topComparison != 0) topComparison else line2.boundingBox!!.right.compareTo(line1.boundingBox!!.right)
+                            compareHorizontalTextLineOrder(line1.boundingBox!!, line2.boundingBox!!, rtl = true)
                         }
                     )
             }
@@ -436,6 +448,19 @@ class VisionRepository @Inject constructor() {
         }
     }
 
+    private fun compareHorizontalTextLineOrder(first: Rect, second: Rect, rtl: Boolean): Int {
+        val averageHeight = (first.height() + second.height()).toDouble() / 2.0
+        val sameBaselineBand = averageHeight > 0.0 && abs(first.centerY() - second.centerY()) <= averageHeight * 0.72
+        if (sameBaselineBand) {
+            return if (rtl) {
+                second.right.compareTo(first.right)
+            } else {
+                first.left.compareTo(second.left)
+            }
+        }
+        return first.top.compareTo(second.top)
+    }
+
     /**
      */
     private fun convertTextLinesToWords(
@@ -448,7 +473,6 @@ class VisionRepository @Inject constructor() {
         val sourceLineWords = ArrayList<RecognizedSourceLineWords>(textLines.size)
         val bitmapWidth = bitmap.width
         val bitmapHeight = bitmap.height
-        val wordComparator = VisionSingleLineText.getComparator(writingDirection)
 
         for (textLine in textLines) {
             val textLineBoundingBox = textLine.boundingBox ?: continue
@@ -533,12 +557,18 @@ class VisionRepository @Inject constructor() {
             }
             if (words.isNotEmpty()) {
                 if (words.size > 1) {
-                    words.sortWith(wordComparator)
+                    sortWordsInsideRecognizedSourceLine(words, writingDirection)
                 }
                 val normalizedWords = if (bitmap.config == Bitmap.Config.ARGB_8888) {
-                    mergeHiddenSeparatorWords(
+                    mergeTokenFragments(
                         bitmap = bitmap,
-                        words = words,
+                        words = mergeHiddenSeparatorWords(
+                            bitmap = bitmap,
+                            words = words,
+                            writingDirection = writingDirection,
+                            coordinateOffsetX = coordinateOffsetX,
+                            coordinateOffsetY = coordinateOffsetY,
+                        ),
                         writingDirection = writingDirection,
                         coordinateOffsetX = coordinateOffsetX,
                         coordinateOffsetY = coordinateOffsetY,
@@ -559,6 +589,17 @@ class VisionRepository @Inject constructor() {
             }
         }
         return sourceLineWords
+    }
+
+    private fun sortWordsInsideRecognizedSourceLine(
+        words: MutableList<Word>,
+        writingDirection: WritingDirection,
+    ) {
+        when (writingDirection) {
+            WritingDirection.LTR -> words.sortBy { it.boundingBox.left }
+            WritingDirection.RTL -> words.sortByDescending { it.boundingBox.right }
+            WritingDirection.TTB_LTR, WritingDirection.TTB_RTL -> words.sortBy { it.boundingBox.top }
+        }
     }
 
     private fun mergeHiddenSeparatorWords(
@@ -610,6 +651,71 @@ class VisionRepository @Inject constructor() {
             }
         }
         return merged
+    }
+
+    private fun mergeTokenFragments(
+        bitmap: Bitmap,
+        words: List<Word>,
+        writingDirection: WritingDirection,
+        coordinateOffsetX: Int,
+        coordinateOffsetY: Int,
+    ): List<Word> {
+        if (writingDirection != WritingDirection.LTR || words.size < 2) {
+            return words.map { it.withNormalizedTokenText() }
+        }
+
+        val merged = ArrayList<Word>(words.size)
+        for (word in words.map { it.withNormalizedTokenText() }) {
+            val previous = merged.lastOrNull()
+            if (previous != null && shouldMergeTokenFragments(previous, word)) {
+                merged[merged.lastIndex] = previous.mergeWith(word)
+            } else {
+                merged.add(word)
+            }
+        }
+        return merged
+    }
+
+    private fun shouldMergeTokenFragments(previous: Word, next: Word): Boolean {
+        val left = previous.representation
+        val right = next.representation
+        if (left.isBlank() || right.isBlank()) return false
+
+        val gap = next.boundingBox.left - previous.boundingBox.right
+        val averageFontHeight = previous.getAverageFontHeight(next)
+        val gapRatio = if (averageFontHeight <= 0.0) 1.0 else gap.toDouble() / averageFontHeight
+
+        if (left.isUrlFragmentBefore(right) || left.isEmailFragmentBefore(right)) return true
+        if (left.isHandleMarkerBefore(right) || left.isHandleNameBeforeNumericSuffix(right)) return true
+        if (left.endsWith("-0") && right.firstOrNull()?.isDigit() == true && right.contains('@')) return true
+        if (right.startsWith("?") && (left.contains('/') || left.contains('.'))) return true
+        if (left.endsWith(".") && right.isDomainOrPathTail() && left.contains('.')) return true
+
+        if (gapRatio > 0.48) return false
+        return left.isCompactAmbiguousTokenFragment() && right.isCompactAmbiguousTokenFragment()
+    }
+
+    private fun Word.withNormalizedTokenText(): Word {
+        val normalized = LatinOcrGlyphNormalizer.normalizeTokenText(representation)
+        return if (normalized == representation) {
+            this
+        } else {
+            copy(representation = normalized)
+        }
+    }
+
+    private fun Word.mergeWith(next: Word): Word {
+        val mergedRepresentation = if (representation.isHandleNameBeforeNumericSuffix(next.representation)) {
+            "${representation}_${next.representation}"
+        } else {
+            representation + next.representation
+        }
+        return Word(
+            boundingBox = boundingBox._unionWith(next.boundingBox),
+            representation = LatinOcrGlyphNormalizer.normalizeTokenText(mergedRepresentation),
+            writingDirection = writingDirection,
+            chars = chars + next.chars,
+        )
     }
 
     private fun canMergeWithHiddenSeparator(current: Word, next: Word): Boolean {
@@ -729,6 +835,23 @@ class VisionRepository @Inject constructor() {
         val lines = mutableListOf<Line>()
 
         sourceLineWords.forEach { recognizedSourceLine ->
+            if (recognizedSourceLine.words.size > 1) {
+                val sourceOrderedWords = when (writingDirection) {
+                    WritingDirection.LTR -> recognizedSourceLine.words.sortedBy { it.boundingBox.left }
+                    WritingDirection.RTL -> recognizedSourceLine.words.sortedByDescending { it.boundingBox.right }
+                    WritingDirection.TTB_LTR, WritingDirection.TTB_RTL -> recognizedSourceLine.words.sortedBy { it.boundingBox.top }
+                }
+                val existingLine = lines.firstOrNull {
+                    it.acceptsSplitSourceLineFragment(recognizedSourceLine.boundingBox, writingDirection)
+                }
+                if (existingLine != null) {
+                    sourceOrderedWords.forEach(existingLine::addWord)
+                } else {
+                    lines.add(Line(sourceOrderedWords.toMutableList(), writingDirection))
+                }
+                return@forEach
+            }
+
             val splitSourceLine = lines.firstOrNull {
                 it.acceptsSplitSourceLineFragment(recognizedSourceLine.boundingBox, writingDirection)
             }
@@ -1343,6 +1466,80 @@ private fun rectOf(left: Int, top: Int, right: Int, bottom: Int): Rect {
         this.right = right
         this.bottom = bottom
     }
+}
+
+private fun String.scriptCoverageScore(): Double {
+    var score = 0.0
+    forEach { char ->
+        score += when (Character.UnicodeBlock.of(char)) {
+            Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS,
+            Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A,
+            Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B,
+            Character.UnicodeBlock.CJK_COMPATIBILITY_IDEOGRAPHS,
+            Character.UnicodeBlock.HIRAGANA,
+            Character.UnicodeBlock.KATAKANA,
+            Character.UnicodeBlock.HANGUL_SYLLABLES,
+            Character.UnicodeBlock.HANGUL_JAMO,
+            Character.UnicodeBlock.DEVANAGARI -> 6.0
+            else -> 0.0
+        }
+    }
+    return score
+}
+
+private fun String.isUrlFragmentBefore(next: String): Boolean {
+    if (startsWith("http://") || startsWith("https://") || startsWith("http:/") || startsWith("https:/")) return true
+    if (startsWith("htps:/") || startsWith("ttp://")) return true
+    if (contains("://") && next.isDomainOrPathTail()) return true
+    return false
+}
+
+private fun String.isEmailFragmentBefore(next: String): Boolean {
+    val hasLocalPart = any { it.isLetterOrDigit() } &&
+            (any { it == '.' || it == '_' || it == '-' || it.isDigit() } || length <= 2)
+    if (next.startsWith("@")) return hasLocalPart
+    if (next.contains('@')) return hasLocalPart
+    if (!contains('@')) return false
+    if (startsWith("@")) return false
+    val domain = substringAfter('@', missingDelimiterValue = "")
+    if (domain.any { !(it.isLetterOrDigit() || it == '-' || it == '.') }) return false
+    return domain.isNotEmpty() && !domain.contains('.') && next.isDomainOrPathTail()
+}
+
+private fun String.isHandleMarkerBefore(next: String): Boolean {
+    return (this == "@" || this == "(@") && next.isHandleTail()
+}
+
+private fun String.isHandleNameBeforeNumericSuffix(next: String): Boolean {
+    if (!startsWith("@") || contains('_')) return false
+    if (length < 3 || drop(1).any { !it.isLetterOrDigit() }) return false
+    return next.isNumericSuffixFragment()
+}
+
+private fun String.isHandleTail(): Boolean {
+    if (isEmpty()) return false
+    if (first() == '@' || first() == '#') return false
+    return first().isLetter() && all { it.isLetterOrDigit() || it == '_' }
+}
+
+private fun String.isNumericSuffixFragment(): Boolean {
+    if (length !in 2..6) return false
+    return all { it.isDigit() || it in "Il|l" } && any { it.isDigit() }
+}
+
+private fun String.isDomainOrPathTail(): Boolean {
+    if (isEmpty()) return false
+    val first = first()
+    return first.isLetterOrDigit() || first == '/' || first == '?' || first == '&' || first == '-' || first == '_'
+}
+
+private fun String.isCompactAmbiguousTokenFragment(): Boolean {
+    if (length !in 1..12 || any { it.isWhitespace() }) return false
+    if (!all { it.isLetterOrDigit() || it in "_-:/?.=&" }) return false
+    val compact = filter { it.isLetterOrDigit() || it == '|' }
+    if (compact.isNotEmpty() && compact.all { it in "0OoOQ1Il|" }) return true
+    if (compact.any { it.isLowerCase() && it !in "ol" }) return false
+    return any { it.isDigit() || it in "_-:/?.=&" }
 }
 
 fun Text.Element._toWord(

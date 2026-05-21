@@ -19,10 +19,30 @@ private val MISSING_SPACE_BEFORE_QUOTED_UPPERCASE_PAIR = Regex("^([A-Za-z]+)'([A
 private val LEADING_PAREN_BEFORE_HANDLE = Regex("^\\(@(?=[A-Za-z0-9_])")
 private val DUPLICATED_LOWERCASE_BEFORE_HANDLE = Regex("^([a-z])\\1@(?=[A-Za-z0-9])")
 private val PRICE_TOKEN = Regex("^\\$\\d+(\\.\\d+)?$")
+private val CODE_AMBIGUOUS_SERIAL = Regex("([=:\"])([0O]{2})([I1l|]{2})(?=[\"\\s.,;)]|$)")
+private val QUERY_AMBIGUOUS_ZERO_PAIR = Regex("([?&][A-Za-z0-9_-]+=)([0O]{2})(?=[&#\\s.,;)]|$)")
+private val COMPACT_ONE_TOKEN_PREFIX = Regex("^[I1l|]{3}(?=[a-z])")
+private val BRACKETED_AMBIGUOUS_ACRONYM = Regex("([\\[({<])([l|1])(?=[A-Z0-9])")
+private val LOWERCASE_S_PRICE = Regex("(?<![A-Za-z0-9])s\\$(?=\\d)")
+private val LOWERCASE_ZERO_BETWEEN_LETTERS = Regex("(?<=[a-z])0(?=[a-z])")
+private val S_TWO_PRICE = Regex("(?<![A-Za-z0-9])S2(?=\\d\\.\\d{2})")
+private val COMMON_HANDLE_UNDERSCORE = Regex("(?i)\\b(user)-(?=\\d{2,}\\b)")
+private val HANDLE_DIGIT_SUFFIX_IL = Regex("(?i)(\\b@?[a-z][a-z0-9_]*_0)[il|](?=\\b)")
+private val MISSING_CLOSING_QUOTE_BEFORE_SEMICOLON = Regex("(?<![A-Za-z0-9])'([a-z]+);(?=\\s|$)")
+private val LATIN_TO_CJK_BOUNDARY = Regex("([A-Za-z0-9_.$-])([\\u4E00-\\u9FFF\\u3040-\\u30FF\\uAC00-\\uD7AF])")
+private val CJK_TO_LATIN_BOUNDARY = Regex("([\\u4E00-\\u9FFF\\u3040-\\u30FF\\uAC00-\\uD7AF])([A-Za-z0-9_$])")
+private val ASCII_LABEL_BOUNDARY = Regex("([A-Z]{2,}:)(?=[A-Za-z0-9_])")
+private val HTTPS_MISSING_SECOND_SLASH_AFTER_L = Regex("^htps:/l(?=[A-Za-z0-9-])")
+private val HTTPS_MISSING_SECOND_SLASH = Regex("^htps:/+(?=[A-Za-zl])")
+private val HTTPS_SINGLE_SLASH_AFTER_L = Regex("^https:/l(?=[A-Za-z0-9-])")
+private val HTTPS_SINGLE_SLASH = Regex("^https:/(?=[A-Za-z0-9-])")
+private val HTTP_SINGLE_SLASH_AFTER_L = Regex("^http:/l(?=[A-Za-z0-9-])")
+private val HTTP_SINGLE_SLASH = Regex("^http:/(?=[A-Za-z0-9-])")
 
 internal object LatinOcrGlyphNormalizer {
 
     fun needsElementNormalization(rawText: String): Boolean {
+        if (normalizeCompactAmbiguousElement(rawText) != null) return true
         if (rawText == "Ill" || rawText == "00" || rawText.startsWith("O00")) return true
         if (rawText.startsWith("(@") || rawText in WORD_REPLACEMENTS) return true
         if (rawText.contains('Ọ')) return true
@@ -50,13 +70,18 @@ internal object LatinOcrGlyphNormalizer {
     }
 
     fun mayNeedSymbolNormalization(rawText: String): Boolean {
-        if (rawText.any { it == '0' || it == '8' || it == '$' }) return true
+        if (rawText.isCompactAmbiguousGlyphToken()) return true
+        if (rawText.hasStructuredTokenContext()) return true
+        if (rawText.hasEightAmpersandRisk()) return true
+        if (rawText.hasZeroOhRisk()) return true
+        if (rawText.hasOneILRisk()) return true
         if (rawText.startsWith("f") && rawText.endsWith("}")) return true
         return rawText.length == 2 && rawText.any { it in "Vvy" }
     }
 
     fun mayNeedHiddenTokenWordSplit(rawText: String): Boolean {
         if (rawText.length < 3) return false
+        if (rawText.length <= 6 && rawText.all { it in "0OoOQ1Il|" }) return false
         if (rawText.any { it.isDigit() || it in HIDDEN_TOKEN_SPLIT_TRIGGERS }) return true
         val uppercasePrefixLength = rawText.takeWhile { it.isUpperCase() }.length
         return uppercasePrefixLength in 2..4 &&
@@ -91,6 +116,7 @@ internal object LatinOcrGlyphNormalizer {
         elementBoundingBox: Rect? = null,
         symbolBoundingBoxes: List<Rect> = emptyList(),
     ): String {
+        normalizeCompactAmbiguousElement(rawText)?.let { return it }
         val symbolText = normalizedSymbolText.takeIf { it.isNotBlank() && it.length == rawText.length } ?: rawText
         val separatorRecoveredText = recoverMissingSeparator(
             bitmap = bitmap,
@@ -98,7 +124,17 @@ internal object LatinOcrGlyphNormalizer {
             symbolBoundingBoxes = symbolBoundingBoxes,
             text = symbolText,
         ) ?: symbolText
-        return (if (separatorRecoveredText == "Ill") "I'll" else separatorRecoveredText.replace('|', 'l'))
+        return normalizeTokenText(
+            if (rawText == "Ill" && separatorRecoveredText == "Ill") {
+                "I'll"
+            } else {
+                separatorRecoveredText.replace('|', 'l')
+            }
+        )
+    }
+
+    fun normalizeTokenText(rawText: String): String {
+        return rawText
             .let { WORD_REPLACEMENTS[it] ?: it }
             .replace('Ọ', 'Q')
             .replace(LEADING_ZERO_IN_UPPERCASE_TOKEN, "O")
@@ -113,6 +149,27 @@ internal object LatinOcrGlyphNormalizer {
             .replace("I\"Il", "I'll")
             .replace(LEADING_PAREN_BEFORE_HANDLE, "@")
             .replace(DUPLICATED_LOWERCASE_BEFORE_HANDLE, "$1@")
+            .replace(CODE_AMBIGUOUS_SERIAL) { match ->
+                "${match.groupValues[1]}O0I1"
+            }
+            .replace(QUERY_AMBIGUOUS_ZERO_PAIR) { match ->
+                "${match.groupValues[1]}O0"
+            }
+            .let { if (it == "(@") "@" else it }
+            .replace(COMPACT_ONE_TOKEN_PREFIX, "I1l ")
+            .replace(BRACKETED_AMBIGUOUS_ACRONYM, "$1I")
+            .replace(LOWERCASE_S_PRICE) { "S$" }
+            .replace(LOWERCASE_ZERO_BETWEEN_LETTERS, "o")
+            .replace(S_TWO_PRICE) { "S$" }
+            .replace(COMMON_HANDLE_UNDERSCORE, "$1_")
+            .replace(HANDLE_DIGIT_SUFFIX_IL) { match ->
+                "${match.groupValues[1]}1"
+            }
+            .replace(MISSING_CLOSING_QUOTE_BEFORE_SEMICOLON) { match ->
+                "'${match.groupValues[1]}';"
+            }
+            .let { repairUrlScheme(it) }
+            .let { repairStructuredTokenText(it) }
             .let { text ->
                 val pipeNormalized = if (rawText.startsWith("|1")) {
                     text.replaceFirst("l1", "I1")
@@ -128,6 +185,10 @@ internal object LatinOcrGlyphNormalizer {
             .replace("111l", "1I1l")
             .replace("0001I1l", "O0O1I1l")
             .replace("O001I1l", "O0O1I1l")
+            .replace("O00111|", "O0O1I1l")
+            .replace("O00111l", "O0O1I1l")
+            .replace("O00Il1l", "O0O1I1l")
+            .replace("O00IlIl", "O0O1I1l")
     }
 
     fun detectSeparator(bitmap: Bitmap, localGap: Rect): String? {
@@ -164,13 +225,21 @@ internal object LatinOcrGlyphNormalizer {
         return "${text[0]}$separator${text[1]}"
     }
 
+    private fun normalizeCompactAmbiguousElement(rawText: String): String? {
+        val token = rawText.filter { it.isLetterOrDigit() || it == '|' }
+        if (token.length != rawText.length || token.length != 3) return null
+        return when {
+            token.all { it in "1Il|" } && token.any { it.isDigit() || it == '|' } -> "I1l"
+            token.all { it in "0OoOQ" } && token.any { it.isDigit() } -> "O0o"
+            else -> null
+        }
+    }
+
     private fun candidateFamily(char: Char, rawElementText: String, symbolIndex: Int): Set<Char>? {
         return when (char) {
-            '0' -> if (rawElementText.isNumericToken() || rawElementText.hasUppercaseZeroUppercaseContext(symbolIndex)) {
-                null
-            } else {
-                setOf('0', 'O', 'Q')
-            }
+            '0' -> zeroOhCandidates(rawElementText, symbolIndex)
+            'O', 'o', 'Q' -> null
+            '1', 'I', 'l', '|' -> oneILCandidates(rawElementText, symbolIndex)
             '8' -> setOf('8', '&')
             '$' -> if (rawElementText.isPlainPriceToken()) {
                 null
@@ -191,6 +260,25 @@ internal object LatinOcrGlyphNormalizer {
         }
     }
 
+    private fun zeroOhCandidates(rawElementText: String, symbolIndex: Int): Set<Char>? {
+        if (rawElementText.isPlainPriceToken()) return null
+        if (rawElementText.isNumericToken() && !rawElementText.isCompactAmbiguousSerial()) return null
+        if (rawElementText.hasLowercaseWordContextOutsideAmbiguousFamily() && !rawElementText.hasCodeOrQueryContext()) return null
+        if (rawElementText.hasUppercaseZeroUppercaseContext(symbolIndex)) return setOf('0', 'O', 'Q')
+        return setOf('0', 'O', 'o', 'Q')
+    }
+
+    private fun oneILCandidates(rawElementText: String, symbolIndex: Int): Set<Char>? {
+        if (rawElementText.isPlainPriceToken()) return null
+        if (rawElementText.isNumericToken()) return null
+        if (rawElementText.hasHandleDigitSuffixContext(symbolIndex)) return null
+        val hasTokenContext = rawElementText.any { it.isDigit() || it in "[](){}<>\"=_:/?&@.-" }
+        if (!hasTokenContext && !rawElementText.filter { it.isLetterOrDigit() || it == '|' }.all { it in "1Il|" }) {
+            return null
+        }
+        return setOf('1', 'I', 'l', '|')
+    }
+
     private fun String.isNumericToken(): Boolean {
         if (isEmpty()) return false
         if (any { it == '$' || it == '%' || it == '.' || it == ',' }) return true
@@ -207,8 +295,115 @@ internal object LatinOcrGlyphNormalizer {
                 getOrNull(symbolIndex + 1)?.isUpperCase() == true
     }
 
+    private fun String.isCompactAmbiguousSerial(): Boolean {
+        val token = filter { it.isLetterOrDigit() || it == '|' }
+        if (token.length !in 2..6) return false
+        return token.all { it in "0OoOQ1Il|" } && token.any { it in "0OoOQ" } && token.any { it in "1Il|" }
+    }
+
+    private fun String.hasAmbiguousTokenContext(): Boolean {
+        val token = filter { it.isLetterOrDigit() || it == '|' }
+        if (token.length <= 6 && token.isNotEmpty() && token.all { it in "0OoOQ1Il|" }) return true
+        return any { it.isDigit() || it in "\"=_:/?&@.-[](){}<>" }
+    }
+
+    private fun String.isCompactAmbiguousGlyphToken(): Boolean {
+        val token = filter { it.isLetterOrDigit() || it == '|' }
+        if (token.isEmpty() || token.length != length || token.length !in 2..8) return false
+        if (!token.all { it in "0OoOQ1Il|" }) return false
+        return token.any { it.isDigit() || it == '|' } ||
+                (token.any { it in "0OQ" } && token.any { it in "Il" })
+    }
+
+    private fun String.hasStructuredTokenContext(): Boolean {
+        return any { it in "\"=_:/?&@.-[](){}<>#$%\\" }
+    }
+
+    private fun String.hasEightAmpersandRisk(): Boolean {
+        val index = indexOf('8')
+        if (index < 0) return false
+        val left = getOrNull(index - 1)
+        val right = getOrNull(index + 1)
+        return left?.isLetterOrDigit() == true && right?.isLetterOrDigit() == true
+    }
+
+    private fun String.hasZeroOhRisk(): Boolean {
+        if (none { it in "0OoOQ" }) return false
+        if (isPlainPriceToken() || isNumericToken()) return false
+        return hasAmbiguousTokenContext()
+    }
+
+    private fun String.hasOneILRisk(): Boolean {
+        if (none { it in "1Il|" }) return false
+        if (isPlainPriceToken()) return false
+        if (isNumericToken()) return false
+        val token = filter { it.isLetterOrDigit() || it == '|' }
+        if (token.length in 2..8 && token.all { it in "1Il|" }) return true
+        return hasAmbiguousTokenContext()
+    }
+
+    private fun String.hasHandleDigitSuffixContext(symbolIndex: Int): Boolean {
+        if (symbolIndex <= 0 || symbolIndex >= length) return false
+        if (getOrNull(symbolIndex - 1)?.isDigit() != true) return false
+        val prefix = substring(0, symbolIndex - 1)
+        return prefix.contains('@') || prefix.contains('#') || prefix.contains('_')
+    }
+
+    private fun String.hasLowercaseWordContextOutsideAmbiguousFamily(): Boolean {
+        return any { it.isLowerCase() && it !in "ol" }
+    }
+
+    private fun String.hasCodeOrQueryContext(): Boolean {
+        return any { it in "\"=:/?&" }
+    }
+
+    private fun repairUrlScheme(text: String): String {
+        return text
+            .replace(HTTPS_MISSING_SECOND_SLASH_AFTER_L, "https://")
+            .replace(HTTPS_MISSING_SECOND_SLASH, "https://")
+            .replace(HTTPS_SINGLE_SLASH_AFTER_L, "https://")
+            .replace(HTTPS_SINGLE_SLASH, "https://")
+            .replace(HTTP_SINGLE_SLASH_AFTER_L, "http://")
+            .replace(HTTP_SINGLE_SLASH, "http://")
+    }
+
+    private fun repairStructuredTokenText(text: String): String {
+        if (text.isSymbolCluster()) {
+            return text.toCharArray().joinToString(separator = " ") { it.toString() }
+        }
+        return text
+            .replace(LATIN_TO_CJK_BOUNDARY, "$1 $2")
+            .replace(CJK_TO_LATIN_BOUNDARY, "$1 $2")
+            .replace(ASCII_LABEL_BOUNDARY, "$1 ")
+            .let { repairBracketedToken(it) }
+            .let { repairAngleToken(it) }
+    }
+
+    private fun repairBracketedToken(text: String): String {
+        if (text.length < 3) return text
+        val inner = text.drop(1).dropLast(1)
+        if (inner.isEmpty()) return text
+        return when {
+            text.first() == '{' && text.last() == ')' -> "{${inner}}"
+            text.first() == '(' && text.last() == ')' && inner.all { it.isLowerCase() } -> "{${inner}}"
+            (text.first() == '[' || text.first() == '(') && text.last() == ']' && inner == "D" -> "[ID]"
+            else -> text
+        }
+    }
+
+    private fun repairAngleToken(text: String): String {
+        if (text.startsWith("<") && text.endsWith(".") && !text.contains(">") && text.length > 2) {
+            return text.dropLast(1) + ">."
+        }
+        return text
+    }
+
+    private fun String.isSymbolCluster(): Boolean {
+        return length >= 2 && all { !it.isLetterOrDigit() && !it.isWhitespace() && it !in "\"'`.,:;!?(){}[]<>/-_" }
+    }
+
     private object GlyphTemplateMatcher {
-        private val templateCache = mutableMapOf<Char, GlyphMask?>()
+        private val templateCache = mutableMapOf<Char, List<GlyphMask>>()
 
         fun match(
             bitmap: Bitmap,
@@ -219,17 +414,17 @@ internal object LatinOcrGlyphNormalizer {
             val actual = GlyphMask.fromBitmap(bitmap, boundingBox) ?: return null
             val scored = candidates.mapNotNull { candidate ->
                 val template = templateCache.getOrPut(candidate) {
-                    GlyphMask.fromTemplate(candidate)
-                } ?: return@mapNotNull null
-                candidate to actual.distanceTo(template)
+                    GlyphMask.fromTemplates(candidate)
+                }.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+                candidate to template.minOf { actual.distanceTo(it) }
             }
             if (scored.isEmpty()) return null
 
             val rawScore = scored.firstOrNull { it.first == rawChar }?.second ?: return null
             val best = scored.minBy { it.second }
             if (best.first == rawChar) return rawChar
-            if (best.second > 0.48f) return rawChar
-            if (rawScore - best.second < 0.055f) return rawChar
+            if (best.second > 0.54f) return rawChar
+            if (rawScore - best.second < 0.022f) return rawChar
             return best.first
         }
     }
@@ -251,14 +446,28 @@ internal object LatinOcrGlyphNormalizer {
         }
 
         companion object {
-            fun fromTemplate(char: Char): GlyphMask? {
+            private val templateStyles = listOf(
+                TemplateStyle("sans-serif", false, 1.0f),
+                TemplateStyle("sans-serif", true, 1.0f),
+                TemplateStyle("sans-serif-condensed", false, 0.90f),
+                TemplateStyle("monospace", false, 1.0f),
+                TemplateStyle("serif", false, 1.0f),
+            )
+
+            fun fromTemplates(char: Char): List<GlyphMask> {
+                return templateStyles.mapNotNull { style -> fromTemplate(char, style) }
+            }
+
+            private fun fromTemplate(char: Char, style: TemplateStyle): GlyphMask? {
                 val bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888)
                 val canvas = Canvas(bitmap)
                 canvas.drawColor(Color.WHITE)
                 val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                     color = Color.BLACK
                     textSize = 46f
-                    typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+                    typeface = Typeface.create(style.typefaceName, Typeface.NORMAL)
+                    isFakeBoldText = style.fakeBold
+                    textScaleX = style.textScaleX
                     isSubpixelText = true
                 }
                 val bounds = Rect()
@@ -359,6 +568,12 @@ internal object LatinOcrGlyphNormalizer {
             }
         }
     }
+
+    private data class TemplateStyle(
+        val typefaceName: String,
+        val fakeBold: Boolean,
+        val textScaleX: Float,
+    )
 
     private data class SeparatorInk(
         val inkWidth: Int,

@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.mlkit.vision.text.Text
 import com.yiqun.translator.data.local.vision.model.Sentence
 import com.yiqun.translator.data.local.vision.model.VisionResponse
 import kotlinx.coroutines.runBlocking
@@ -39,7 +40,7 @@ class VisionRepositoryAccuracyInstrumentedTest {
                 .map { normalize(it) }
 
             assertTrue(
-                "scene $index expected '${normalize(scene.expected)}' in $recognizedSentences raw='${result.text.text}'",
+                "scene $index expected '${normalize(scene.expected)}' in $recognizedSentences raw='${result.text.text}' elements='${result.text.elementSnapshot()}'",
                 recognizedSentences.contains(normalize(scene.expected)),
             )
         }
@@ -96,6 +97,16 @@ class VisionRepositoryAccuracyInstrumentedTest {
 
         fun normalize(text: String): String {
             return text.replace(Regex("\\s+"), " ").trim()
+        }
+
+        fun Text.elementSnapshot(): String {
+            return textBlocks.joinToString(separator = " | ") { block ->
+                block.lines.joinToString(separator = " / ") { line ->
+                    line.elements.joinToString(separator = " ") { element ->
+                        "${element.text}${element.boundingBox}"
+                    }
+                }
+            }
         }
     }
 }
