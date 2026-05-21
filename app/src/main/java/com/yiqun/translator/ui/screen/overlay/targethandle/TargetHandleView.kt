@@ -114,12 +114,6 @@ class TargetHandleView private constructor(
             if (SECONDARY.isRunning.get()) SECONDARY.clear()
         }
 
-        fun setCaptureOccludedAll(occluded: Boolean) {
-            registeredInstances().forEach { handleView ->
-                handleView.setCaptureOccluded(occluded)
-            }
-        }
-
         private fun registeredInstances(): List<TargetHandleView> {
             return synchronized(instances) { instances.toList() }
         }
@@ -168,13 +162,6 @@ class TargetHandleView private constructor(
     private val handleWindowVisibilityState = StableWindowVisibilityState()
 
     private val targetWindowVisibilityState = StableWindowVisibilityState()
-
-    private data class TargetCaptureOcclusionSnapshot(
-        val viewAlpha: Float,
-        val windowAlpha: Float,
-    )
-
-    private var targetCaptureOcclusionSnapshot: TargetCaptureOcclusionSnapshot? = null
 
     private var dualPointerMode = false
 
@@ -629,11 +616,10 @@ class TargetHandleView private constructor(
         val localView = view ?: return
         if (!handleWindowVisibilityState.markIfChanged(visible)) return
         val alpha = OverlayWindowAlpha.forTouchableVisibility(visible)
-        val appliedAlpha = alphaForCaptureOcclusion(alpha)
-        localView.alpha = appliedAlpha
+        localView.alpha = alpha
         localView.visibility = if (visible) View.VISIBLE else View.GONE
         if (::layoutParams.isInitialized) {
-            layoutParams.alpha = appliedAlpha
+            layoutParams.alpha = alpha
             layoutParams.flags = if (visible) {
                 layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
             } else {
@@ -648,72 +634,16 @@ class TargetHandleView private constructor(
     private fun updateTargetWindowVisibility(visible: Boolean) {
         val localTargetView = targetView ?: return
         if (!targetWindowVisibilityState.markIfChanged(visible)) return
-        localTargetView.alpha = targetAlphaForCaptureOcclusion(OverlayWindowAlpha.forTouchableVisibility(visible))
+        localTargetView.alpha = OverlayWindowAlpha.forTouchableVisibility(visible)
         localTargetView.visibility = if (visible) View.VISIBLE else View.GONE
         if (::targetLayoutParams.isInitialized) {
-            targetLayoutParams.alpha = targetAlphaForCaptureOcclusion(
-                OverlayWindowAlpha.forPassThroughVisibility(visible)
-            )
+            targetLayoutParams.alpha = OverlayWindowAlpha.forPassThroughVisibility(visible)
             if (isServiceInitialized() && localTargetView.isAttachedToWindow) {
                 try {
                     (overlayService.applicationContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
                         .updateViewLayout(localTargetView, targetLayoutParams)
                 } catch (e: IllegalArgumentException) {
                     Timber.tag(TAG).e(e, "targetView visibility updateViewLayout failed")
-                }
-            }
-        }
-    }
-
-    override fun setCaptureOccluded(occluded: Boolean) {
-        super.setCaptureOccluded(occluded)
-        setTargetCaptureOccluded(occluded)
-    }
-
-    private fun targetAlphaForCaptureOcclusion(alpha: Float): Float {
-        return if (targetCaptureOcclusionSnapshot != null) 0.0f else alpha
-    }
-
-    private fun setTargetCaptureOccluded(occluded: Boolean) {
-        val localTargetView = targetView ?: return
-        if (occluded) {
-            if (targetCaptureOcclusionSnapshot != null) return
-            val windowAlpha = if (::targetLayoutParams.isInitialized) {
-                targetLayoutParams.alpha
-            } else {
-                localTargetView.alpha
-            }
-            targetCaptureOcclusionSnapshot = TargetCaptureOcclusionSnapshot(
-                viewAlpha = localTargetView.alpha,
-                windowAlpha = windowAlpha,
-            )
-            localTargetView.animate().cancel()
-            localTargetView.alpha = 0.0f
-            if (::targetLayoutParams.isInitialized) {
-                targetLayoutParams.alpha = 0.0f
-                if (isServiceInitialized() && localTargetView.isAttachedToWindow) {
-                    try {
-                        (overlayService.applicationContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
-                            .updateViewLayout(localTargetView, targetLayoutParams)
-                    } catch (e: IllegalArgumentException) {
-                        Timber.tag(TAG).e(e, "targetView capture occlusion updateViewLayout failed")
-                    }
-                }
-            }
-            return
-        }
-
-        val snapshot = targetCaptureOcclusionSnapshot ?: return
-        targetCaptureOcclusionSnapshot = null
-        localTargetView.alpha = snapshot.viewAlpha
-        if (::targetLayoutParams.isInitialized) {
-            targetLayoutParams.alpha = snapshot.windowAlpha
-            if (isServiceInitialized() && localTargetView.isAttachedToWindow) {
-                try {
-                    (overlayService.applicationContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager)
-                        .updateViewLayout(localTargetView, targetLayoutParams)
-                } catch (e: IllegalArgumentException) {
-                    Timber.tag(TAG).e(e, "targetView capture restore updateViewLayout failed")
                 }
             }
         }
@@ -1206,7 +1136,6 @@ class TargetHandleView private constructor(
         nativeStateCollectorJobs.forEach { it.cancel() }
         nativeStateCollectorJobs = emptyList()
         lastTargetIconRenderState = TargetIconRenderState()
-        targetCaptureOcclusionSnapshot = null
         cancelDockDragHandle()
         cancelRepositionAnimation()
         handleWindowVisibilityState.reset()

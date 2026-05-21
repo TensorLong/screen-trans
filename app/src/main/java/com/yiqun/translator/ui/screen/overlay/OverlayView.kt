@@ -65,60 +65,6 @@ abstract class OverlayView : OverlayServiceEventListener {
 
     open val touchListener: (applicationContext: Context) -> View.OnTouchListener? = { _ -> null }
 
-    private data class CaptureOcclusionSnapshot(
-        val viewAlpha: Float,
-        val windowAlpha: Float,
-    )
-
-    private var captureOcclusionSnapshot: CaptureOcclusionSnapshot? = null
-
-    protected fun isCaptureOccluded(): Boolean {
-        return captureOcclusionSnapshot != null
-    }
-
-    protected fun alphaForCaptureOcclusion(alpha: Float): Float {
-        return if (isCaptureOccluded()) 0.0f else alpha
-    }
-
-    open fun setCaptureOccluded(occluded: Boolean) {
-        val localView = view ?: return
-        if (occluded) {
-            if (captureOcclusionSnapshot != null) return
-            val windowAlpha = currentLayoutAlpha(localView.alpha)
-            captureOcclusionSnapshot = CaptureOcclusionSnapshot(
-                viewAlpha = localView.alpha,
-                windowAlpha = windowAlpha,
-            )
-            localView.animate().cancel()
-            localView.alpha = 0.0f
-            setLayoutAlpha(0.0f)
-            return
-        }
-
-        val snapshot = captureOcclusionSnapshot ?: return
-        captureOcclusionSnapshot = null
-        localView.alpha = snapshot.viewAlpha
-        setLayoutAlpha(snapshot.windowAlpha)
-    }
-
-    private fun currentLayoutAlpha(fallback: Float): Float {
-        return try {
-            layoutParams.alpha
-        } catch (_: UninitializedPropertyAccessException) {
-            fallback
-        }
-    }
-
-    private fun setLayoutAlpha(alpha: Float) {
-        try {
-            layoutParams.alpha = alpha
-            if (::overlayService.isInitialized && view?.isAttachedToWindow == true) {
-                updateLayout(overlayService.applicationContext)
-            }
-        } catch (_: UninitializedPropertyAccessException) {
-        }
-    }
-
     @CallSuper
     open suspend fun cast(applicationContext: Context, reattach: Boolean = false) {
         Timber.tag(TAG).i("#### cast ####")
@@ -314,7 +260,6 @@ abstract class OverlayView : OverlayServiceEventListener {
         }
         oldViewDetachRunnable = null
         this@OverlayView.oldView = null
-        captureOcclusionSnapshot = null
 
         try {
             val rippleDrawable = view?.background as? RippleDrawable

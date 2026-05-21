@@ -34,7 +34,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yiqun.translator.R
 import com.yiqun.translator.core.OverlayService
-import com.yiqun.translator.data.local.capture.CaptureFramePolicy
 import com.yiqun.translator.data.local.capture.CapturePreventedException
 import com.yiqun.translator.data.local.capture.NoMediaProjectionTokenException
 import com.yiqun.translator.data.local.vision.TextDetectMode
@@ -44,7 +43,6 @@ import com.yiqun.translator.extensions.vibrate
 import com.yiqun.translator.data.remote.translation.Language
 import com.yiqun.translator.data.local.capture.CaptureResponse
 import com.yiqun.translator.data.local.vision.model.VisionResponse
-import com.yiqun.translator.ui.screen.overlay.OverlayCaptureOcclusion
 import com.yiqun.translator.ui.screen.overlay.OverlayView
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleViewModel
 import com.yiqun.translator.ui.screen.overlay.targethandle.TranslateStatus
@@ -314,12 +312,9 @@ open class AreaSelectionView : OverlayView() {
     private fun requestTranslate(context: Context, selectedArea: Rect) {
         translateJob?.cancel()
         translateJob = launchInOverlayViewCoroutineScope {
-            val captureResponse: CaptureResponse = OverlayCaptureOcclusion.withHiddenOverlays {
-                targetHandleViewModel.captureRepository.request(
-                    cropRect = AreaCapturePolicy.captureRect(selectedArea),
-                    discardInitialFrames = CaptureFramePolicy.cleanCaptureDiscardFrameCount(),
-                )
-            }
+            val captureResponse: CaptureResponse = targetHandleViewModel.captureRepository.request(
+                AreaCapturePolicy.captureRect(selectedArea)
+            )
             Timber.tag(TAG).d("captureResponse $captureResponse")
             if (captureResponse !is CaptureResponse.Success) {
                 Timber.tag(TAG).d("CaptureResponse.Error ${(captureResponse as CaptureResponse.Error).t}")
@@ -438,6 +433,7 @@ fun createOverlaidBitmap(originalBitmap: Bitmap, rect: Rect): Bitmap {
         }
     }
 }
+
 
 
 

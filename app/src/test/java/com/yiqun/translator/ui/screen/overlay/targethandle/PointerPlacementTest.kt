@@ -638,7 +638,7 @@ class PointerPlacementTest {
     }
 
     @Test
-    fun targetIconContentIsHiddenDuringCaptureWithoutChangingWindowVisibility() {
+    fun targetIconContentDimsDuringCaptureWithoutChangingWindowVisibility() {
         val state = TargetIconRenderPolicy.stateFor(
             side = PointerSide.LEFT,
             activeSide = PointerSide.RIGHT,
@@ -652,12 +652,13 @@ class PointerPlacementTest {
         )
 
         assertFalse(state.pointerVisible)
-        assertTrue(state.captureHidden)
-        assertEquals(0.0f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+        assertTrue(state.dimmed)
+        assertTrue(state.captureRequested)
+        assertEquals(0.01f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
     }
 
     @Test
-    fun activeDraggedPointerIconIsHiddenDuringCapture() {
+    fun activeDraggedPointerIconDimsDuringCapture() {
         val state = TargetIconRenderPolicy.stateFor(
             side = PointerSide.LEFT,
             activeSide = PointerSide.LEFT,
@@ -671,17 +672,18 @@ class PointerPlacementTest {
         )
 
         assertTrue(state.pointerVisible)
-        assertTrue(state.captureHidden)
-        assertEquals(0.0f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+        assertTrue(state.dimmed)
+        assertTrue(state.captureRequested)
+        assertEquals(0.01f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
     }
 
     @Test
-    fun fixedAreaTranslationStillDimsPointerWithoutHidingIt() {
+    fun activeDraggedPointerIconStaysOpaqueWhenOnlyFixedAreaIsTranslating() {
         val state = TargetIconRenderPolicy.stateFor(
             side = PointerSide.LEFT,
-            activeSide = PointerSide.RIGHT,
+            activeSide = PointerSide.LEFT,
             motionEventAction = MotionEvent.ACTION_MOVE,
-            textDetectMode = TextDetectMode.FIXED_AREA,
+            textDetectMode = TextDetectMode.SENTENCE,
             captureStatus = CaptureStatus.Idle,
             fixedAreaTranslating = true,
             translateStatus = TranslateStatus.Idle,
@@ -689,9 +691,9 @@ class PointerPlacementTest {
             writingRtl = false,
         )
 
-        assertFalse(state.pointerVisible)
-        assertFalse(state.captureHidden)
+        assertTrue(state.pointerVisible)
         assertTrue(state.dimmed)
-        assertEquals(0.01f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+        assertFalse(state.captureRequested)
+        assertEquals(1.0f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
     }
 }

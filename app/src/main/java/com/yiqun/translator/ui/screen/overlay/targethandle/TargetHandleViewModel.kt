@@ -18,7 +18,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.yiqun.translator.R
-import com.yiqun.translator.data.local.capture.CaptureFramePolicy
 import com.yiqun.translator.data.local.capture.CapturePreventedException
 import com.yiqun.translator.data.local.capture.PointedCaptureCrop
 import com.yiqun.translator.data.local.capture.CaptureRepository
@@ -62,7 +61,6 @@ import com.yiqun.translator.extensions.openGoogleApp
 import com.yiqun.translator.extensions.toPx
 import com.yiqun.translator.ui.screen.overlay.dialog.DialogView
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuBarView
-import com.yiqun.translator.ui.screen.overlay.OverlayCaptureOcclusion
 import com.yiqun.translator.ui.screen.overlay.translation.DismissRunningCommand
 import com.yiqun.translator.ui.screen.overlay.translation.TTSStatus
 import com.yiqun.translator.ui.screen.overlay.translation.TranslationView
@@ -638,14 +636,8 @@ class TargetHandleViewModel(
                 screenWidth = screenInfo.width,
                 screenHeight = screenInfo.height,
                 pointer = pointerPosition,
-                textDetectMode = textDetectMode,
             )
-            val captureResponse: CaptureResponse = OverlayCaptureOcclusion.withHiddenOverlays {
-                captureRepository.request(
-                    cropRect = cropRect,
-                    discardInitialFrames = CaptureFramePolicy.cleanCaptureDiscardFrameCount(),
-                )
-            }
+            val captureResponse: CaptureResponse = captureRepository.request(cropRect)
             Timber.tag(TAG).d("requestCapture viewModelScope.launch -------------- 2 $captureResponse")
             if (captureResponse is CaptureResponse.Success) {
                 endTime = System.nanoTime()

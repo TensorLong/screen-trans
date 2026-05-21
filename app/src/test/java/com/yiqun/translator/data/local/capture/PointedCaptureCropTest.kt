@@ -1,7 +1,6 @@
 package com.yiqun.translator.data.local.capture
 
 import android.graphics.Rect
-import com.yiqun.translator.data.local.vision.TextDetectMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -9,7 +8,7 @@ import org.junit.Test
 class PointedCaptureCropTest {
 
     @Test
-    fun boundsForPointedTranslationUsesBroadLocalBand() {
+    fun boundsForPointedTranslationPreserveFullOcrArea() {
         val bounds = PointedCaptureCrop.boundsFor(
             screenWidth = 1080,
             screenHeight = 2400,
@@ -17,9 +16,8 @@ class PointedCaptureCropTest {
             pointerY = 1200,
         )
 
-        assertEquals(1080, width(bounds))
-        assertEquals(1600, height(bounds))
-        assertRect(rectOf(0, 400, 1080, 2000), bounds)
+        assertEquals(1080 * 2400, width(bounds) * height(bounds))
+        assertRect(rectOf(0, 0, 1080, 2400), bounds)
     }
 
     @Test
@@ -31,7 +29,7 @@ class PointedCaptureCropTest {
             pointerY = 12,
         )
 
-        assertRect(rectOf(0, 0, 1080, 1600), bounds)
+        assertRect(rectOf(0, 0, 1080, 2400), bounds)
         assertTrue(540 >= bounds.left && 540 < bounds.right)
         assertTrue(12 >= bounds.top && 12 < bounds.bottom)
     }
@@ -49,20 +47,7 @@ class PointedCaptureCropTest {
     }
 
     @Test
-    fun paragraphModePreservesFullScreenContext() {
-        val bounds = PointedCaptureCrop.boundsFor(
-            screenWidth = 1080,
-            screenHeight = 2400,
-            pointerX = 540,
-            pointerY = 1200,
-            textDetectMode = TextDetectMode.PARAGRAPH,
-        )
-
-        assertRect(rectOf(0, 0, 1080, 2400), bounds)
-    }
-
-    @Test
-    fun pointedBoundsReduceOcrPixelsOnTallScreens() {
+    fun pointedBoundsNeverReduceOcrPixels() {
         val screenWidth = 1080
         val screenHeight = 2400
         val fullScreenPixels = screenWidth * screenHeight
@@ -74,8 +59,7 @@ class PointedCaptureCropTest {
         )
         val croppedPixels = width(bounds) * height(bounds)
 
-        assertTrue(croppedPixels < fullScreenPixels)
-        assertEquals((fullScreenPixels * 2) / 3, croppedPixels)
+        assertEquals(fullScreenPixels, croppedPixels)
     }
 
     private fun width(rect: Rect): Int = rect.right - rect.left

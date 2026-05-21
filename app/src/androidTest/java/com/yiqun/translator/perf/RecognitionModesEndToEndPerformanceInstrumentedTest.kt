@@ -19,7 +19,6 @@ import com.yiqun.translator.data.local.vision.model.Paragraph
 import com.yiqun.translator.data.local.vision.model.Sentence
 import com.yiqun.translator.data.local.vision.model.VisionResponse
 import com.yiqun.translator.data.local.vision.model.Word
-import com.yiqun.translator.data.local.capture.PointedCaptureCrop
 import com.yiqun.translator.data.remote.ai.chatgpt.SenseGroupRequestCache
 import com.yiqun.translator.data.remote.ai.chatgpt.SenseGroupChunkPolicy
 import com.yiqun.translator.data.remote.translation.TranslationRequestCache
@@ -233,35 +232,19 @@ class RecognitionModesEndToEndPerformanceInstrumentedTest {
         mode: TextDetectMode,
         optimized: Boolean,
     ): String {
-        var offsetX = 0
-        var offsetY = 0
         val bitmap = when {
             mode == TextDetectMode.SELECT || mode == TextDetectMode.FIXED_AREA -> {
                 if (optimized) {
                     val captureRect = AreaCapturePolicy.captureRect(selectionRect)
-                    offsetX = captureRect.left
-                    offsetY = captureRect.top
                     Bitmap.createBitmap(template, captureRect.left, captureRect.top, captureRect.width(), captureRect.height())
                 } else {
                     createOverlaidBitmap(template, selectionRect)
                 }
             }
-            optimized -> {
-                val captureRect = PointedCaptureCrop.boundsFor(
-                    screenWidth = SCREEN_WIDTH,
-                    screenHeight = SCREEN_HEIGHT,
-                    pointerX = SCREEN_WIDTH / 2,
-                    pointerY = selectionRect.centerY(),
-                    textDetectMode = mode,
-                )
-                offsetX = captureRect.left
-                offsetY = captureRect.top
-                Bitmap.createBitmap(template, captureRect.left, captureRect.top, captureRect.width(), captureRect.height())
-            }
-            else -> {
-                template.copy(Bitmap.Config.ARGB_8888, false)
-            }
+            else -> template.copy(Bitmap.Config.ARGB_8888, false)
         }
+        val offsetX = if (optimized && (mode == TextDetectMode.SELECT || mode == TextDetectMode.FIXED_AREA)) selectionRect.left else 0
+        val offsetY = if (optimized && (mode == TextDetectMode.SELECT || mode == TextDetectMode.FIXED_AREA)) selectionRect.top else 0
         val response = try {
             repository.request(
                 bitmap = bitmap,

@@ -366,11 +366,10 @@ class MenuBarView private constructor() : OverlayView() {
             if (!windowVisibilityState.markIfChanged(visible)) return
             it.animate().cancel()
             val alpha = OverlayWindowAlpha.forTouchableVisibility(visible)
-            val appliedAlpha = alphaForCaptureOcclusion(alpha)
-            it.alpha = appliedAlpha
+            it.alpha = alpha
             it.visibility = if (visible) View.VISIBLE else View.GONE
             if (::layoutParams.isInitialized) {
-                layoutParams.alpha = appliedAlpha
+                layoutParams.alpha = alpha
                 layoutParams.flags = if (visible) {
                     layoutParams.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
                 } else {
@@ -1002,6 +1001,7 @@ fun TranslationKitIconButton(
         }
     }
 }
+
 
 
 
