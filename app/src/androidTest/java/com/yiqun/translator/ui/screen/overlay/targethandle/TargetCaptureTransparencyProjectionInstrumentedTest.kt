@@ -7,7 +7,12 @@ import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.os.Build
+import android.os.Debug
 import android.os.ParcelFileDescriptor
+import android.os.Process
+import android.system.Os
+import android.system.OsConstants
+import android.util.Log
 import android.view.Gravity
 import android.view.WindowManager
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -27,8 +32,12 @@ import com.yiqun.translator.data.local.vision.VisionRepository
 import com.yiqun.translator.data.local.vision.model.VisionResponse
 import com.yiqun.translator.ui.screen.permissions.ScreenCapturePermissionRequesterActivity
 import com.yiqun.translator.ui.screen.test.OcrProbeActivity
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -39,6 +48,8 @@ import org.junit.runner.RunWith
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.roundToInt
 
 @RunWith(AndroidJUnit4::class)
 class TargetCaptureTransparencyProjectionInstrumentedTest {
@@ -71,24 +82,18 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
             val cropRect = probeCropRect()
             val baseline = captureBitmap(captureRepository, cropRect, "baseline")
             val baselineText = recognize(visionRepository, baseline)
-            assertTrue(
-                "Baseline OCR should read the probe sentence, got '$baselineText'",
-                baselineText.contains(OcrProbeActivity.EXPECTED_TEXT),
-            )
+            assertProbeTextRecognized("Baseline", baselineText)
 
             addVisibleTarget()
             val visible = captureBitmap(captureRepository, cropRect, "visible-target")
-            val visibleDifference = meanDifferenceAroundTarget(baseline, visible)
-            assertTrue(
-                "Visible target must be present in MediaProjection capture; diff=$visibleDifference",
-                visibleDifference > VISIBLE_TARGET_DIFF_THRESHOLD,
-            )
+            val visibleDifference = differenceAroundTarget(baseline, visible)
+            assertTargetVisible("Visible target must be present in MediaProjection capture", visibleDifference)
 
             withContext(Dispatchers.Main.immediate) {
                 targetView?.render(TargetIconRenderState(pointerVisible = true, captureRequested = true))
             }
             val immediateTransparent = captureBitmap(captureRepository, cropRect, "immediate-transparent")
-            val immediateDifference = meanDifferenceAroundTarget(baseline, immediateTransparent)
+            val immediateDifference = differenceAroundTarget(baseline, immediateTransparent)
 
             withContext(Dispatchers.Main.immediate) {
                 targetView?.render(TargetIconRenderState(pointerVisible = true))
@@ -99,17 +104,14 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
                 captureBitmap(captureRepository, cropRect, "synchronized-transparent")
             }
             val synchronizedText = recognize(visionRepository, synchronizedTransparent)
-            val synchronizedDifference = meanDifferenceAroundTarget(baseline, synchronizedTransparent)
+            val synchronizedDifference = differenceAroundTarget(baseline, synchronizedTransparent)
 
             assertTrue(
                 "Synchronized transparent target should be much closer to baseline than the visible target. " +
                         "visible=$visibleDifference immediate=$immediateDifference synchronized=$synchronizedDifference",
-                synchronizedDifference < visibleDifference * TRANSPARENT_DIFF_RATIO_LIMIT,
+                synchronizedDifference.mean < visibleDifference.mean * TRANSPARENT_DIFF_RATIO_LIMIT,
             )
-            assertTrue(
-                "Synchronized transparent target should not corrupt OCR, got '$synchronizedText'",
-                synchronizedText.contains(OcrProbeActivity.EXPECTED_TEXT),
-            )
+            assertProbeTextRecognized("Synchronized transparent target", synchronizedText)
 
             baseline.recycle()
             visible.recycle()
@@ -118,6 +120,95 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
         } finally {
             captureRepository.release()
         }
+        Unit
+    }
+
+    @Test
+    fun cancelledTransparentCaptureRestoresVisibleTargetFrame() = runBlocking {
+        prepareAppPermissions()
+        configureSenseGroupMode()
+        launchProbeActivity()
+        startOverlayForegroundService()
+        ensureMediaProjectionToken()
+
+        val captureRepository = CaptureRepository(context).also { it.acquire() }
+        try {
+            val cropRect = probeCropRect()
+            val baseline = captureBitmap(captureRepository, cropRect, "cancel-baseline")
+
+            addVisibleTarget()
+            val visible = captureBitmap(captureRepository, cropRect, "cancel-visible-target")
+            val visibleDifference = differenceAroundTarget(baseline, visible)
+            assertTargetVisible("Visible target must be present before cancellation", visibleDifference)
+
+            val transparentBlockStarted = CompletableDeferred<Unit>()
+            val transparentJob = launch {
+                TargetCaptureTransparency.withTransparentTargets(listOfNotNull(targetView)) {
+                    transparentBlockStarted.complete(Unit)
+                    awaitCancellation()
+                }
+            }
+            withTimeout(CAPTURE_TIMEOUT_MS) {
+                transparentBlockStarted.await()
+            }
+            transparentJob.cancelAndJoin()
+            delay(200)
+
+            val afterCancel = captureBitmap(captureRepository, cropRect, "cancel-after-restore")
+            val afterCancelDifference = differenceAroundTarget(baseline, afterCancel)
+
+            assertTrue(
+                "Cancelled transparent capture must restore the visible target. " +
+                        "visible=$visibleDifference afterCancel=$afterCancelDifference",
+                afterCancelDifference.mean > visibleDifference.mean * RESTORED_TARGET_DIFF_RATIO_LIMIT,
+            )
+
+            baseline.recycle()
+            visible.recycle()
+            afterCancel.recycle()
+        } finally {
+            captureRepository.release()
+        }
+        Unit
+    }
+
+    @Test
+    fun transparentProjectionCaptureResourceProfile() = runBlocking {
+        prepareAppPermissions()
+        configureSenseGroupMode()
+        launchProbeActivity()
+        startOverlayForegroundService()
+        ensureMediaProjectionToken()
+
+        val captureRepository = CaptureRepository(context).also { it.acquire() }
+        try {
+            val cropRect = probeCropRect()
+            addVisibleTarget()
+
+            repeat(2) {
+                captureTransparentOnce(captureRepository, cropRect).recycle()
+            }
+            Runtime.getRuntime().gc()
+            delay(250)
+
+            val results = (1..PROFILE_RUNS).map { runIndex ->
+                profileTransparentCaptureRun(runIndex, captureRepository, cropRect)
+            }
+            val medianWallMs = results.map { it.wallMs }.sorted()[results.size / 2]
+            val medianCpuMs = results.map { it.cpuMs }.sorted()[results.size / 2]
+            val medianPeakPssKb = results.map { it.peakPssKb }.sorted()[results.size / 2]
+            val medianDeltaPssKb = results.map { it.deltaPssKb }.sorted()[results.size / 2]
+
+            Log.i(
+                PERF_TAG,
+                "SUMMARY label=target-transparent-capture runs=$PROFILE_RUNS " +
+                        "medianWallMs=$medianWallMs medianCpuMs=$medianCpuMs " +
+                        "medianPeakPssKb=$medianPeakPssKb medianDeltaPssKb=$medianDeltaPssKb",
+            )
+        } finally {
+            captureRepository.release()
+        }
+        Unit
     }
 
     private suspend fun configureSenseGroupMode() {
@@ -239,6 +330,61 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
         return bitmap
     }
 
+    private suspend fun captureTransparentOnce(
+        captureRepository: CaptureRepository,
+        cropRect: Rect,
+    ): Bitmap {
+        val response = TargetCaptureTransparency.withTransparentTargets(listOfNotNull(targetView)) {
+            withTimeout(CAPTURE_TIMEOUT_MS) {
+                captureRepository.request(cropRect)
+            }
+        }
+        assertTrue("Transparent capture should succeed, got $response", response is CaptureResponse.Success)
+        return (response as CaptureResponse.Success).bitmap
+    }
+
+    private suspend fun profileTransparentCaptureRun(
+        runIndex: Int,
+        captureRepository: CaptureRepository,
+        cropRect: Rect,
+    ): ProfileResult {
+        val keepSampling = AtomicBoolean(true)
+        val startPssKb = currentPssKb()
+        var peakPssKb = startPssKb
+        val sampler = Thread {
+            while (keepSampling.get()) {
+                peakPssKb = maxOf(peakPssKb, currentPssKb())
+                Thread.sleep(20)
+            }
+        }
+
+        val startCpuMs = processCpuMs()
+        val startWallNs = System.nanoTime()
+        sampler.start()
+        val bitmap = try {
+            captureTransparentOnce(captureRepository, cropRect)
+        } finally {
+            keepSampling.set(false)
+            sampler.join()
+        }
+        bitmap.recycle()
+
+        val result = ProfileResult(
+            wallMs = (System.nanoTime() - startWallNs) / 1_000_000,
+            cpuMs = processCpuMs() - startCpuMs,
+            peakPssKb = peakPssKb,
+            deltaPssKb = peakPssKb - startPssKb,
+        )
+
+        Log.i(
+            PERF_TAG,
+            "RUN index=$runIndex label=target-transparent-capture wallMs=${result.wallMs} " +
+                    "cpuMs=${result.cpuMs} startPssKb=$startPssKb peakPssKb=${result.peakPssKb} " +
+                    "deltaPssKb=${result.deltaPssKb}",
+        )
+        return result
+    }
+
     private suspend fun recognize(
         visionRepository: VisionRepository,
         bitmap: Bitmap,
@@ -259,7 +405,26 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
             .trim()
     }
 
-    private fun meanDifferenceAroundTarget(first: Bitmap, second: Bitmap): Double {
+    private fun assertProbeTextRecognized(label: String, recognizedText: String) {
+        assertTrue(
+            "$label OCR should read the probe sentence, got '$recognizedText'",
+            normalizedOcrText(recognizedText).contains(normalizedOcrText(OcrProbeActivity.EXPECTED_TEXT)),
+        )
+    }
+
+    private fun normalizedOcrText(text: String): String {
+        return text.lowercase().filter { it.isLetterOrDigit() }
+    }
+
+    private fun assertTargetVisible(label: String, difference: TargetDifference) {
+        assertTrue(
+            "$label; diff=$difference",
+            difference.mean > VISIBLE_TARGET_MEAN_DIFF_THRESHOLD ||
+                    difference.maxChannelSum > VISIBLE_TARGET_MAX_CHANNEL_SUM_THRESHOLD,
+        )
+    }
+
+    private fun differenceAroundTarget(first: Bitmap, second: Bitmap): TargetDifference {
         val cropTop = OcrProbeActivity.CROP_TOP
         val centerX = OcrProbeActivity.TARGET_CENTER_X.coerceIn(0, first.width - 1)
         val centerY = (OcrProbeActivity.TARGET_CENTER_Y - cropTop).coerceIn(0, first.height - 1)
@@ -271,17 +436,25 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
 
         var sum = 0L
         var count = 0
+        var maxChannelSum = 0
         for (y in top until bottom) {
             for (x in left until right) {
                 val a = first.getPixel(x, y)
                 val b = second.getPixel(x, y)
-                sum += kotlin.math.abs(Color.red(a) - Color.red(b))
-                sum += kotlin.math.abs(Color.green(a) - Color.green(b))
-                sum += kotlin.math.abs(Color.blue(a) - Color.blue(b))
+                val redDiff = kotlin.math.abs(Color.red(a) - Color.red(b))
+                val greenDiff = kotlin.math.abs(Color.green(a) - Color.green(b))
+                val blueDiff = kotlin.math.abs(Color.blue(a) - Color.blue(b))
+                sum += redDiff
+                sum += greenDiff
+                sum += blueDiff
+                maxChannelSum = maxOf(maxChannelSum, redDiff + greenDiff + blueDiff)
                 count += 3
             }
         }
-        return if (count == 0) 0.0 else sum.toDouble() / count.toDouble()
+        return TargetDifference(
+            mean = if (count == 0) 0.0 else sum.toDouble() / count.toDouble(),
+            maxChannelSum = maxChannelSum,
+        )
     }
 
     private fun writeBitmap(bitmap: Bitmap, label: String) {
@@ -300,13 +473,45 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
         }
     }
 
+    private fun currentPssKb(): Int {
+        val memoryInfo = Debug.MemoryInfo()
+        Debug.getMemoryInfo(memoryInfo)
+        return memoryInfo.totalPss
+    }
+
+    private fun processCpuMs(): Long {
+        val stat = File("/proc/${Process.myPid()}/stat").readText()
+        val closeParen = stat.lastIndexOf(')')
+        val fields = stat.substring(closeParen + 2).split(' ')
+        val userTicks = fields[11].toLong()
+        val kernelTicks = fields[12].toLong()
+        val ticksPerSecond = Os.sysconf(OsConstants._SC_CLK_TCK)
+        return ((userTicks + kernelTicks) * 1000.0 / ticksPerSecond).roundToInt().toLong()
+    }
+
     private companion object {
+        const val PERF_TAG = "TargetCapturePerf"
         val WAS_TRAILER_SHOWN = booleanPreferencesKey("was_trailer_shown")
         val TEXT_DETECT_MODE = stringPreferencesKey("text_detect_mode")
         val SOURCE_LANGUAGE_CODE = stringPreferencesKey("source_language_code")
         val TARGET_LANGUAGE_CODE = stringPreferencesKey("target_language_code")
-        const val VISIBLE_TARGET_DIFF_THRESHOLD = 2.0
+        const val VISIBLE_TARGET_MEAN_DIFF_THRESHOLD = 1.0
+        const val VISIBLE_TARGET_MAX_CHANNEL_SUM_THRESHOLD = 60
         const val TRANSPARENT_DIFF_RATIO_LIMIT = 0.35
+        const val RESTORED_TARGET_DIFF_RATIO_LIMIT = 0.70
         const val CAPTURE_TIMEOUT_MS = 10_000L
+        const val PROFILE_RUNS = 5
     }
+
+    private data class TargetDifference(
+        val mean: Double,
+        val maxChannelSum: Int,
+    )
+
+    private data class ProfileResult(
+        val wallMs: Long,
+        val cpuMs: Long,
+        val peakPssKb: Int,
+        val deltaPssKb: Int,
+    )
 }

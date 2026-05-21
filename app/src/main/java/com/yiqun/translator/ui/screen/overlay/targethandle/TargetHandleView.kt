@@ -48,6 +48,7 @@ import com.yiqun.translator.ui.screen.overlay.fixedarea.FixedAreaView
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuBarView
 import com.yiqun.translator.ui.screen.overlay.selection.AreaSelectionView
 import com.yiqun.translator.ui.screen.overlay.visiontext.VisionTextView
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -1178,25 +1179,24 @@ object TargetCaptureTransparency {
         }
         if (visibleTargets.isEmpty()) return block()
 
-        withContext(Dispatchers.Main.immediate) {
-            visibleTargets.forEach { it.setCaptureTransparent(true) }
-        }
-        coroutineScope {
-            visibleTargets
-                .map { targetView ->
-                    async(Dispatchers.Main.immediate) {
-                        withTimeoutOrNull(FRAME_COMMIT_TIMEOUT_MS) {
-                            targetView.awaitCaptureTransparentFrameCommit()
+        return try {
+            withContext(Dispatchers.Main.immediate) {
+                visibleTargets.forEach { it.setCaptureTransparent(true) }
+            }
+            coroutineScope {
+                visibleTargets
+                    .map { targetView ->
+                        async(Dispatchers.Main.immediate) {
+                            withTimeoutOrNull(FRAME_COMMIT_TIMEOUT_MS) {
+                                targetView.awaitCaptureTransparentFrameCommit()
+                            }
                         }
                     }
-                }
-                .awaitAll()
-        }
-
-        return try {
+                    .awaitAll()
+            }
             block()
         } finally {
-            withContext(Dispatchers.Main.immediate) {
+            withContext(NonCancellable + Dispatchers.Main.immediate) {
                 visibleTargets.forEach { it.setCaptureTransparent(false) }
             }
         }
