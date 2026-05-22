@@ -60,6 +60,7 @@ import com.yiqun.translator.ui.screen.overlay.Event
 import com.yiqun.translator.ui.screen.overlay.OverlayView
 import com.yiqun.translator.ui.screen.overlay.dialog.DialogView
 import com.yiqun.translator.ui.screen.overlay.selection.createOverlaidBitmap
+import com.yiqun.translator.ui.screen.overlay.targethandle.TargetCaptureTransparency
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleView
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleViewModel
 import com.yiqun.translator.ui.screen.permissions.ScreenCapturePermissionRequesterActivity
@@ -453,9 +454,18 @@ open class FixedAreaView : OverlayView() {
     private var detectedString = ""
 
     private suspend fun requestVision(context: Context, selectedArea: Rect) {
-        val captureResponse: CaptureResponse = targetHandleViewModel.captureRepository.request(
-            AreaCapturePolicy.captureRect(selectedArea)
-        )
+        // Hide the shared target pointer (the real OCR contaminant — same as pointed mode)
+        // and gate the capture on the overlay-hidden frame being committed.
+        // The fixed-area dimming overlay is deliberately NOT hidden here: it is a uniform
+        // translucent wash (OCR-benign, unlike the pointer) that the app already fades out
+        // on its own, and requestVision runs in a tight polling loop — hiding it every poll
+        // would turn that fade-out into a strobe.
+        val captureResponse: CaptureResponse = TargetCaptureTransparency.withTransparentTargetsAfterCommit { minimumImageTimestampNs ->
+            targetHandleViewModel.captureRepository.request(
+                AreaCapturePolicy.captureRect(selectedArea),
+                minimumImageTimestampNs,
+            )
+        }
         Timber.tag(TAG).d("captureResponse $captureResponse")
         if (captureResponse !is CaptureResponse.Success) {
             Timber.tag(TAG).d("CaptureResponse.Error ${(captureResponse as CaptureResponse.Error).t}")

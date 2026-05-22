@@ -96,7 +96,10 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
             }
             mediaProjection!!.registerCallback(mediaProjectionStopCallback!!, null)
 
-            imageReader = ImageReader.newInstance(screenInfo.width, screenInfo.height, PixelFormat.RGBA_8888, 1)
+            // maxImages must be >= 2: acquireLatestImage() needs a spare buffer to
+            // drop stale frames and return the freshest one. With 1 it can hand back
+            // a stale, pre-transparency frame that still contains overlay pixels.
+            imageReader = ImageReader.newInstance(screenInfo.width, screenInfo.height, PixelFormat.RGBA_8888, 2)
 
             virtualDisplay = mediaProjection!!.createVirtualDisplay(
                 "Sense Group Translator",

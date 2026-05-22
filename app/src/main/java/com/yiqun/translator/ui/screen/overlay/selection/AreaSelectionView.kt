@@ -44,6 +44,7 @@ import com.yiqun.translator.data.remote.translation.Language
 import com.yiqun.translator.data.local.capture.CaptureResponse
 import com.yiqun.translator.data.local.vision.model.VisionResponse
 import com.yiqun.translator.ui.screen.overlay.OverlayView
+import com.yiqun.translator.ui.screen.overlay.targethandle.TargetCaptureTransparency
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleViewModel
 import com.yiqun.translator.ui.screen.overlay.targethandle.TranslateStatus
 import com.yiqun.translator.ui.screen.overlay.translation.TranslationView
@@ -312,9 +313,17 @@ open class AreaSelectionView : OverlayView() {
     private fun requestTranslate(context: Context, selectedArea: Rect) {
         translateJob?.cancel()
         translateJob = launchInOverlayViewCoroutineScope {
-            val captureResponse: CaptureResponse = targetHandleViewModel.captureRepository.request(
-                AreaCapturePolicy.captureRect(selectedArea)
-            )
+            // Hide the app's own overlays (target pointer + this selection dimming overlay)
+            // and gate the capture on the overlay-hidden frame being committed, so OCR never
+            // sees the app's overlays — same protection as pointed mode.
+            val captureResponse: CaptureResponse = TargetCaptureTransparency.withTransparentCaptureSurfacesAfterCommit(
+                listOfNotNull(view)
+            ) { minimumImageTimestampNs ->
+                targetHandleViewModel.captureRepository.request(
+                    AreaCapturePolicy.captureRect(selectedArea),
+                    minimumImageTimestampNs,
+                )
+            }
             Timber.tag(TAG).d("captureResponse $captureResponse")
             if (captureResponse !is CaptureResponse.Success) {
                 Timber.tag(TAG).d("CaptureResponse.Error ${(captureResponse as CaptureResponse.Error).t}")

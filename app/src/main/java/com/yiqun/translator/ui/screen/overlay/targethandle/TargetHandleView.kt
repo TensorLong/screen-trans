@@ -1183,35 +1183,179 @@ object TargetCaptureTransparency {
         targetViews: List<TargetIconNativeView>,
         block: suspend (minimumImageTimestampNs: Long?) -> T,
     ): T {
-        val visibleTargets = withContext(Dispatchers.Main.immediate) {
+        return withTransparentCaptureSurfaces(targetViews, emptyList(), block)
+    }
+
+    /**
+     * Hides the shared target-pointer icons AND any [extraViews] (e.g. the area-selection
+     * dimming overlay, the fixed-area frame) before a screen capture, waits for the
+     * overlay-hidden frame to be committed to the display, and only then captures the
+     * gate timestamp passed to [block]. This lets the area-selection and fixed-area
+     * capture paths reuse the exact same post-commit timestamp gate as pointed mode so
+     * the app's own overlays never leak into OCR.
+     */
+    suspend fun <T> withTransparentCaptureSurfacesAfterCommit(
+        extraViews: List<View>,
+        block: suspend (minimumImageTimestampNs: Long?) -> T,
+    ): T {
+        return withTransparentCaptureSurfaces(TargetHandleView.targetIconViews(), extraViews, block)
+    }
+
+    private suspend fun <T> withTransparentCaptureSurfaces(
+        targetViews: List<TargetIconNativeView>,
+        extraViews: List<View>,
+        block: suspend (minimumImageTimestampNs: Long?) -> T,
+    ): T {
+        val hideableSurfaces = withContext(Dispatchers.Main.immediate) {
+            val surfaces = ArrayList<CaptureHideableSurface>()
             targetViews
-                .filter { it.isAttachedToWindow && it.isShown && it.width > 0 && it.height > 0 }
-                .toList()
+                .filter { it.isCaptureSurfaceVisible() }
+                .forEach { surfaces.add(CaptureHideableSurface.Target(it)) }
+            extraViews
+                .filter { it.isCaptureSurfaceVisible() }
+                .forEach { surfaces.add(CaptureHideableSurface.Plain(it)) }
+            surfaces.toList()
         }
-        if (visibleTargets.isEmpty()) return block(null)
+        if (hideableSurfaces.isEmpty()) return block(null)
 
         return try {
-            val minimumImageTimestampNs = System.nanoTime()
             withContext(Dispatchers.Main.immediate) {
-                visibleTargets.forEach { it.setCaptureTransparent(true) }
+                hideableSurfaces.forEach { it.setCaptureTransparent(true) }
             }
             coroutineScope {
-                visibleTargets
-                    .map { targetView ->
+                hideableSurfaces
+                    .map { surface ->
                         async(Dispatchers.Main.immediate) {
                             withTimeoutOrNull(FRAME_COMMIT_TIMEOUT_MS) {
-                                targetView.awaitCaptureTransparentFrameCommit()
+                                surface.awaitCaptureTransparentFrameCommit()
                             }
                         }
                     }
                     .awaitAll()
             }
+            // Capture the gate timestamp AFTER the transparent frame is committed.
+            // Frames older than this still show the app's overlays — CaptureRepository
+            // drops them. Capturing it before the commit makes the gate a no-op and
+            // leaks overlay pixels into OCR. Do not move this above the awaitAll().
+            val minimumImageTimestampNs = System.nanoTime()
             block(minimumImageTimestampNs)
         } finally {
             withContext(NonCancellable + Dispatchers.Main.immediate) {
-                visibleTargets.forEach { it.setCaptureTransparent(false) }
+                hideableSurfaces.forEach { it.setCaptureTransparent(false) }
             }
         }
+    }
+
+    private fun View.isCaptureSurfaceVisible(): Boolean {
+        return isAttachedToWindow && isShown && width > 0 && height > 0
+    }
+}
+
+/**
+ * A view whose pixels must be hidden from a MediaProjection capture and then restored.
+ * [Target] uses [TargetIconNativeView.setCaptureTransparent] (alpha is reserved for the
+ * pointer's pass-through window animation); [Plain] hides an ordinary overlay view via
+ * its [View.alpha].
+ */
+private sealed class CaptureHideableSurface {
+    abstract fun setCaptureTransparent(transparent: Boolean)
+    abstract suspend fun awaitCaptureTransparentFrameCommit()
+
+    class Target(private val view: TargetIconNativeView) : CaptureHideableSurface() {
+        override fun setCaptureTransparent(transparent: Boolean) {
+            view.setCaptureTransparent(transparent)
+        }
+
+        override suspend fun awaitCaptureTransparentFrameCommit() {
+            view.awaitCaptureTransparentFrameCommit()
+        }
+    }
+
+    class Plain(private val view: View) : CaptureHideableSurface() {
+        private var restoreAlpha: Float = 1f
+
+        override fun setCaptureTransparent(transparent: Boolean) {
+            if (transparent) {
+                restoreAlpha = view.alpha
+                view.alpha = 0f
+            } else {
+                view.alpha = restoreAlpha
+            }
+        }
+
+        override suspend fun awaitCaptureTransparentFrameCommit() {
+            view.awaitCaptureFrameCommit()
+        }
+    }
+}
+
+/**
+ * Waits until the next frame for this view has been committed to the display, mirroring
+ * [TargetIconNativeView.awaitCaptureTransparentFrameCommit] for ordinary overlay views.
+ * Uses [ViewTreeObserver.registerFrameCommitCallback] on API 29+, with a pre-API-29
+ * [ViewTreeObserver.OnDrawListener] fallback.
+ */
+private suspend fun View.awaitCaptureFrameCommit() {
+    if (!isAttachedToWindow || !isShown || width <= 0 || height <= 0) return
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        awaitViewFrameCommit()
+    } else {
+        awaitViewDrawThenAnimationFrame()
+    }
+}
+
+private suspend fun View.awaitViewFrameCommit() {
+    suspendCancellableCoroutine { continuation ->
+        var resumed = false
+        fun resumeOnce() {
+            if (resumed) return
+            resumed = true
+            continuation.resume(Unit)
+        }
+
+        continuation.invokeOnCancellation { resumed = true }
+        viewTreeObserver.registerFrameCommitCallback {
+            resumeOnce()
+        }
+        postInvalidateOnAnimation()
+    }
+}
+
+private suspend fun View.awaitViewDrawThenAnimationFrame() {
+    suspendCancellableCoroutine { continuation ->
+        var resumed = false
+        var listener: ViewTreeObserver.OnDrawListener? = null
+
+        fun resumeOnce() {
+            if (resumed) return
+            resumed = true
+            continuation.resume(Unit)
+        }
+
+        listener = ViewTreeObserver.OnDrawListener {
+            post {
+                listener?.let { drawListener ->
+                    if (viewTreeObserver.isAlive) {
+                        viewTreeObserver.removeOnDrawListener(drawListener)
+                    }
+                }
+                postOnAnimation { resumeOnce() }
+            }
+        }
+
+        continuation.invokeOnCancellation {
+            resumed = true
+            post {
+                listener?.let { drawListener ->
+                    if (viewTreeObserver.isAlive) {
+                        viewTreeObserver.removeOnDrawListener(drawListener)
+                    }
+                }
+            }
+        }
+
+        viewTreeObserver.addOnDrawListener(listener)
+        postInvalidateOnAnimation()
     }
 }
 
