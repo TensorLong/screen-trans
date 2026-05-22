@@ -397,15 +397,83 @@ object PointerInteractionVisibilityPolicy {
 }
 
 object RecognitionDelayPolicy {
+    private const val POINTED_MODE_DWELL_DELAY_MS = 600L
+    private const val AREA_MODE_SETTLE_DELAY_MS = 90L
+
     fun pointerStoppedDelayMs(textDetectMode: TextDetectMode): Long {
         return when (textDetectMode) {
             TextDetectMode.SELECT,
-            TextDetectMode.FIXED_AREA -> 90L
-            else -> 30L
+            TextDetectMode.FIXED_AREA -> AREA_MODE_SETTLE_DELAY_MS
+            else -> POINTED_MODE_DWELL_DELAY_MS
         }
     }
 
     fun captureStartDelayMs(): Long = 0L
+}
+
+object PointerDwellPolicy {
+    fun shouldRestartDwell(
+        previous: Point?,
+        current: Point,
+        marginDistance: Int,
+    ): Boolean {
+        return previous == null || hasSignificantPointerMove(
+            previousX = previous.x,
+            previousY = previous.y,
+            currentX = current.x,
+            currentY = current.y,
+            marginDistance = marginDistance,
+        )
+    }
+
+    fun hasSignificantPointerMove(
+        previousX: Int,
+        previousY: Int,
+        currentX: Int,
+        currentY: Int,
+        marginDistance: Int,
+    ): Boolean {
+        return distanceSquared(previousX, previousY, currentX, currentY) >
+                marginDistance.toLong() * marginDistance.toLong()
+    }
+
+    fun shouldEmitPosition(
+        current: Point,
+        lastEmittedPoint: Point?,
+        marginDistance: Int,
+    ): Boolean {
+        return lastEmittedPoint?.let {
+            shouldEmitPosition(
+                currentX = current.x,
+                currentY = current.y,
+                lastEmittedX = it.x,
+                lastEmittedY = it.y,
+                marginDistance = marginDistance,
+            )
+        } ?: true
+    }
+
+    fun shouldEmitPosition(
+        currentX: Int,
+        currentY: Int,
+        lastEmittedX: Int,
+        lastEmittedY: Int,
+        marginDistance: Int,
+    ): Boolean {
+        return distanceSquared(currentX, currentY, lastEmittedX, lastEmittedY) >
+                marginDistance.toLong() * marginDistance.toLong()
+    }
+
+    private fun distanceSquared(
+        point1X: Int,
+        point1Y: Int,
+        point2X: Int,
+        point2Y: Int,
+    ): Long {
+        val dx = point1X.toLong() - point2X.toLong()
+        val dy = point1Y.toLong() - point2Y.toLong()
+        return dx * dx + dy * dy
+    }
 }
 
 class PointerDockingReleaseTracker {

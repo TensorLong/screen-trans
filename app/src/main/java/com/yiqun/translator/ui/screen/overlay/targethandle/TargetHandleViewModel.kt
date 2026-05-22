@@ -89,7 +89,6 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import timber.log.Timber
 import java.util.Locale
-import kotlin.math.sqrt
 
 
 @Suppress("UNCHECKED_CAST")
@@ -797,68 +796,55 @@ class TargetHandleViewModel(
     /**
      */
     val pointerStoppedPositionFlow: Flow<Point?> = channelFlow {
-        var _pointerPosition: Point? = null
+        var dwellPointerPosition: Point? = null
         var lastEmittedPoint: Point? = null
         var timerJob: Job? = null
 
-        // Helper function to calculate distance
-        fun calculateDistance(point1: Point, point2: Point): Double {
-            val dx = point1.x - point2.x
-            val dy = point1.y - point2.y
-            return sqrt((dx * dx + dy * dy).toDouble())
-        }
-
-        // Cancel the timer job
         fun cancelTimer() {
             timerJob?.cancel()
             timerJob = null
         }
 
-        // Start the timer to emit the position
-        fun startTimer(pointerPosition: Point?) {
-            cancelTimer() // Cancel any existing timer
+        fun startTimer(pointerPosition: Point) {
+            cancelTimer()
             timerJob = launch {
                 delay(POINTER_STOPPED_MARGIN_DURATION)
-                pointerPosition?.let { currentPoint ->
-                    // Emit only if the distance to the last emitted point is greater than the margin
-                    val isNotDuplicate = lastEmittedPoint?.let {
-                        calculateDistance(currentPoint, it) > POINTER_STOPPED_MARGIN_DISTANCE
-                    } ?: true // If lastEmittedPoint is null, it's not a duplicate
-
-                    if (isNotDuplicate) {
-                        send(currentPoint) // Emit the position using `send`
-                        lastEmittedPoint = currentPoint // Update the last emitted point
-                    }
+                if (PointerDwellPolicy.shouldEmitPosition(
+                        current = pointerPosition,
+                        lastEmittedPoint = lastEmittedPoint,
+                        marginDistance = POINTER_STOPPED_MARGIN_DISTANCE,
+                    )
+                ) {
+                    send(pointerPosition)
+                    lastEmittedPoint = Point(pointerPosition)
                 }
-                _pointerPosition = null // Reset for the next emit
-                cancelTimer()
+                timerJob = null
             }
         }
 
-        // Combine pointerPositionFlow and motionEventFlow
         combine(pointerPositionFlow, motionEventFlow) { pointerPosition, motionEvent ->
             Pair(pointerPosition, motionEvent)
         }.collectLatest { (pointerPosition, motionEvent) ->
             if (pointerPosition != null &&
                 (motionEvent == MotionEvent.ACTION_DOWN || motionEvent == MotionEvent.ACTION_MOVE)
             ) {
-                if (_pointerPosition == null) {
-                    _pointerPosition = pointerPosition
-                    startTimer(pointerPosition) // Start the timer for the first time
-                } else {
-                    if (calculateDistance(pointerPosition, _pointerPosition!!) <= POINTER_STOPPED_MARGIN_DISTANCE) {
-                        // Pointer is within the margin, continue waiting
-                    } else {
-                        cancelTimer() // Cancel the ongoing timer
-                        _pointerPosition = null // Reset the pointer position
-                        send(null) // Emit null using `send`
+                if (PointerDwellPolicy.shouldRestartDwell(
+                        previous = dwellPointerPosition,
+                        current = pointerPosition,
+                        marginDistance = POINTER_STOPPED_MARGIN_DISTANCE,
+                    )
+                ) {
+                    if (dwellPointerPosition != null || lastEmittedPoint != null) {
+                        send(null)
                     }
+                    dwellPointerPosition = Point(pointerPosition)
+                    startTimer(Point(pointerPosition))
                 }
             } else {
-                cancelTimer() // Cancel the timer when pointer is invalid
-                _pointerPosition = null
+                cancelTimer()
+                dwellPointerPosition = null
                 lastEmittedPoint = null
-                send(null) // Emit null using `send`
+                send(null)
             }
         }
     }
