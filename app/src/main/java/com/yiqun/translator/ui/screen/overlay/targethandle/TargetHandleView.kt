@@ -1165,21 +1165,33 @@ object TargetCaptureTransparency {
     private const val FRAME_COMMIT_TIMEOUT_MS = 80L
 
     suspend fun <T> withTransparentTargets(block: suspend () -> T): T {
-        return withTransparentTargets(TargetHandleView.targetIconViews(), block)
+        return withTransparentTargetsAfterCommit { block() }
+    }
+
+    suspend fun <T> withTransparentTargetsAfterCommit(block: suspend (minimumImageTimestampNs: Long?) -> T): T {
+        return withTransparentTargetsAfterCommit(TargetHandleView.targetIconViews(), block)
     }
 
     internal suspend fun <T> withTransparentTargets(
         targetViews: List<TargetIconNativeView>,
         block: suspend () -> T,
     ): T {
+        return withTransparentTargetsAfterCommit(targetViews) { block() }
+    }
+
+    internal suspend fun <T> withTransparentTargetsAfterCommit(
+        targetViews: List<TargetIconNativeView>,
+        block: suspend (minimumImageTimestampNs: Long?) -> T,
+    ): T {
         val visibleTargets = withContext(Dispatchers.Main.immediate) {
             targetViews
                 .filter { it.isAttachedToWindow && it.isShown && it.width > 0 && it.height > 0 }
                 .toList()
         }
-        if (visibleTargets.isEmpty()) return block()
+        if (visibleTargets.isEmpty()) return block(null)
 
         return try {
+            val minimumImageTimestampNs = System.nanoTime()
             withContext(Dispatchers.Main.immediate) {
                 visibleTargets.forEach { it.setCaptureTransparent(true) }
             }
@@ -1194,7 +1206,7 @@ object TargetCaptureTransparency {
                     }
                     .awaitAll()
             }
-            block()
+            block(minimumImageTimestampNs)
         } finally {
             withContext(NonCancellable + Dispatchers.Main.immediate) {
                 visibleTargets.forEach { it.setCaptureTransparent(false) }

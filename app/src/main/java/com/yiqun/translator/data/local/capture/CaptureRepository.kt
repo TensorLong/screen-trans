@@ -59,6 +59,7 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
     private val captureResponseFlow = MutableStateFlow<CaptureResponse?>(null)
 
     private var requestedScreenRect: Rect? = null
+    private var minimumImageTimestampNs: Long? = null
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -114,6 +115,16 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
                 try {
                     if (captureResponseFlow.value == null) {
                         if (capturedImage != null) {
+                            val minimumTimestamp = minimumImageTimestampNs
+                            if (minimumTimestamp != null &&
+                                capturedImage.timestamp > 0 &&
+                                capturedImage.timestamp < minimumTimestamp
+                            ) {
+                                Timber.tag(TAG).d(
+                                    "drop stale capture frame timestamp=${capturedImage.timestamp} minimum=$minimumTimestamp"
+                                )
+                                return@setOnImageAvailableListener
+                            }
                             val (capturedBitmap, screenRect) = bitmapFromImage(
                                 image = capturedImage,
                                 screenInfo = screenInfo,
@@ -335,18 +346,23 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
         mediaProjection = null
     }
 
-    suspend fun request(cropRect: Rect? = null): CaptureResponse {
+    suspend fun request(
+        cropRect: Rect? = null,
+        minimumImageTimestampNs: Long? = null,
+    ): CaptureResponse {
         Timber.tag(TAG).i("#### request() ####")
-        captureResponseFlow.value = null
         requestedScreenRect = cropRect
+        this.minimumImageTimestampNs = minimumImageTimestampNs
+        captureResponseFlow.value = null
 
-        Timber.tag(TAG).i("State $state")
-        if (state == State.Uninitialized) {
-            start()
-        }
+        try {
+            Timber.tag(TAG).i("State $state")
+            if (state == State.Uninitialized) {
+                start()
+            }
 
-        var captureResponse: CaptureResponse = captureResponseFlow.filterNotNull().first()
-        if (captureResponse is CaptureResponse.Success) {
+            val captureResponse: CaptureResponse = captureResponseFlow.filterNotNull().first()
+            if (captureResponse is CaptureResponse.Success) {
 //            val (isCapturePrevented, checkerBitmap) = isCapturePrevented(capturedBitmap)
 //            captureWorkFlow.value =
 //                if (isCapturePrevented) {
@@ -354,9 +370,12 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
 //                } else {
 //                    Response.Success(capturedBitmap)
 //                }
+            }
+            return captureResponse
+        } finally {
+            requestedScreenRect = null
+            this.minimumImageTimestampNs = null
         }
-        requestedScreenRect = null
-        return captureResponse
     }
 
     override fun onZeroReferences() {
