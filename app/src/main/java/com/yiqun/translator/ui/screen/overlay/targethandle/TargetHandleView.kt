@@ -1163,6 +1163,7 @@ class TargetHandleView private constructor(
 
 object TargetCaptureTransparency {
     private const val FRAME_COMMIT_TIMEOUT_MS = 80L
+    private const val POST_HIDE_FLUSH_DELAY_MS = 120L
 
     suspend fun <T> withTransparentTargets(block: suspend () -> T): T {
         return withTransparentTargetsAfterCommit { block() }
@@ -1233,6 +1234,7 @@ object TargetCaptureTransparency {
                     }
                     .awaitAll()
             }
+            delay(POST_HIDE_FLUSH_DELAY_MS)
             // Capture the gate timestamp AFTER the transparent frame is committed.
             // Frames older than this still show the app's overlays — CaptureRepository
             // drops them. Capturing it before the commit makes the gate a no-op and
