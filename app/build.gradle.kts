@@ -17,8 +17,8 @@ android {
         applicationId = "com.yiqun.translator"
         minSdk = 23
         targetSdk = 35
-        versionCode = 30317
-        versionName = "3.3.6.4"
+        versionCode = 30321
+        versionName = "3.3.7"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     bundle {

@@ -7,22 +7,31 @@ import org.junit.Test
 class SenseGroupChunkPolicyTest {
 
     @Test
-    fun systemPromptStaysUnderOneHundredWords() {
+    fun systemPromptStaysUnderTwoHundredWords() {
         val wordCount = SenseGroupChunkPolicy.SYSTEM_PROMPT
             .trim()
             .split(Regex("\\s+"))
             .filter { it.isNotBlank() }
             .size
 
-        assertTrue("system prompt has $wordCount words", wordCount <= 100)
+        assertTrue("system prompt has $wordCount words", wordCount <= 200)
     }
 
     @Test
     fun systemPromptUsesSourceAndTargetChunkContract() {
-        assertEquals(
-            "Return JSON only. First translate the whole sentence naturally into the target language using context. Then choose the smallest target-language sense group for the pointed word. If a target verb needs its object or complement to express the event, include it; avoid bare verbs. Also return the exact aligned source words. Never choose the whole sentence unless unavoidable. Format: {\"source_chunk\":\"...\",\"target_chunk\":\"...\"}",
-            SenseGroupChunkPolicy.SYSTEM_PROMPT,
-        )
+        val prompt = SenseGroupChunkPolicy.SYSTEM_PROMPT
+        // v3.3.7 prompt is model-agnostic: validated via OpenRouter across 14 non-reasoning
+        // models. Removed the GPT-only "first translate the whole sentence" instruction
+        // that caused Claude / Gemini / DeepSeek / Qwen / Kimi to emit whole-sentence
+        // translations. Keep these key contract markers stable.
+        assertTrue("must declare JSON-only output", prompt.contains("ONLY a JSON object"))
+        assertTrue("must forbid markdown fences", prompt.contains("No markdown"))
+        assertTrue("must forbid code fences", prompt.contains("No code fences"))
+        assertTrue("must require source_chunk be a substring", prompt.contains("source_chunk MUST be an exact substring"))
+        assertTrue("must forbid whole-sentence chunk", prompt.contains("Do NOT return the whole sentence"))
+        assertTrue("must require target_chunk translate only the chunk", prompt.contains("target_chunk MUST translate ONLY source_chunk"))
+        assertTrue("must specify output schema", prompt.contains("{\"source_chunk\":\"...\",\"target_chunk\":\"...\"}"))
+        assertTrue("must NOT contain the GPT-only whole-sentence instruction", !prompt.contains("First translate the whole sentence"))
     }
 
     @Test

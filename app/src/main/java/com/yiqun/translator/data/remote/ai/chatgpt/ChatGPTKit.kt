@@ -142,7 +142,7 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
             val requestBody = mapOf(
                 "model" to model,
                 "messages" to listOf(systemMessage, userMessage),
-                "max_tokens" to 80,
+                "max_tokens" to 512,
                 "response_format" to mapOf("type" to "json_object"),
                 "temperature" to 0.0,
             )
@@ -225,13 +225,24 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 .sorted()
         }
 
+        private val FENCE_REGEX = Regex(
+            "^\\s*```(?:json)?\\s*\\n?(.*?)\\n?\\s*```\\s*$",
+            setOf(RegexOption.DOT_MATCHES_ALL)
+        )
+
+        internal fun stripMarkdownFence(raw: String): String {
+            val match = FENCE_REGEX.matchEntire(raw.trim()) ?: return raw
+            return match.groupValues[1].trim()
+        }
+
         fun parseSenseGroupResponse(
             raw: String,
             sentence: String,
             word: String,
             pointedTokenOffset: Int? = null,
         ): SenseGroup? {
-            val response = JsonParser.parseString(raw).asJsonObject
+            val cleaned = stripMarkdownFence(raw)
+            val response = JsonParser.parseString(cleaned).asJsonObject
             val rawSourceChunk = response.stringOrEmpty("source_chunk")
                 .ifEmpty { response.stringOrEmpty("chunk") }
             val chunkText = SenseGroupChunkPolicy.refineChunk(

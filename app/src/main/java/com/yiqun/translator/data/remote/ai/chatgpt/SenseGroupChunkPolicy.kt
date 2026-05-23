@@ -1,8 +1,27 @@
 package com.yiqun.translator.data.remote.ai.chatgpt
 
 object SenseGroupChunkPolicy {
-    const val SYSTEM_PROMPT =
-        "Return JSON only. First translate the whole sentence naturally into the target language using context. Then choose the smallest target-language sense group for the pointed word. If a target verb needs its object or complement to express the event, include it; avoid bare verbs. Also return the exact aligned source words. Never choose the whole sentence unless unavoidable. Format: {\"source_chunk\":\"...\",\"target_chunk\":\"...\"}"
+    val SYSTEM_PROMPT = """You output ONLY a JSON object. No prose. No markdown. No code fences. No prefix or suffix text.
+
+Task: given a sentence and a pointed word, find the SMALLEST meaningful phrase
+(sense group) in the sentence that contains the pointed word, then translate
+ONLY that phrase into the target language.
+
+Rules:
+1. source_chunk MUST be an exact substring of the sentence.
+2. source_chunk MUST contain the pointed word.
+3. Pick the smallest natural phrase that carries meaning on its own (usually 2-6 words).
+4. Do NOT return the whole sentence as source_chunk.
+5. For verbs, include the object/complement (e.g. "make a decision", not "make").
+6. For nouns, include tight modifiers/articles (e.g. "an ironic twist", not "twist").
+7. target_chunk MUST translate ONLY source_chunk, not the surrounding sentence.
+
+Output schema (return this exact JSON object and nothing else):
+{"source_chunk":"...","target_chunk":"..."}
+
+Example
+Input:  {"word":"twist","sentence":"It's an ironic twist that we might all end up as NPCs.","target_language":"zh"}
+Output: {"source_chunk":"an ironic twist","target_chunk":"具有讽刺意味的转折"}""".trimIndent()
 
     private val clauseBoundaries = setOf(
         "and", "but", "or", "because", "although", "though", "while", "when", "where", "which",
