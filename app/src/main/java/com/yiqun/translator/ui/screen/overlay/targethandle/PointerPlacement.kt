@@ -397,7 +397,7 @@ object PointerInteractionVisibilityPolicy {
 }
 
 object RecognitionDelayPolicy {
-    private const val POINTED_MODE_DWELL_DELAY_MS = 120L
+    private const val POINTED_MODE_DWELL_DELAY_MS = 80L
     private const val AREA_MODE_SETTLE_DELAY_MS = 90L
 
     fun pointerStoppedDelayMs(textDetectMode: TextDetectMode): Long {

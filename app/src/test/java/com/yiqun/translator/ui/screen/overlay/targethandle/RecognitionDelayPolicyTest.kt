@@ -20,7 +20,7 @@ class RecognitionDelayPolicyTest {
         pointedModes.forEach { mode ->
             assertEquals(
                 "$mode should wait for stable pointer dwell before capture",
-                120L,
+                80L,
                 RecognitionDelayPolicy.pointerStoppedDelayMs(mode),
             )
         }
