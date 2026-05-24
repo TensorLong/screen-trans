@@ -88,4 +88,11 @@
   <string name="feature_view_description_select_detection">也可以自行选择需要翻译的区域。</string>
   <string name="feature_view_description_word_detection">逐词翻译不限数量、不限时间。</string>
   <string name="feature_view_description_fixed_area_detection">您可以持续翻译固定区域，如电影字幕。</string>
+
+  <!-- Sense-group AI failure toasts -->
+  <string name="sense_group_error_quota">免费模型配额已用尽，请改用付费模型或稍后重试。</string>
+  <string name="sense_group_error_empty">模型未返回有效内容，请尝试更换模型。</string>
+  <string name="sense_group_error_network">网络错误（%1$d），请检查网络后重试。</string>
+  <string name="sense_group_error_network_no_code">网络错误，请检查网络后重试。</string>
+  <string name="sense_group_error_parse">无法解析模型响应，请尝试更换模型。</string>
 </resources>

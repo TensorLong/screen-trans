@@ -29,6 +29,8 @@ object SecureStoreKey {
     const val API_KEY_VERSION_CHATGPT = "api_key_version_chatgpt"
     const val API_BASE_URL_CHATGPT = "api_base_url_chatgpt"
     const val API_MODEL_CHATGPT = "api_model_chatgpt"
+    const val API_MODELS_CACHE_CHATGPT = "api_models_cache_chatgpt"
+    const val API_MODELS_CACHE_FINGERPRINT_CHATGPT = "api_models_cache_fingerprint_chatgpt"
 }
 
 /**

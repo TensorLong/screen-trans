@@ -82,4 +82,10 @@
     <string name="help_text_no_limit_free">不限次數、不限時間</string>
     <string name="help_text_no_limit_free_title">免費且無限制</string>
 
+    <!-- Sense-group AI failure toasts -->
+    <string name="sense_group_error_quota">免費模型配額已用盡，請改用付費模型或稍後再試。</string>
+    <string name="sense_group_error_empty">模型未回傳有效內容，請嘗試更換模型。</string>
+    <string name="sense_group_error_network">網路錯誤（%1$d），請檢查網路後再試。</string>
+    <string name="sense_group_error_network_no_code">網路錯誤，請檢查網路後再試。</string>
+    <string name="sense_group_error_parse">無法解析模型回應，請嘗試更換模型。</string>
 </resources>

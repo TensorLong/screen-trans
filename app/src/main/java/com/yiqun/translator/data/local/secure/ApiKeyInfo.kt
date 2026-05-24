@@ -1,6 +1,10 @@
 package com.yiqun.translator.data.local.secure
 
 import android.content.Context
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import com.google.gson.reflect.TypeToken
+import java.security.MessageDigest
 
 
 /**
@@ -120,5 +124,61 @@ object ApiKeyInfo {
     fun chatgptKeyAvailable(context: Context): Boolean {
         return !getApiKeyChatgpt(context).isNullOrBlank() && !getApiBaseUrlChatgpt(context).isNullOrBlank()
     }
+
+    /**
+     * Returns the previously-cached ChatGPT model list IF the stored fingerprint
+     * (SHA-256 hash of "baseUrl|apiKey", first 16 hex chars) still matches the
+     * current (baseUrl, apiKey) pair. Otherwise returns null so the caller will
+     * fetch fresh data from the network.
+     *
+     * No raw API key is ever stored in the cache record — only its hash.
+     */
+    fun getCachedModelsChatgpt(context: Context): List<String>? {
+        val currentFingerprint = computeChatgptModelsFingerprint(context) ?: return null
+        val storedFingerprint = SecureStore.get(context, SecureStoreKey.API_MODELS_CACHE_FINGERPRINT_CHATGPT)?.get()
+        if (storedFingerprint != currentFingerprint) return null
+        val cachedJson = SecureStore.get(context, SecureStoreKey.API_MODELS_CACHE_CHATGPT)?.get() ?: return null
+        return try {
+            val type = object : TypeToken<List<String>>() {}.type
+            Gson().fromJson<List<String>>(cachedJson, type)?.takeIf { it.isNotEmpty() }
+        } catch (_: JsonSyntaxException) {
+            null
+        }
+    }
+
+    /**
+     * Persists a freshly-fetched ChatGPT model list together with a fingerprint
+     * derived from the current (baseUrl, apiKey). When either changes the
+     * fingerprint will no longer match on the next read and the cache lookup
+     * misses, triggering a fresh fetch.
+     */
+    fun setCachedModelsChatgpt(context: Context, models: List<String>) {
+        val fingerprint = computeChatgptModelsFingerprint(context) ?: return
+        val json = Gson().toJson(models)
+        SecureStore.set(context, SecureStoreKey.API_MODELS_CACHE_CHATGPT, json)
+        SecureStore.set(context, SecureStoreKey.API_MODELS_CACHE_FINGERPRINT_CHATGPT, fingerprint)
+    }
+
+    /**
+     * Hex-encoded SHA-256 of "${trimmedBaseUrl}|${trimmedApiKey}", truncated to
+     * the first 16 chars. Returns null when either input is blank so callers
+     * skip the cache rather than risking a collision on empty credentials.
+     */
+    private fun computeChatgptModelsFingerprint(context: Context): String? {
+        val baseUrl = getApiBaseUrlChatgpt(context)?.trim().orEmpty()
+        val apiKey = getApiKeyChatgpt(context)?.trim().orEmpty()
+        if (baseUrl.isEmpty() || apiKey.isEmpty()) return null
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest("$baseUrl|$apiKey".toByteArray(Charsets.UTF_8))
+        val hex = StringBuilder(digest.size * 2)
+        for (b in digest) {
+            val v = b.toInt() and 0xff
+            hex.append(HEX_CHARS[v ushr 4])
+            hex.append(HEX_CHARS[v and 0x0f])
+        }
+        return hex.substring(0, 16)
+    }
+
+    private val HEX_CHARS = "0123456789abcdef".toCharArray()
 
 }

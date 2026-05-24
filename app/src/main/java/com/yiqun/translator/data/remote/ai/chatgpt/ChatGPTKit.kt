@@ -7,6 +7,10 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
@@ -19,6 +23,19 @@ import javax.inject.Singleton
 class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @ChatGPTRetrofit private val chatGPTService: ChatGPTService) {
 
     private val TAG: String = javaClass.simpleName
+
+    private val _senseGroupErrors = MutableSharedFlow<SenseGroupErrorEvent>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+    )
+
+    /**
+     * Side-channel of failure events emitted by [senseGroupAt] when it cannot
+     * return a usable chunk. Collectors (typically the floating-overlay UI)
+     * map each event to a localized toast/snackbar.
+     */
+    val senseGroupErrors: SharedFlow<SenseGroupErrorEvent> = _senseGroupErrors.asSharedFlow()
 
     fun available(): Boolean {
         return ApiKeyInfo.chatgptKeyAvailable(context)
@@ -142,8 +159,9 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
             val requestBody = mapOf(
                 "model" to model,
                 "messages" to listOf(systemMessage, userMessage),
-                "max_tokens" to 512,
+                "max_tokens" to 2048,
                 "response_format" to mapOf("type" to "json_object"),
+                "reasoning" to mapOf("enabled" to false),
                 "temperature" to 0.0,
             )
             Timber.tag(TAG).d("senseGroupAt() word=[$word] sentence=[$sentence]")
@@ -159,12 +177,23 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 )
             } catch (e: Exception) {
                 logApiFailure("senseGroupAt()", e)
+                if (e is HttpException) {
+                    val code = e.code()
+                    if (code == 402 || code == 429) {
+                        _senseGroupErrors.tryEmit(SenseGroupErrorEvent.Quota)
+                    } else {
+                        _senseGroupErrors.tryEmit(SenseGroupErrorEvent.Network(code))
+                    }
+                } else {
+                    _senseGroupErrors.tryEmit(SenseGroupErrorEvent.Network())
+                }
                 return@getOrLoad null
             }
 
             val raw = response.choices.firstOrNull()?.message?.content
             if (raw.isNullOrBlank()) {
                 Timber.tag(TAG).w("senseGroupAt() empty response")
+                _senseGroupErrors.tryEmit(SenseGroupErrorEvent.Empty)
                 return@getOrLoad null
             }
 
@@ -177,6 +206,7 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 )
                 if (senseGroup == null) {
                     Timber.tag(TAG).w("senseGroupAt() empty chunk in response: $raw")
+                    _senseGroupErrors.tryEmit(SenseGroupErrorEvent.Empty)
                     return@getOrLoad null
                 }
                 Timber.tag(TAG).d(
@@ -185,6 +215,7 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 senseGroup
             } catch (e: Exception) {
                 Timber.tag(TAG).w(e, "senseGroupAt() parse failed: $raw")
+                _senseGroupErrors.tryEmit(SenseGroupErrorEvent.Parse(e.message ?: e.javaClass.simpleName))
                 null
             }
         }

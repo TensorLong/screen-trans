@@ -126,4 +126,11 @@
     <string name="feature_view_description_select_detection">You can also specify the range you want.</string>
     <string name="feature_view_description_word_detection">Word-by-word translation is unlimited during the internal beta.</string>
     <string name="feature_view_description_fixed_area_detection">You can continuously translate fixed areas, such as movie subtitles.</string>
+
+    <!-- Sense-group AI failure toasts -->
+    <string name="sense_group_error_quota">Free model quota exhausted. Try a paid model or wait a moment.</string>
+    <string name="sense_group_error_empty">Model returned empty response. Try a different model.</string>
+    <string name="sense_group_error_network">Network error (%1$d). Check connection and try again.</string>
+    <string name="sense_group_error_network_no_code">Network error. Check connection and try again.</string>
+    <string name="sense_group_error_parse">Could not parse model response. Try a different model.</string>
 </resources>

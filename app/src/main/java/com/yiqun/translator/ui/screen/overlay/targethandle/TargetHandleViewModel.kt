@@ -7,6 +7,7 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.os.Build
 import android.view.MotionEvent
+import android.widget.Toast
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeviceUnknown
 import androidx.compose.material.icons.filled.Engineering
@@ -49,6 +50,7 @@ import com.yiqun.translator.data.local.vision.model.VisionText
 import com.yiqun.translator.data.local.vision.model.Word
 import com.yiqun.translator.data.remote.ai.SenseGroupRepository
 import com.yiqun.translator.data.remote.ai.chatgpt.SenseGroup
+import com.yiqun.translator.data.remote.ai.chatgpt.SenseGroupErrorEvent
 import com.yiqun.translator.data.remote.firebase.AnalyticsRepository
 import com.yiqun.translator.data.remote.firebase.RemoteConfigRepository
 import com.yiqun.translator.data.remote.translation.Transaction
@@ -68,9 +70,11 @@ import com.yiqun.translator.ui.screen.overlay.visiontext.VisionTextView
 import com.yiqun.translator.ui.screen.permissions.ScreenCapturePermissionRequesterActivity
 import getAverageTextBlockHeight
 import getBoundingBoxUnion
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.channelFlow
@@ -1298,6 +1302,42 @@ class TargetHandleViewModel(
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //                                                                                            //
+    //                              Sense-group failure surfacing                                 //
+    //                                                                                            //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private fun collectSenseGroupErrors() {
+        viewModelScope.launch {
+            senseGroupRepository.senseGroupErrors.collect { event ->
+                val message = when (event) {
+                    is SenseGroupErrorEvent.Quota ->
+                        applicationContext.getString(R.string.sense_group_error_quota)
+                    is SenseGroupErrorEvent.Empty ->
+                        applicationContext.getString(R.string.sense_group_error_empty)
+                    is SenseGroupErrorEvent.Network -> {
+                        val code = event.code
+                        if (code != null) {
+                            applicationContext.getString(R.string.sense_group_error_network, code)
+                        } else {
+                            applicationContext.getString(R.string.sense_group_error_network_no_code)
+                        }
+                    }
+                    is SenseGroupErrorEvent.Parse ->
+                        applicationContext.getString(R.string.sense_group_error_parse)
+                }
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        applicationContext,
+                        message,
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
+
     fun playTTS(text: String) {
         ensureTtsAcquiredForTranslation()
         ttsRepository.playTTS(text, ttsSpeechRate)
@@ -1320,6 +1360,7 @@ class TargetHandleViewModel(
         collectPointerStoppedCaptureRequests()
         collectVisionTextForTranslationView()
         collectTranslationVoiceFlow()
+        collectSenseGroupErrors()
     }
 
     override fun onCleared() {

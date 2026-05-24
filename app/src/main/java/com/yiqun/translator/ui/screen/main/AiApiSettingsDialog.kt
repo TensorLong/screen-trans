@@ -6,7 +6,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -17,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,7 +28,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -46,13 +52,16 @@ fun AiApiSettingsDialog(
     val initialKey = remember { ApiKeyInfo.getApiKeyChatgpt(context).orEmpty() }
     val initialBaseUrl = remember { ApiKeyInfo.getApiBaseUrlChatgpt(context).orEmpty() }
     val initialModel = remember { ApiKeyInfo.getApiModelChatgpt(context).orEmpty() }
+    val initialCachedModels = remember { ApiKeyInfo.getCachedModelsChatgpt(context).orEmpty() }
     var keyText by remember { mutableStateOf(initialKey) }
     var baseUrlText by remember { mutableStateOf(initialBaseUrl) }
     var modelText by remember { mutableStateOf(initialModel) }
-    var models by remember { mutableStateOf<List<String>>(emptyList()) }
+    var models by remember { mutableStateOf<List<String>>(initialCachedModels) }
     var modelDropdownExpanded by remember { mutableStateOf(false) }
     var statusText by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
+    val modelScrollState = rememberScrollState()
+    val menuItemHeightPx = with(LocalDensity.current) { 48.dp.roundToPx() }
 
     fun persistInputs() {
         val trimmedKey = keyText.trim()
@@ -120,14 +129,34 @@ fun AiApiSettingsDialog(
                         expanded = modelDropdownExpanded,
                         onDismissRequest = { modelDropdownExpanded = false },
                     ) {
-                        models.forEach { model ->
-                            DropdownMenuItem(
-                                text = { Text(model) },
-                                onClick = {
-                                    modelText = model
-                                    modelDropdownExpanded = false
+                        LaunchedEffect(modelDropdownExpanded, models, modelText) {
+                            if (modelDropdownExpanded && models.isNotEmpty()) {
+                                val idx = models.indexOf(modelText.trim())
+                                if (idx >= 0) {
+                                    modelScrollState.scrollTo(idx * menuItemHeightPx)
                                 }
-                            )
+                            }
+                        }
+                        Column(
+                            modifier = Modifier
+                                .heightIn(max = 240.dp)
+                                .verticalScroll(modelScrollState),
+                        ) {
+                            models.forEach { model ->
+                                val isSelected = model == modelText.trim()
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = model,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        )
+                                    },
+                                    onClick = {
+                                        modelText = model
+                                        modelDropdownExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -146,6 +175,9 @@ fun AiApiSettingsDialog(
                                 runCatching { onFetchModels() }
                                     .onSuccess { fetchedModels ->
                                         models = fetchedModels
+                                        if (fetchedModels.isNotEmpty()) {
+                                            ApiKeyInfo.setCachedModelsChatgpt(context, fetchedModels)
+                                        }
                                         statusText = if (fetchedModels.isEmpty()) {
                                             context.getString(R.string.settings_menu_ai_api_no_models)
                                         } else {
