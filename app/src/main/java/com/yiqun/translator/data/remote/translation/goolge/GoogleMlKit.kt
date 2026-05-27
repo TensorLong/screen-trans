@@ -75,7 +75,6 @@ class GoogleMlKit @Inject constructor() : TranslationKit() {
         }
 
         val downloadModelConditions = DownloadConditions.Builder()
-            .requireWifi()
             .build()
 
         downloadTask = modelManager
@@ -125,7 +124,7 @@ class GoogleMlKit @Inject constructor() : TranslationKit() {
                     sourceLanguageCode = sourceLanguageCode,
                     targetLanguageCode = targetLanguageCode,
                     sourceText = sourceText,
-                    translationKitType = TranslationKitType.GOOGLE,
+                    translationKitType = TranslationKitType.GOOGLE_OFFLINE,
                     detectedLanguageCode = sourceLangCode,
                     resultText = translatedText
                 )
@@ -135,7 +134,7 @@ class GoogleMlKit @Inject constructor() : TranslationKit() {
         }
     }
 
-    private val availableLanguages: List<Language> = TranslateLanguage.getAllLanguages().map { Language(it).apply { supportKitTypes.add(TranslationKitType.GOOGLE) } }
+    private val availableLanguages: List<Language> = TranslateLanguage.getAllLanguages().map { Language(it).apply { supportKitTypes.add(TranslationKitType.GOOGLE_OFFLINE) } }
 
     override val supportedLanguagesAsSource: List<Language> = availableLanguages
 

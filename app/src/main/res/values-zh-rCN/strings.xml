@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">意群翻译</string>
+  <string name="app_name">意群翻译·离线测试</string>
 
   <!-- Notification Permission -->
   <string name="message_permission_notification">所需权限：\n通知</string>

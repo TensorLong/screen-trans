@@ -18,7 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class TranslationRepository @Inject constructor(
     private val googleWebKit: GoogleWebKit,
-//    private val googleMlKit: GoogleMlKit,
+    private val googleMlKit: GoogleMlKit,
     private val azureKit: AzureKit,
     private val deepLKit: DeepLKit,
 //    private val yandexKit: YandexKit,
@@ -30,7 +30,7 @@ class TranslationRepository @Inject constructor(
     val supportedLanguagesAsSource: List<Language> by lazy {
         val (autoLanguages, otherLanguages) = mergeLanguages(
             googleWebKit.supportedLanguagesAsSource,
-//            googleMlKit.supportedLanguagesAsSource,
+            googleMlKit.supportedLanguagesAsSource,
             azureKit.supportedLanguagesAsSource,
             deepLKit.supportedLanguagesAsSource,
 //            yandexKit.supportedLanguagesAsSource,
@@ -51,7 +51,7 @@ class TranslationRepository @Inject constructor(
     val supportedLanguagesAsTarget: List<Language> by lazy {
         val mergedLanguages = mergeLanguages(
             googleWebKit.supportedLanguagesAsTarget,
-//            googleMlKit.supportedLanguagesAsTarget,
+            googleMlKit.supportedLanguagesAsTarget,
             azureKit.supportedLanguagesAsTarget,
             deepLKit.supportedLanguagesAsTarget,
             azureKit.supportedLanguagesAsTarget,
@@ -72,8 +72,8 @@ class TranslationRepository @Inject constructor(
 
     fun getSupportedLanguages(kitType: TranslationKitType): List<Language> {
         val languages = when (kitType) {
-//            TranslationKitType.GOOGLE -> googleWebKit.supportedLanguagesAsSource + googleWebKit.supportedLanguagesAsTarget + googleMlKit.supportedLanguagesAsSource + googleMlKit.supportedLanguagesAsTarget
             TranslationKitType.GOOGLE -> googleWebKit.supportedLanguagesAsSource + googleWebKit.supportedLanguagesAsTarget
+            TranslationKitType.GOOGLE_OFFLINE -> googleMlKit.supportedLanguagesAsSource + googleMlKit.supportedLanguagesAsTarget
             TranslationKitType.AZURE -> azureKit.supportedLanguagesAsSource + azureKit.supportedLanguagesAsTarget
             TranslationKitType.DEEPL -> deepLKit.supportedLanguagesAsSource + deepLKit.supportedLanguagesAsTarget
 //            TranslationKitType.YANDEX -> yandexKit.supportedLanguagesAsSource + yandexKit.supportedLanguagesAsTarget
@@ -120,6 +120,7 @@ class TranslationRepository @Inject constructor(
     private fun getTranslationKit(kitType: TranslationKitType): TranslationKit {
         return when (kitType) {
             TranslationKitType.GOOGLE -> googleWebKit
+            TranslationKitType.GOOGLE_OFFLINE -> googleMlKit
             TranslationKitType.DEEPL -> deepLKit
             TranslationKitType.AZURE -> azureKit
 //            TranslationKitType.YANDEX -> yandexKit
@@ -130,6 +131,7 @@ class TranslationRepository @Inject constructor(
     fun isSupportedAsSource(kitType: TranslationKitType, code: String, targetLanguageCode: String): Boolean {
         return when (kitType) {
             TranslationKitType.GOOGLE -> googleWebKit.isSupportedAsSource(code, targetLanguageCode)
+            TranslationKitType.GOOGLE_OFFLINE -> googleMlKit.isSupportedAsSource(code, targetLanguageCode)
             TranslationKitType.AZURE -> azureKit.isSupportedAsSource(code, targetLanguageCode)
             TranslationKitType.DEEPL -> deepLKit.isSupportedAsSource(code, targetLanguageCode)
 //            TranslationKitType.YANDEX -> yandexKit.isSupportedAsSource(code, targetLanguageCode)
@@ -140,6 +142,7 @@ class TranslationRepository @Inject constructor(
     fun isSupportedAsTarget(kitType: TranslationKitType, code: String, sourceLanguageCode: String): Boolean {
         return when (kitType) {
             TranslationKitType.GOOGLE -> googleWebKit.isSupportedAsTarget(code, sourceLanguageCode)
+            TranslationKitType.GOOGLE_OFFLINE -> googleMlKit.isSupportedAsTarget(code, sourceLanguageCode)
             TranslationKitType.AZURE -> azureKit.isSupportedAsTarget(code, sourceLanguageCode)
             TranslationKitType.DEEPL -> deepLKit.isSupportedAsTarget(code, sourceLanguageCode)
 //            TranslationKitType.YANDEX -> yandexKit.isSupportedAsTarget(code)
@@ -150,6 +153,7 @@ class TranslationRepository @Inject constructor(
     fun isLanguageSwappable(sourceLanguageCode: String, targetLanguageCode: String, kitType: TranslationKitType): Boolean {
         return when (kitType) {
             TranslationKitType.GOOGLE -> googleWebKit.isLanguageSwappable(sourceLanguageCode, targetLanguageCode)
+            TranslationKitType.GOOGLE_OFFLINE -> googleMlKit.isLanguageSwappable(sourceLanguageCode, targetLanguageCode)
             TranslationKitType.DEEPL -> deepLKit.isLanguageSwappable(sourceLanguageCode, targetLanguageCode)
             TranslationKitType.AZURE -> azureKit.isLanguageSwappable(sourceLanguageCode, targetLanguageCode)
 //            TranslationKitType.YANDEX -> yandexKit.isLanguageSwappable(sourceLanguageCode, targetLanguageCode)
@@ -173,19 +177,6 @@ class TranslationRepository @Inject constructor(
         }
 
         val translationKit: TranslationKit = getTranslationKit(translationKitType)
-        if (translationKit is GoogleMlKit) {
-//            coroutineScope {
-//                launch { googleMlKit.downloadLanguage(sourceLanguageCode) }
-//                launch { googleMlKit.downloadLanguage(targetLanguageCode) }
-//            }
-
-            return googleWebKit.request(
-                sourceLanguageCode,
-                targetLanguageCode,
-                sourceText
-            ).also(::cacheSuccessfulTranslation)
-        }
-
         return translationKit.request(
             sourceLanguageCode,
             targetLanguageCode,
@@ -200,7 +191,7 @@ class TranslationRepository @Inject constructor(
     }
 
     private fun close() {
-//        googleMlKit.close()
+        googleMlKit.close()
         TranslationRequestCache.clear()
     }
 

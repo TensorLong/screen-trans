@@ -80,4 +80,17 @@ enum class TranslationKitType(
         brandFatResourceId = R.drawable.translate_papago_fat,
         providersUrl = "https://papago-plus.com/about",
     ),
+    GOOGLE_OFFLINE(
+        text = "Google (Offline)",
+        logoResourceId = R.drawable.logo_engine_google,
+        ciResourceId = R.drawable.ci_google,
+        ciOddResourceId = R.drawable.ci_google_odd,
+        ciGrayResourceId = R.drawable.ci_google_gray,
+        ciGrayOddResourceId = R.drawable.ci_google_gray_odd,
+        ciGrayDarkResourceId = R.drawable.ci_google_gray_dark,
+        ciGrayOddDarkResourceId = R.drawable.ci_google_gray_odd_dark,
+        brandResourceId = R.drawable.translate_google,
+        brandFatResourceId = R.drawable.translate_google_fat,
+        providersUrl = "https://developers.google.com/ml-kit/language/translation",
+    ),
 }

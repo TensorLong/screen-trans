@@ -37,7 +37,6 @@ import com.yiqun.translator.data.local.vision.TextDetectMode
 import com.yiqun.translator.data.local.vision.WritingDirection
 import com.yiqun.translator.data.local.vision.model.VisionText
 import com.yiqun.translator.data.remote.translation.Language
-import com.yiqun.translator.extensions.isNetworkAvailable
 import com.yiqun.translator.extensions.vibrate
 import com.yiqun.translator.ui.screen.main.SettingsActivity
 import com.yiqun.translator.ui.screen.overlay.Event
@@ -482,29 +481,16 @@ class TargetHandleView private constructor(
 
                 when (action) {
                     MotionEvent.ACTION_DOWN -> {
-                        if (applicationContext.isNetworkAvailable()) {
-                            viewModel.activePointerSideFlow.value = pointerSide
-                            viewModel.motionEventFlow.value = event.action
-                            (targetView as? TargetIconNativeView)?.setPointerVisible(true)
-                            showOnlyInteractingPointer(pointerSide)
-                            cancelRepositionAnimation()
-                            cancelDockDragHandle(applicationContext)
-                            touchStartX = event.rawX
-                            touchStartY = event.rawY
-                            dragStartX = layoutParams.x
-                            dragStartY = layoutParams.y
-                        } else {
-                            launchInOverlayViewCoroutineScope {
-                                DialogView.INSTANCE.cast(
-                                    applicationContext = applicationContext,
-                                    icon = Icons.Default.SignalWifiStatusbarConnectedNoInternet4,
-                                    dialogTitle = applicationContext.getString(R.string.message_network_unavailable),
-                                    dialogText = applicationContext.getString(R.string.message_network_unavailable_detail),
-                                    onConfirm = {}
-                                )
-                            }
-                            isDraggingHandle = false
-                        }
+                        viewModel.activePointerSideFlow.value = pointerSide
+                        viewModel.motionEventFlow.value = event.action
+                        (targetView as? TargetIconNativeView)?.setPointerVisible(true)
+                        showOnlyInteractingPointer(pointerSide)
+                        cancelRepositionAnimation()
+                        cancelDockDragHandle(applicationContext)
+                        touchStartX = event.rawX
+                        touchStartY = event.rawY
+                        dragStartX = layoutParams.x
+                        dragStartY = layoutParams.y
                     }
 
                     MotionEvent.ACTION_MOVE -> {

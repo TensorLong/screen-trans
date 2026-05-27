@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Sense Group Translator</string>
+    <string name="app_name">Sense Group (Offline Test)</string>
 
     <!-- Notification Permission -->
     <string name="message_permission_notification">Required permission :\nNotification</string>
