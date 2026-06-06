@@ -17,8 +17,8 @@ android {
         applicationId = "com.yiqun.translator.offline"
         minSdk = 23
         targetSdk = 35
-        versionCode = 30324
-        versionName = "3.3.8-offline.2"
+        versionCode = 30325
+        versionName = "3.3.8-offline.3"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     bundle {

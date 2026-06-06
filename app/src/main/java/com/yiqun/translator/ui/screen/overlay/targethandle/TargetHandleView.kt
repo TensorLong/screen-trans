@@ -700,7 +700,9 @@ class TargetHandleView private constructor(
         pointerThumbSpace = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_pointer_thumb_space)
         einkPointerWidth = applicationContext.resources.getDimensionPixelSize(R.dimen.target_pointer_eink_width)
         einkPointerStrokePx = applicationContext.resources.getDimensionPixelSize(R.dimen.target_pointer_eink_stroke).toFloat()
-        einkDisplayMode = viewModel.preferenceRepository.einkDisplayModeFlow.first()
+        // einkDisplayMode is NOT read here: castWithMode runs before onServiceConnected on first launch,
+        // and viewModel.lateinit access would crash. The flow collector in restartNativeStateCollectors
+        // sets einkDisplayMode reactively once the service is bound. First frame defaults to off.
         val defaultTargetFromHandleOffset = PointerOffset.defaultTargetFromHandleOffset(
             pointerDimen = pointerDimen,
             handleWidth = handleWidth,
