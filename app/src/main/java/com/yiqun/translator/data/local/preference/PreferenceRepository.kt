@@ -66,6 +66,7 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
         val TRANSLATION_CLOSE_DELAY = longPreferencesKey("translation_close_delay")
         val REPLY_TRANSPARENCY = floatPreferencesKey("reply_transparency")
         val AUTOMATIC_TRANSLATION_PLAYBACK = booleanPreferencesKey("automatic_translation_playback")
+        val EINK_DISPLAY_MODE = booleanPreferencesKey("eink_display_mode")
         val TTS_SPEECH_RATE = floatPreferencesKey("tts_speech_rate")
         val TTS_ORDERED_VOICE_NAMES = stringPreferencesKey("tts_ordered_voice_names")
 
@@ -189,6 +190,10 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
 
     val automaticTranslationPlaybackFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
         preferences[AUTOMATIC_TRANSLATION_PLAYBACK] ?: false
+    }
+
+    val einkDisplayModeFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
+        preferences[EINK_DISPLAY_MODE] ?: false
     }
 
     val ttsSpeechRateFlow: Flow<Float> = preferenceFlow.map { preferences ->

@@ -18,6 +18,9 @@
     <dimen name="target_handle_width">70dp</dimen>
     <dimen name="target_handle_height">112dp</dimen>
     <dimen name="target_pointer_dimen">24dp</dimen>
+    <!-- E-ink display mode: wider target frame for visibility on white e-ink panels -->
+    <dimen name="target_pointer_eink_width">96dp</dimen>
+    <dimen name="target_pointer_eink_stroke">4dp</dimen>
     <dimen name="target_pointer_progress_dimen">14dp</dimen>
     <dimen name="target_handle_pointer_thumb_space">18dp</dimen>
     <dimen name="target_handle_thumb_dimen">50dp</dimen>

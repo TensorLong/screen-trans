@@ -516,6 +516,12 @@ class SettingsActivity : AVDActivity() {
             initialValue = false
         )
 
+        // E-ink display mode
+        val einkDisplayMode by viewModel.preferenceRepository.einkDisplayModeFlow.collectAsStateWithLifecycle(
+            lifecycle = lifecycleOwner.lifecycle,
+            initialValue = false
+        )
+
         // TTS Speech rate
         val ttsSpeechRateTextOffset = remember { mutableStateOf(Point(0, 0)) }
         val ttsSpeechRateIconOffset = remember { mutableStateOf(Point(0, 0)) }
@@ -862,7 +868,7 @@ class SettingsActivity : AVDActivity() {
                             }
 
                             MenuItem(
-                                menuItemPosition = MenuItemPosition.Bottom,
+                                menuItemPosition = MenuItemPosition.Middle,
                                 onClick = {
                                     if (!dragHandleHaptic) {
                                         context.vibrate()
@@ -898,6 +904,43 @@ class SettingsActivity : AVDActivity() {
                                                     "Haptic feedback to detection on"
                                                 } else {
                                                     "Haptic feedback to detection off"
+                                                }
+                                            }
+                                    )
+                                }
+                            }
+
+                            MenuItem(
+                                menuItemPosition = MenuItemPosition.Bottom,
+                                onClick = {
+                                    viewModel.updateEinkDisplayMode(!einkDisplayMode)
+                                }
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    MenuText(
+                                        text = getString(R.string.settings_menu_eink_display_mode),
+                                    )
+                                    Switch(
+                                        checked = einkDisplayMode,
+                                        onCheckedChange = { value ->
+                                            viewModel.updateEinkDisplayMode(value)
+                                        },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = switchThumbColor,
+                                            checkedTrackColor = switchTrackColor
+                                        ),
+                                        modifier = Modifier
+                                            .scale(switchScale)
+                                            .align(Alignment.CenterVertically)
+                                            .semantics {
+                                                contentDescription = if (einkDisplayMode) {
+                                                    "E-ink display mode on"
+                                                } else {
+                                                    "E-ink display mode off"
                                                 }
                                             }
                                     )

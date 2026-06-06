@@ -73,6 +73,10 @@ class SettingsViewModel @Inject constructor(
         preferenceRepository.update(PreferenceRepository.AUTOMATIC_TRANSLATION_PLAYBACK, automaticTranslationPlayback)
     }
 
+    fun updateEinkDisplayMode(einkDisplayMode: Boolean) {
+        preferenceRepository.update(PreferenceRepository.EINK_DISPLAY_MODE, einkDisplayMode)
+    }
+
     fun updateTtsSpeechRate(speechRate: Float) {
         preferenceRepository.update(PreferenceRepository.TTS_SPEECH_RATE, speechRate)
     }
