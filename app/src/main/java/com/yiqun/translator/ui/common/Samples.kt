@@ -202,6 +202,7 @@ class AboutTranslationKitView private constructor() : OverlayView() {
 //                    TranslationKitType.YANDEX -> MyWebView(url = TranslationKitType.YANDEX.providersUrl)
                     TranslationKitType.PAPAGO -> MyWebView(url = TranslationKitType.PAPAGO.providersUrl)
                     TranslationKitType.GOOGLE -> MyWebView(url = TranslationKitType.GOOGLE.providersUrl)
+                    TranslationKitType.GOOGLE_OFFLINE -> MyWebView(url = TranslationKitType.GOOGLE_OFFLINE.providersUrl)
                 }
 
                 ExtendedFloatingActionButton(

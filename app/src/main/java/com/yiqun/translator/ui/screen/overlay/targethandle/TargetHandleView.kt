@@ -37,7 +37,6 @@ import com.yiqun.translator.data.local.vision.TextDetectMode
 import com.yiqun.translator.data.local.vision.WritingDirection
 import com.yiqun.translator.data.local.vision.model.VisionText
 import com.yiqun.translator.data.remote.translation.Language
-import com.yiqun.translator.extensions.isNetworkAvailable
 import com.yiqun.translator.extensions.vibrate
 import com.yiqun.translator.ui.screen.main.SettingsActivity
 import com.yiqun.translator.ui.screen.overlay.Event
@@ -169,6 +168,12 @@ class TargetHandleView private constructor(
 
     private var pointerThumbSpace = 0
 
+    private var einkDisplayMode = false
+
+    private var einkPointerWidth = 0
+
+    private var einkPointerStrokePx = 0f
+
     private var passThroughWindowLayout: PointerPassThroughWindowLayout? = null
 
     private lateinit var targetLayoutParams: WindowManager.LayoutParams
@@ -200,6 +205,16 @@ class TargetHandleView private constructor(
             setImageResource(if (isDarkMode) R.drawable.drag_handle_dark else R.drawable.drag_handle)
             scaleType = ImageView.ScaleType.FIT_CENTER
             setPadding(padding, padding, padding, padding)
+            applyHandleEinkFilter(this, einkDisplayMode)
+        }
+    }
+
+    private fun applyHandleEinkFilter(imageView: ImageView, eink: Boolean) {
+        imageView.colorFilter = if (eink) {
+            // Mid-gray multiply: keeps shape detail but darkens white-ish handle for e-ink visibility.
+            PorterDuffColorFilter(Color.rgb(0x40, 0x40, 0x40), PorterDuff.Mode.MULTIPLY)
+        } else {
+            null
         }
     }
 
@@ -397,6 +412,19 @@ class TargetHandleView private constructor(
                     }
                 }
             },
+            launchInOverlayViewCoroutineScope {
+                viewModel.preferenceRepository.einkDisplayModeFlow
+                    .distinctUntilChanged()
+                    .collect { eink ->
+                        einkDisplayMode = eink
+                        (view as? ImageView)?.let { applyHandleEinkFilter(it, eink) }
+                        (targetView as? TargetIconNativeView)?.let {
+                            it.einkStrokePx = einkPointerStrokePx
+                            it.einkMode = eink
+                        }
+                        updateTargetLayout(applicationContext)
+                    }
+            },
         )
     }
 
@@ -482,29 +510,16 @@ class TargetHandleView private constructor(
 
                 when (action) {
                     MotionEvent.ACTION_DOWN -> {
-                        if (applicationContext.isNetworkAvailable()) {
-                            viewModel.activePointerSideFlow.value = pointerSide
-                            viewModel.motionEventFlow.value = event.action
-                            (targetView as? TargetIconNativeView)?.setPointerVisible(true)
-                            showOnlyInteractingPointer(pointerSide)
-                            cancelRepositionAnimation()
-                            cancelDockDragHandle(applicationContext)
-                            touchStartX = event.rawX
-                            touchStartY = event.rawY
-                            dragStartX = layoutParams.x
-                            dragStartY = layoutParams.y
-                        } else {
-                            launchInOverlayViewCoroutineScope {
-                                DialogView.INSTANCE.cast(
-                                    applicationContext = applicationContext,
-                                    icon = Icons.Default.SignalWifiStatusbarConnectedNoInternet4,
-                                    dialogTitle = applicationContext.getString(R.string.message_network_unavailable),
-                                    dialogText = applicationContext.getString(R.string.message_network_unavailable_detail),
-                                    onConfirm = {}
-                                )
-                            }
-                            isDraggingHandle = false
-                        }
+                        viewModel.activePointerSideFlow.value = pointerSide
+                        viewModel.motionEventFlow.value = event.action
+                        (targetView as? TargetIconNativeView)?.setPointerVisible(true)
+                        showOnlyInteractingPointer(pointerSide)
+                        cancelRepositionAnimation()
+                        cancelDockDragHandle(applicationContext)
+                        touchStartX = event.rawX
+                        touchStartY = event.rawY
+                        dragStartX = layoutParams.x
+                        dragStartY = layoutParams.y
                     }
 
                     MotionEvent.ACTION_MOVE -> {
@@ -607,9 +622,12 @@ class TargetHandleView private constructor(
         val windowLayout = passThroughWindowLayout ?: return
         if (!::layoutParams.isInitialized || !::targetLayoutParams.isInitialized) return
 
-        targetLayoutParams.width = windowLayout.targetIconWindowWidth
+        val baseTargetWidth = windowLayout.targetIconWindowWidth
+        val widthForLayout = if (einkDisplayMode) einkPointerWidth else baseTargetWidth
+        val widthExpansion = (widthForLayout - baseTargetWidth) / 2
+        targetLayoutParams.width = widthForLayout
         targetLayoutParams.height = windowLayout.targetIconWindowHeight
-        targetLayoutParams.x = layoutParams.x + windowLayout.targetIconTopLeftX(edgeCorrectionX)
+        targetLayoutParams.x = layoutParams.x + windowLayout.targetIconTopLeftX(edgeCorrectionX) - widthExpansion
         targetLayoutParams.y = layoutParams.y + windowLayout.targetIconTopLeftY(edgeCorrectionY)
 
         val localTargetView = targetView
@@ -680,6 +698,11 @@ class TargetHandleView private constructor(
         handleWidth = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_width)
         pointerDimen = applicationContext.resources.getDimensionPixelSize(R.dimen.target_pointer_dimen)
         pointerThumbSpace = applicationContext.resources.getDimensionPixelSize(R.dimen.target_handle_pointer_thumb_space)
+        einkPointerWidth = applicationContext.resources.getDimensionPixelSize(R.dimen.target_pointer_eink_width)
+        einkPointerStrokePx = applicationContext.resources.getDimensionPixelSize(R.dimen.target_pointer_eink_stroke).toFloat()
+        // einkDisplayMode is NOT read here: castWithMode runs before onServiceConnected on first launch,
+        // and viewModel.lateinit access would crash. The flow collector in restartNativeStateCollectors
+        // sets einkDisplayMode reactively once the service is bound. First frame defaults to off.
         val defaultTargetFromHandleOffset = PointerOffset.defaultTargetFromHandleOffset(
             pointerDimen = pointerDimen,
             handleWidth = handleWidth,
@@ -800,6 +823,8 @@ class TargetHandleView private constructor(
         launchInOverlayViewCoroutineScope {
             if (targetView == null) {
                 targetView = TargetIconNativeView(overlayService).apply {
+                    einkStrokePx = einkPointerStrokePx
+                    einkMode = einkDisplayMode
                     render(lastTargetIconRenderState)
                 }
             }
@@ -1372,6 +1397,19 @@ internal class TargetIconNativeView(context: Context) : View(context) {
         strokeWidth = 1.8f * context.resources.displayMetrics.density
         color = Color.rgb(0x48, 0xba, 0xef)
     }
+    private val einkPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.SQUARE
+        color = Color.BLACK
+    }
+
+    var einkStrokePx: Float = 0f
+    var einkMode: Boolean = false
+        set(value) {
+            if (field == value) return
+            field = value
+            invalidate()
+        }
 
     private var renderState = TargetIconRenderState()
     private var captureTransparent = false
@@ -1496,6 +1534,11 @@ internal class TargetIconNativeView(context: Context) : View(context) {
     }
 
     private fun drawPointer(canvas: Canvas, contentAlpha: Float) {
+        if (einkMode) {
+            drawEinkPointer(canvas, contentAlpha)
+            return
+        }
+
         val drawable = when (renderState.tint) {
             TargetIconTint.NONE -> pointerDrawable
             TargetIconTint.SELECT,
@@ -1525,6 +1568,14 @@ internal class TargetIconNativeView(context: Context) : View(context) {
         drawable.draw(canvas)
         canvas.restoreToCount(saveCount)
         drawable.colorFilter = null
+    }
+
+    private fun drawEinkPointer(canvas: Canvas, contentAlpha: Float) {
+        val stroke = einkStrokePx.coerceAtLeast(1f)
+        einkPaint.strokeWidth = stroke
+        einkPaint.alpha = (255 * contentAlpha).roundToInt().coerceIn(0, 255)
+        val inset = stroke / 2f
+        canvas.drawRect(inset, inset, width - inset, height - inset, einkPaint)
     }
 
     private fun updateProgressAnimator() {

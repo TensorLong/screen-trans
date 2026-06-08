@@ -52,7 +52,6 @@ import com.yiqun.translator.data.local.vision.model.Transaction
 import com.yiqun.translator.data.local.vision.model.VisionResponse
 import com.yiqun.translator.data.remote.translation.TranslationKitType
 import com.yiqun.translator.data.remote.translation.TranslationResponse
-import com.yiqun.translator.extensions.isNetworkAvailable
 import com.yiqun.translator.extensions.setFromPoints
 import com.yiqun.translator.extensions.vibrate
 import com.yiqun.translator.ui.screen.main.SettingsActivity
@@ -322,48 +321,34 @@ open class FixedAreaView : OverlayView() {
                 if (selectionAreaRatio.intValue <= SELECTION_AREA_RATIO_LIMIT) {
                     IconButton(
                         onClick = {
-                            if (context.isNetworkAvailable()) {
-                                fun start() {
-                                    startFixedAreaTranslate(context, selectedArea.value)
-                                    launchInOverlayViewCoroutineScope {
-                                        TargetHandleView.INSTANCE.cast(context, true)
-                                        FixedAreaTranslationView.INSTANCE.cast(context, selectedArea.value)
-                                    }
-
-                                    fixedAreaViewBackgroundAlphaJob?.cancel()
-                                    fixedAreaViewBackgroundAlphaJob = composeScope.launch {
-                                        fixedAreaViewBackgroundAlpha.animateTo(
-                                            targetValue = BACKGROUND_FADE_OUT_ALPHA,
-                                            animationSpec = tween(durationMillis = BACKGROUND_FADE_OUT_DURATION)
-                                        )
-                                    }
+                            fun start() {
+                                startFixedAreaTranslate(context, selectedArea.value)
+                                launchInOverlayViewCoroutineScope {
+                                    TargetHandleView.INSTANCE.cast(context, true)
+                                    FixedAreaTranslationView.INSTANCE.cast(context, selectedArea.value)
                                 }
 
-                                launchInOverlayViewCoroutineScope {
-                                    DialogView.INSTANCE.cast(
-                                        applicationContext = context,
-                                        icon = Icons.Default.BatteryAlert,
-                                        dialogTitle = context.getString(R.string.message_translate_fixedarea_warn),
-                                        dialogText = context.getString(R.string.message_translate_fixedarea_warn_detail),
-                                        onConfirm = {
-                                            launchInOverlayViewCoroutineScope {
-                                                start()
-                                            }
-                                        }
+                                fixedAreaViewBackgroundAlphaJob?.cancel()
+                                fixedAreaViewBackgroundAlphaJob = composeScope.launch {
+                                    fixedAreaViewBackgroundAlpha.animateTo(
+                                        targetValue = BACKGROUND_FADE_OUT_ALPHA,
+                                        animationSpec = tween(durationMillis = BACKGROUND_FADE_OUT_DURATION)
                                     )
                                 }
-                            } else {
-                                launchInOverlayViewCoroutineScope {
-                                    DialogView.INSTANCE.cast(
-                                        applicationContext = context,
-                                        icon = Icons.Default.SignalWifiStatusbarConnectedNoInternet4,
-                                        dialogTitle = context.getString(R.string.message_network_unavailable),
-                                        dialogText = context.getString(R.string.message_network_unavailable_detail),
-                                        onConfirm = {
-                                            clear()
+                            }
+
+                            launchInOverlayViewCoroutineScope {
+                                DialogView.INSTANCE.cast(
+                                    applicationContext = context,
+                                    icon = Icons.Default.BatteryAlert,
+                                    dialogTitle = context.getString(R.string.message_translate_fixedarea_warn),
+                                    dialogText = context.getString(R.string.message_translate_fixedarea_warn_detail),
+                                    onConfirm = {
+                                        launchInOverlayViewCoroutineScope {
+                                            start()
                                         }
-                                    )
-                                }
+                                    }
+                                )
                             }
                         },
                         modifier = Modifier
