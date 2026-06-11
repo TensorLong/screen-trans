@@ -425,6 +425,37 @@ object CaptureInterruptionPolicy {
     }
 }
 
+object CaptureHideFrameSyncPolicy {
+    private const val DEFAULT_REFRESH_RATE = 60f
+    private const val HIDE_COMMIT_TIMEOUT_FRAMES = 5
+    private const val POST_HIDE_FLUSH_FRAMES = 7
+    private const val MIN_FRAME_COMMIT_TIMEOUT_MS = 80L
+    private const val MIN_POST_HIDE_FLUSH_DELAY_MS = 120L
+
+    /**
+     * The legacy 80ms commit timeout and 120ms post-hide flush were tuned on 60Hz
+     * devices (~5 and ~7 frame intervals). On lower refresh rates the same wall-clock
+     * budget covers too few frames: the hide commit regularly times out and the flush
+     * no longer outlives the compositor latency, which lets overlay pixels leak into
+     * the capture. Budget in frames, floored at the 60Hz values so high-refresh
+     * devices keep today's behavior.
+     */
+    fun frameCommitTimeoutMs(displayRefreshRate: Float?): Long {
+        return (frameIntervalMs(displayRefreshRate) * HIDE_COMMIT_TIMEOUT_FRAMES).toLong()
+            .coerceAtLeast(MIN_FRAME_COMMIT_TIMEOUT_MS)
+    }
+
+    fun postHideFlushDelayMs(displayRefreshRate: Float?): Long {
+        return (frameIntervalMs(displayRefreshRate) * POST_HIDE_FLUSH_FRAMES).toLong()
+            .coerceAtLeast(MIN_POST_HIDE_FLUSH_DELAY_MS)
+    }
+
+    private fun frameIntervalMs(displayRefreshRate: Float?): Float {
+        val refreshRate = displayRefreshRate?.takeIf { it >= 1f } ?: DEFAULT_REFRESH_RATE
+        return 1000f / refreshRate
+    }
+}
+
 object PointerDwellPolicy {
     fun shouldRestartDwell(
         previous: Point?,
@@ -577,7 +608,7 @@ object TargetIconRenderPolicy {
                     side == activeSide,
             progressVisible = translateStatus == TranslateStatus.Requested &&
                     textDetectMode != TextDetectMode.SELECT,
-            dimmed = captureStatus == CaptureStatus.Requested || fixedAreaTranslating,
+            dimmed = fixedAreaTranslating,
             captureRequested = captureStatus == CaptureStatus.Requested,
             writingRtl = writingRtl,
             tint = when {
@@ -588,8 +619,16 @@ object TargetIconRenderPolicy {
         )
     }
 
+    /**
+     * [TargetIconRenderState.captureRequested] deliberately does NOT hide the icon here.
+     * Hiding the icon from the projection is owned by the frame-synchronized
+     * captureTransparent window (TargetCaptureTransparency) together with the
+     * minimumImageTimestampNs gate, so a render-level hide for the whole Requested
+     * period is redundant for OCR purity. On sub-60fps devices a janky touch stream
+     * produces false dwells mid-drag, and a status-driven hide makes the icon vanish
+     * for the entire abort-restart cycle — the exact "box disappears while moving" bug.
+     */
     fun contentAlpha(state: TargetIconRenderState): Float {
-        if (state.captureRequested) return CAPTURE_ALPHA
         if (state.pointerVisible) return 1.0f
         return if (state.dimmed) CAPTURE_ALPHA else 1.0f
     }

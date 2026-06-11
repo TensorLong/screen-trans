@@ -72,9 +72,14 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
     fun senseGroupProjectionCaptureWaitsForTransparentTargetFrame() = runBlocking {
         prepareAppPermissions()
         configureSenseGroupMode()
-        launchProbeActivity()
-        startOverlayForegroundService()
+        // Token must be granted BEFORE the foreground service starts: on API 34+
+        // startForeground(FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION) without a
+        // projection grant throws SecurityException, and the service's recovery
+        // path launches SplashActivity over the probe screen. The probe activity
+        // is launched last so it is the captured foreground content.
         ensureMediaProjectionToken()
+        startOverlayForegroundService()
+        launchProbeActivity()
 
         val captureRepository = CaptureRepository(context).also { it.acquire() }
         val visionRepository = VisionRepository()
@@ -127,9 +132,14 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
     fun cancelledTransparentCaptureRestoresVisibleTargetFrame() = runBlocking {
         prepareAppPermissions()
         configureSenseGroupMode()
-        launchProbeActivity()
-        startOverlayForegroundService()
+        // Token must be granted BEFORE the foreground service starts: on API 34+
+        // startForeground(FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION) without a
+        // projection grant throws SecurityException, and the service's recovery
+        // path launches SplashActivity over the probe screen. The probe activity
+        // is launched last so it is the captured foreground content.
         ensureMediaProjectionToken()
+        startOverlayForegroundService()
+        launchProbeActivity()
 
         val captureRepository = CaptureRepository(context).also { it.acquire() }
         try {
@@ -176,9 +186,14 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
     fun transparentProjectionCaptureResourceProfile() = runBlocking {
         prepareAppPermissions()
         configureSenseGroupMode()
-        launchProbeActivity()
-        startOverlayForegroundService()
+        // Token must be granted BEFORE the foreground service starts: on API 34+
+        // startForeground(FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION) without a
+        // projection grant throws SecurityException, and the service's recovery
+        // path launches SplashActivity over the probe screen. The probe activity
+        // is launched last so it is the captured foreground content.
         ensureMediaProjectionToken()
+        startOverlayForegroundService()
+        launchProbeActivity()
 
         val captureRepository = CaptureRepository(context).also { it.acquire() }
         try {
@@ -227,7 +242,10 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK),
         )
         instrumentation.waitForIdleSync()
-        delay(800)
+        // The immersive system-bar transition shifts the window content by a few
+        // pixels for ~1s after launch; captures taken across that transition differ
+        // at every glyph edge and drown out the target-icon diff.
+        delay(2_000)
         ScreenInfoHolder.updateScreenInfoInService(context)
     }
 
@@ -235,6 +253,9 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
         shell("pm grant ${context.packageName} android.permission.POST_NOTIFICATIONS")
         shell("cmd appops set ${context.packageName} SYSTEM_ALERT_WINDOW allow")
         shell("cmd appops set ${context.packageName} PROJECT_MEDIA allow")
+        // The probe activity uses immersive fullscreen; without this the system's
+        // "Viewing full screen" education bubble covers the capture region.
+        shell("settings put secure immersive_mode_confirmations confirmed")
     }
 
     private suspend fun startOverlayForegroundService() {
@@ -250,6 +271,9 @@ class TargetCaptureTransparencyProjectionInstrumentedTest {
     private suspend fun ensureMediaProjectionToken() {
         if (CaptureRepository.mediaProjectionToken != null) return
 
+        // The consent-dialog tap coordinates need real screen dimensions, and this
+        // now runs before launchProbeActivity (which used to populate the holder).
+        ScreenInfoHolder.updateScreenInfoInService(context)
         context.startActivity(
             Intent(context, ScreenCapturePermissionRequesterActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),

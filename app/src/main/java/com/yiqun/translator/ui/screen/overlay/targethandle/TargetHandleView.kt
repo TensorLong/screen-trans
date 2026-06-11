@@ -197,6 +197,9 @@ class TargetHandleView private constructor(
 
     override lateinit var layoutParams: WindowManager.LayoutParams
 
+    internal val handleCenterOnScreenForTest: Pair<Int, Int>
+        get() = layoutParams.x + handleCenterX to layoutParams.y + handleCenterY
+
     override fun createView(overlayService: OverlayService): View {
         val thumbDimen = overlayService.resources.getDimensionPixelSize(R.dimen.target_handle_thumb_dimen)
         val padding = ((handleWidth - thumbDimen) / 2).coerceAtLeast(0)
@@ -1191,8 +1194,6 @@ class TargetHandleView private constructor(
 }
 
 object TargetCaptureTransparency {
-    private const val FRAME_COMMIT_TIMEOUT_MS = 80L
-    private const val POST_HIDE_FLUSH_DELAY_MS = 120L
 
     suspend fun <T> withTransparentTargets(block: suspend () -> T): T {
         return withTransparentTargetsAfterCommit { block() }
@@ -1248,6 +1249,12 @@ object TargetCaptureTransparency {
         }
         if (hideableSurfaces.isEmpty()) return block(null)
 
+        val displayRefreshRate = withContext(Dispatchers.Main.immediate) {
+            hideableSurfaces.firstNotNullOfOrNull { it.displayRefreshRate() }
+        }
+        val frameCommitTimeoutMs = CaptureHideFrameSyncPolicy.frameCommitTimeoutMs(displayRefreshRate)
+        val postHideFlushDelayMs = CaptureHideFrameSyncPolicy.postHideFlushDelayMs(displayRefreshRate)
+
         return try {
             withContext(Dispatchers.Main.immediate) {
                 hideableSurfaces.forEach { it.setCaptureTransparent(true) }
@@ -1256,7 +1263,13 @@ object TargetCaptureTransparency {
                 hideableSurfaces
                     .map { surface ->
                         async(Dispatchers.Main.immediate) {
-                            withTimeoutOrNull(FRAME_COMMIT_TIMEOUT_MS) {
+                            withTimeoutOrNull(frameCommitTimeoutMs) {
+                                surface.awaitCaptureTransparentFrameCommit()
+                            } ?: withTimeoutOrNull(frameCommitTimeoutMs) {
+                                // One retry: a single missed commit window is common under
+                                // main-thread jank on low-refresh devices, and proceeding
+                                // without a committed hide is the one path that can leak
+                                // overlay pixels into OCR.
                                 surface.awaitCaptureTransparentFrameCommit()
                             }
                         }
@@ -1271,7 +1284,7 @@ object TargetCaptureTransparency {
                 Timber.tag("TargetCaptureTransparency")
                     .w("frame commit timed out for %d/%d surface(s)", timedOutCommits, hideableSurfaces.size)
             }
-            delay(POST_HIDE_FLUSH_DELAY_MS)
+            delay(postHideFlushDelayMs)
             // Capture the gate timestamp AFTER the transparent frame is committed.
             // Frames older than this still show the app's overlays — CaptureRepository
             // drops them. Capturing it before the commit makes the gate a no-op and
@@ -1299,8 +1312,14 @@ object TargetCaptureTransparency {
 private sealed class CaptureHideableSurface {
     abstract fun setCaptureTransparent(transparent: Boolean)
     abstract suspend fun awaitCaptureTransparentFrameCommit()
+    protected abstract val view: View
 
-    class Target(private val view: TargetIconNativeView) : CaptureHideableSurface() {
+    fun displayRefreshRate(): Float? {
+        if (!view.isAttachedToWindow) return null
+        return view.display?.refreshRate?.takeIf { it >= 1f }
+    }
+
+    class Target(override val view: TargetIconNativeView) : CaptureHideableSurface() {
         override fun setCaptureTransparent(transparent: Boolean) {
             view.setCaptureTransparent(transparent)
         }
@@ -1310,7 +1329,7 @@ private sealed class CaptureHideableSurface {
         }
     }
 
-    class Plain(private val view: View) : CaptureHideableSurface() {
+    class Plain(override val view: View) : CaptureHideableSurface() {
         private var restoreAlpha: Float = 1f
 
         override fun setCaptureTransparent(transparent: Boolean) {
@@ -1426,6 +1445,9 @@ internal class TargetIconNativeView(context: Context) : View(context) {
 
     private var renderState = TargetIconRenderState()
     private var captureTransparent = false
+
+    internal val renderStateForTest: TargetIconRenderState get() = renderState
+    internal val isCaptureTransparentForTest: Boolean get() = captureTransparent
     private var progressRotation = 0f
     private var progressAnimator: ValueAnimator? = null
 

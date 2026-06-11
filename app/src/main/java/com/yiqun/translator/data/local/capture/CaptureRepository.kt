@@ -105,7 +105,9 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
                     state = State.Uninitialized
                 }
             }
-            projection.registerCallback(mediaProjectionStopCallback!!, null)
+            // A null handler would dispatch on the calling thread's Looper and throws
+            // when start() runs on a looperless thread (e.g. the instrumentation thread).
+            projection.registerCallback(mediaProjectionStopCallback!!, handler)
 
             // maxImages must be >= 2: acquireLatestImage() needs a spare buffer to
             // drop stale frames and return the freshest one. With 1 it can hand back

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
@@ -20,6 +21,16 @@ class OcrProbeActivity : Activity() {
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
         )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            // The probe geometry constants are physical pixels from y=0. On devices
+            // with a display cutout the window is otherwise letterboxed below the
+            // cutout (128px on a Pixel 6), shifting the probe sentence out of the
+            // CROP_TOP..CROP_BOTTOM capture region.
+            window.attributes = window.attributes.apply {
+                layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+        }
         @Suppress("DEPRECATION")
         window.decorView.systemUiVisibility =
             View.SYSTEM_UI_FLAG_FULLSCREEN or

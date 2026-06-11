@@ -638,7 +638,10 @@ class PointerPlacementTest {
     }
 
     @Test
-    fun targetIconContentDimsDuringCaptureWithoutChangingWindowVisibility() {
+    fun inactivePointerIconStaysVisibleDuringCaptureRequest() {
+        // Hiding during capture is owned by the frame-synchronized captureTransparent
+        // window, not by CaptureStatus.Requested: a status-driven hide lasts the whole
+        // abort-restart cycle and makes the icon vanish mid-drag on janky devices.
         val state = TargetIconRenderPolicy.stateFor(
             side = PointerSide.LEFT,
             activeSide = PointerSide.RIGHT,
@@ -652,13 +655,13 @@ class PointerPlacementTest {
         )
 
         assertFalse(state.pointerVisible)
-        assertTrue(state.dimmed)
+        assertFalse(state.dimmed)
         assertTrue(state.captureRequested)
-        assertEquals(TargetIconRenderPolicy.CAPTURE_ALPHA, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+        assertEquals(1.0f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
     }
 
     @Test
-    fun activeDraggedPointerIconDimsDuringCapture() {
+    fun activeDraggedPointerIconStaysVisibleDuringCaptureRequest() {
         val state = TargetIconRenderPolicy.stateFor(
             side = PointerSide.LEFT,
             activeSide = PointerSide.LEFT,
@@ -672,9 +675,53 @@ class PointerPlacementTest {
         )
 
         assertTrue(state.pointerVisible)
-        assertTrue(state.dimmed)
+        assertFalse(state.dimmed)
         assertTrue(state.captureRequested)
+        assertEquals(1.0f, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+    }
+
+    @Test
+    fun fixedAreaTranslatingStillDimsIdlePointerIcon() {
+        val state = TargetIconRenderPolicy.stateFor(
+            side = PointerSide.LEFT,
+            activeSide = PointerSide.RIGHT,
+            motionEventAction = MotionEvent.ACTION_UP,
+            textDetectMode = TextDetectMode.FIXED_AREA,
+            captureStatus = CaptureStatus.Idle,
+            fixedAreaTranslating = true,
+            translateStatus = TranslateStatus.Idle,
+            areaSelecting = false,
+            writingRtl = false,
+        )
+
+        assertFalse(state.pointerVisible)
+        assertTrue(state.dimmed)
         assertEquals(TargetIconRenderPolicy.CAPTURE_ALPHA, TargetIconRenderPolicy.contentAlpha(state), 0.0f)
+    }
+
+    @Test
+    fun frameSyncBudgetsMatchLegacyValuesAt60Hz() {
+        assertEquals(83L, CaptureHideFrameSyncPolicy.frameCommitTimeoutMs(60f))
+        assertEquals(120L, CaptureHideFrameSyncPolicy.postHideFlushDelayMs(60f))
+    }
+
+    @Test
+    fun frameSyncBudgetsScaleUpForLowRefreshDisplays() {
+        assertEquals(166L, CaptureHideFrameSyncPolicy.frameCommitTimeoutMs(30f))
+        assertEquals(233L, CaptureHideFrameSyncPolicy.postHideFlushDelayMs(30f))
+    }
+
+    @Test
+    fun frameSyncBudgetsAreFlooredForHighRefreshDisplays() {
+        assertEquals(80L, CaptureHideFrameSyncPolicy.frameCommitTimeoutMs(120f))
+        assertEquals(120L, CaptureHideFrameSyncPolicy.postHideFlushDelayMs(120f))
+    }
+
+    @Test
+    fun frameSyncBudgetsFallBackTo60HzWhenRefreshRateUnknown() {
+        assertEquals(CaptureHideFrameSyncPolicy.frameCommitTimeoutMs(60f), CaptureHideFrameSyncPolicy.frameCommitTimeoutMs(null))
+        assertEquals(CaptureHideFrameSyncPolicy.postHideFlushDelayMs(60f), CaptureHideFrameSyncPolicy.postHideFlushDelayMs(null))
+        assertEquals(CaptureHideFrameSyncPolicy.frameCommitTimeoutMs(60f), CaptureHideFrameSyncPolicy.frameCommitTimeoutMs(0f))
     }
 
     @Test

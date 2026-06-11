@@ -179,6 +179,8 @@
 -keep class com.yiqun.translator.ui.screen.overlay.targethandle.RecognitionDelayPolicy { *; }
 -keep class com.yiqun.translator.ui.screen.overlay.targethandle.TargetCaptureTransparency { *; }
 -keep class com.yiqun.translator.ui.screen.overlay.targethandle.TargetIconNativeView { *; }
+-keep class com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleView { *; }
+-keep class com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleView$* { *; }
 -keep class com.yiqun.translator.ui.screen.overlay.targethandle.TargetIconRenderState { *; }
 -keep class com.yiqun.translator.ui.screen.overlay.targethandle.TargetIconRenderPolicy { *; }
 -keep class com.yiqun.translator.ui.screen.overlay.fixedarea.FixedAreaRecognitionPolicy { *; }
