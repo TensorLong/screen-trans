@@ -132,10 +132,28 @@
     <string name="feature_view_description_word_detection">Word-by-word translation is unlimited during the internal beta.</string>
     <string name="feature_view_description_fixed_area_detection">You can continuously translate fixed areas, such as movie subtitles.</string>
 
+    <!-- WelcomeActivity (first-run hero screen) -->
+    <string name="welcome_tagline">Point at a word — understand the whole phrase.</string>
+    <string name="welcome_step_1">Drag the floating ball over any app</string>
+    <string name="welcome_step_2">Point at any word on screen</string>
+    <string name="welcome_step_3">The sense group is translated instantly</string>
+    <string name="welcome_start">Get started</string>
+    <string name="welcome_demo_prefix">"La vida es "</string>
+    <string name="welcome_demo_chunk">como una caja de bombones</string>
+    <string name="welcome_demo_suffix">.</string>
+    <string name="welcome_demo_translation">like a box of chocolates</string>
+
+    <!-- PracticeActivity (first-run try-it playground) -->
+    <string name="practice_instruction">The floating ball is ready. Hold it and drag the pointer onto any word below, then let go.</string>
+    <string name="practice_sample_1">El viejo farero había pasado treinta años viendo pasar los barcos en la noche. Cada tarde, justo antes del atardecer, subía la estrecha escalera de caracol para encender la gran lámpara.</string>
+    <string name="practice_sample_2">La gente del pueblo decía que la luz se veía desde veinte millas de distancia, atravesando la niebla y la lluvia como una hoja dorada.</string>
+    <string name="practice_done">Got it — start translating</string>
+
     <!-- Sense-group AI failure toasts -->
     <string name="sense_group_error_quota">Free model quota exhausted. Try a paid model or wait a moment.</string>
     <string name="sense_group_error_empty">Model returned empty response. Try a different model.</string>
     <string name="sense_group_error_network">Network error (%1$d). Check connection and try again.</string>
     <string name="sense_group_error_network_no_code">Network error. Check connection and try again.</string>
     <string name="sense_group_error_parse">Could not parse model response. Try a different model.</string>
+    <string name="sense_group_error_no_key">Sense-group translation needs an AI API key (Settings → AI API). Using sentence translation for now.</string>
 </resources>

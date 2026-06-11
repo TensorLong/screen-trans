@@ -115,6 +115,7 @@ import androidx.lifecycle.lifecycleScope
 import com.yiqun.translator.BuildConfig
 import com.yiqun.translator.R
 import com.yiqun.translator.data.local.capture.CaptureRepository
+import com.yiqun.translator.data.local.preference.DefaultLanguagePolicy
 import com.yiqun.translator.data.local.screen.ScreenInfoHolder
 import com.yiqun.translator.data.local.secure.ApiKeyInfo
 import com.yiqun.translator.data.local.vision.TextDetectMode
@@ -547,7 +548,7 @@ class SettingsActivity : AVDActivity() {
         // Text detect mode
         val textDetectMode by viewModel.preferenceRepository.textDetectModeFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
-            initialValue = TextDetectMode.SENTENCE
+            initialValue = TextDetectMode.SENSE_GROUP
         )
 
         // source language
@@ -560,12 +561,14 @@ class SettingsActivity : AVDActivity() {
         // target language
         val targetLanguageCode by viewModel.preferenceRepository.targetLanguageCodeFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
-            initialValue = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                context.resources.configuration.locales.get(0).language
-            } else {
-                @Suppress("DEPRECATION")
-                context.resources.configuration.locale.language
-            }
+            initialValue = DefaultLanguagePolicy.defaultTargetLanguageCode(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    context.resources.configuration.locales.get(0)
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.resources.configuration.locale
+                }
+            )
         )
         val targetLanguage = viewModel.translationRepository.getSupportedTargetLanguage(targetLanguageCode)
 

@@ -80,7 +80,7 @@ class VisionTextView private constructor() : OverlayView() {
 
         val textDetectMode by targetHandleViewModel.preferenceRepository.textDetectModeFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
-            initialValue = TextDetectMode.SENTENCE
+            initialValue = TextDetectMode.SENSE_GROUP
         )
 
         pointerPositionedVisionTextState?.let { visionText ->

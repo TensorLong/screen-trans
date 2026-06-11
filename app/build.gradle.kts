@@ -17,8 +17,8 @@ android {
         applicationId = "com.yiqun.translator"
         minSdk = 23
         targetSdk = 35
-        versionCode = 30326
-        versionName = "3.4.0"
+        versionCode = 30500
+        versionName = "3.5.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     bundle {
@@ -162,7 +162,6 @@ dependencies {
     implementation(libs.squareup.retrofit2.converter.gson)
     implementation(libs.coil.compose)
     implementation(libs.reorderable)
-    implementation(libs.exoplayer)
 
     implementation(libs.timber)
 

@@ -57,6 +57,7 @@ import com.yiqun.translator.data.remote.translation.Transaction
 import com.yiqun.translator.data.remote.translation.TranslationKitType
 import com.yiqun.translator.data.remote.translation.TranslationRepository
 import com.yiqun.translator.data.remote.translation.TranslationResponse
+import com.yiqun.translator.data.remote.translation.TranslationSourcePolicy
 import com.yiqun.translator.extensions.finishService
 import com.yiqun.translator.extensions.gotoStore
 import com.yiqun.translator.extensions.openGoogleApp
@@ -490,7 +491,7 @@ class TargetHandleViewModel(
     //                                                                                            //
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private var _textDetectMode = TextDetectMode.SENTENCE
+    private var _textDetectMode = TextDetectMode.SENSE_GROUP
 
     val textDetectMode: TextDetectMode
         get() = _textDetectMode
@@ -955,6 +956,8 @@ class TargetHandleViewModel(
         return positionedWord
     }
 
+    private var wasSenseGroupKeyHintShown = false
+
     /**
      *
      *
@@ -966,6 +969,24 @@ class TargetHandleViewModel(
         sourceLanguageCode: String,
     ): VisionText? {
         if (sentence == null) return null
+
+        // Sense-group is the default mode but needs a user-provided AI key.
+        // Without one, degrade to whole-sentence translation instead of firing
+        // doomed network calls, and tell the user how to unlock it (once per
+        // service session, so a fresh start reminds but dwells never nag).
+        if (!ApiKeyInfo.chatgptKeyAvailable(applicationContext)) {
+            if (!wasSenseGroupKeyHintShown) {
+                wasSenseGroupKeyHintShown = true
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        applicationContext,
+                        applicationContext.getString(R.string.sense_group_error_no_key),
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            return sentence
+        }
 
         val positionedLine: Line? = sentence.lines.find { line ->
             val expandedRect = expandedRect(line.boundingBox)
@@ -1113,9 +1134,14 @@ class TargetHandleViewModel(
 
                             val motionEventState = motionEventFlow.first()
                             if (motionEventState == MotionEvent.ACTION_DOWN || motionEventState == MotionEvent.ACTION_MOVE) {
+                                val requestSourceLanguageCode = TranslationSourcePolicy.requestSourceLanguageCode(
+                                    userSourceLanguageCode = preferenceRepository.sourceLanguageCodeFlow.first(),
+                                    detectedLanguageCode = visionResultTransaction.detectedLanguageCode,
+                                    translationKitType = translationKitType,
+                                )
                                 translationRepository.request(
                                     translationKitType,
-                                    visionResultTransaction.detectedLanguageCode,
+                                    requestSourceLanguageCode,
                                     targetLanguageCode,
                                     pointerPositionedVisionText.representation,
                                 )

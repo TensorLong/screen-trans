@@ -94,10 +94,28 @@
   <string name="feature_view_description_word_detection">逐词翻译不限数量、不限时间。</string>
   <string name="feature_view_description_fixed_area_detection">您可以持续翻译固定区域，如电影字幕。</string>
 
+  <!-- WelcomeActivity（首次启动欢迎页） -->
+  <string name="welcome_tagline">指到哪个词，看懂整个意群。</string>
+  <string name="welcome_step_1">把悬浮球拖到任意应用上</string>
+  <string name="welcome_step_2">指向屏幕上的任意单词</string>
+  <string name="welcome_step_3">所在意群立刻翻译</string>
+  <string name="welcome_start">开始使用</string>
+  <string name="welcome_demo_prefix">"Life is "</string>
+  <string name="welcome_demo_chunk">like a box of chocolates</string>
+  <string name="welcome_demo_suffix">.</string>
+  <string name="welcome_demo_translation">就像一盒巧克力</string>
+
+  <!-- PracticeActivity（首次启动试用场） -->
+  <string name="practice_instruction">悬浮球已就位。按住它，把指针拖到下面任意单词上，停一下即可翻译。</string>
+  <string name="practice_sample_1">The old lighthouse keeper had spent thirty years watching ships pass in the night. Every evening, just before sunset, he climbed the narrow spiral staircase to light the great lamp.</string>
+  <string name="practice_sample_2">People in the village said the light could be seen from twenty miles away, cutting through fog and rain like a steady golden blade.</string>
+  <string name="practice_done">我学会了，开始使用</string>
+
   <!-- Sense-group AI failure toasts -->
   <string name="sense_group_error_quota">免费模型配额已用尽，请改用付费模型或稍后重试。</string>
   <string name="sense_group_error_empty">模型未返回有效内容，请尝试更换模型。</string>
   <string name="sense_group_error_network">网络错误（%1$d），请检查网络后重试。</string>
   <string name="sense_group_error_network_no_code">网络错误，请检查网络后重试。</string>
   <string name="sense_group_error_parse">无法解析模型响应，请尝试更换模型。</string>
+  <string name="sense_group_error_no_key">意群翻译需要先配置 AI 接口（设置 → AI API），当前暂用整句翻译。</string>
 </resources>

@@ -76,6 +76,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yiqun.translator.R
 import com.yiqun.translator.core.OverlayService
+import com.yiqun.translator.data.local.preference.DefaultLanguagePolicy
 import com.yiqun.translator.data.local.screen.ScreenInfo
 import com.yiqun.translator.data.local.screen.ScreenInfoHolder
 import com.yiqun.translator.data.local.vision.TextDetectMode
@@ -190,25 +191,26 @@ class MenuBarView private constructor() : OverlayView() {
             val translationKitTypeAlpha = remember { Animatable(0f) }
             var translationKitTypeAlphaAnimation: Job? by remember { mutableStateOf(null) }
 
-            val localeLanguage: String = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                configuration.locales[0].language
-            } else {
-                @Suppress("DEPRECATION")
-                configuration.locale.language
-            }
+            val localeTargetLanguage: String = DefaultLanguagePolicy.defaultTargetLanguageCode(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    configuration.locales[0]
+                } else {
+                    @Suppress("DEPRECATION")
+                    configuration.locale
+                }
+            )
 
             // source language
             val sourceLanguageCode by viewModel.preferenceRepository.sourceLanguageCodeFlow.collectAsStateWithLifecycle(
                 lifecycle = lifecycleOwner.lifecycle,
-                initialValue = "auto"
+                initialValue = DefaultLanguagePolicy.DEFAULT_SOURCE_LANGUAGE_CODE
             )
             val sourceLanguage = viewModel.translationRepository.getSupportedSourceLanguage(sourceLanguageCode)
-            Timber.tag(TAG).d("sourceLanguageCode $sourceLanguageCode sourceLanguage $sourceLanguage  localeLanguage $localeLanguage")
 
             // target language
             val targetLanguageCode by viewModel.preferenceRepository.targetLanguageCodeFlow.collectAsStateWithLifecycle(
                 lifecycle = lifecycleOwner.lifecycle,
-                initialValue = localeLanguage
+                initialValue = localeTargetLanguage
             )
             val targetLanguage = viewModel.translationRepository.getSupportedTargetLanguage(targetLanguageCode)
 

@@ -52,6 +52,7 @@ import com.yiqun.translator.data.local.vision.model.Transaction
 import com.yiqun.translator.data.local.vision.model.VisionResponse
 import com.yiqun.translator.data.remote.translation.TranslationKitType
 import com.yiqun.translator.data.remote.translation.TranslationResponse
+import com.yiqun.translator.data.remote.translation.TranslationSourcePolicy
 import com.yiqun.translator.extensions.setFromPoints
 import com.yiqun.translator.extensions.vibrate
 import com.yiqun.translator.ui.screen.main.SettingsActivity
@@ -499,7 +500,11 @@ open class FixedAreaView : OverlayView() {
 
     private suspend fun requestTranslate(visionResult: Transaction, sourceText: String) {
         val translationKitType: TranslationKitType = targetHandleViewModel.preferenceRepository.translationKitTypeFlow.first()
-        val sourceLanguageCode: String = visionResult.detectedLanguageCode
+        val sourceLanguageCode: String = TranslationSourcePolicy.requestSourceLanguageCode(
+            userSourceLanguageCode = targetHandleViewModel.preferenceRepository.sourceLanguageCodeFlow.first(),
+            detectedLanguageCode = visionResult.detectedLanguageCode,
+            translationKitType = translationKitType,
+        )
         val targetLanguageCode: String = targetHandleViewModel.preferenceRepository.targetLanguageCodeFlow.first()
 
         if (sourceText.trim().isEmpty()) {

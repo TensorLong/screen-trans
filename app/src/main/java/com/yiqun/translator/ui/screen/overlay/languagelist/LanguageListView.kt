@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yiqun.translator.R
+import com.yiqun.translator.data.local.preference.DefaultLanguagePolicy
 import com.yiqun.translator.data.remote.translation.Language
 import com.yiqun.translator.core.OverlayService
 import com.yiqun.translator.ui.screen.overlay.OverlayView
@@ -164,8 +165,9 @@ class LanguageListView private constructor() : OverlayView() {
         // target language
         val targetLanguageCode by viewModel.preferenceRepository.targetLanguageCodeFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
-            initialValue = ConfigurationCompat.getLocales(LocalConfiguration.current)[0]?.language
-                ?: Locale.getDefault().language
+            initialValue = DefaultLanguagePolicy.defaultTargetLanguageCode(
+                ConfigurationCompat.getLocales(LocalConfiguration.current)[0] ?: Locale.getDefault()
+            )
         )
         val targetLanguage: Language = viewModel.translationRepository.getSupportedTargetLanguage(targetLanguageCode)
 

@@ -55,7 +55,6 @@ import com.yiqun.translator.data.local.preference.PreferenceRepository
 import com.yiqun.translator.ui.screen.AVDActivity
 import com.yiqun.translator.ui.common.MyDialog
 import com.yiqun.translator.ui.screen.main.SettingsActivity
-import com.yiqun.translator.ui.screen.onboarding.OnBoardingActivity
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuBarView
 import com.yiqun.translator.ui.screen.overlay.targethandle.TargetHandleView
 import com.yiqun.translator.ui.screen.permissions.NotificationPermissionRequesterActivity
@@ -91,17 +90,24 @@ class SplashActivity : AVDActivity() {
             val wasTrailerShown = viewModel.preferenceRepository.wasTrailerShownFlow.first()
             Timber.tag(TAG).d("wasTrailerShown $wasTrailerShown")
             if (!wasTrailerShown) {
-                OnBoardingActivity.start(applicationContext)
-                finish()
-            } else {
-                val layoutParams = window.attributes
-                layoutParams.dimAmount = 0.90f
-                window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-                window.attributes = layoutParams
+                // Show the welcome page on top and stay alive underneath.
+                // Finishing here and letting the welcome page relaunch this
+                // singleTop activity raced the dying instance: the launch
+                // intent was delivered to the finishing record (START result
+                // DELIVERED_TO_TOP) and dropped, stranding the user on the
+                // home screen. Waiting on the DataStore flow also removes the
+                // race against the asynchronous preference write.
+                WelcomeActivity.start(applicationContext)
+                viewModel.preferenceRepository.wasTrailerShownFlow.first { it }
+            }
 
-                setContent {
-                    DelayedFadeInContent()
-                }
+            val layoutParams = window.attributes
+            layoutParams.dimAmount = 0.90f
+            window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            window.attributes = layoutParams
+
+            setContent {
+                DelayedFadeInContent()
             }
         }
     }
@@ -499,6 +505,12 @@ class SplashActivity : AVDActivity() {
                                 applicationContext = applicationContext,
                                 dualPointerMode = viewModel.preferenceRepository.dualPointerEnabledFlow.first(),
                             )
+                            // First run only: land on the practice playground so
+                            // the user performs the real gesture on safe sample
+                            // text while the handle is freshly on screen.
+                            if (!viewModel.preferenceRepository.wasPracticeShownFlow.first()) {
+                                PracticeActivity.start(applicationContext)
+                            }
                             finish()
                         }
                     },

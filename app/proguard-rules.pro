@@ -200,10 +200,6 @@
 -keep class com.yiqun.translator.core.OverlayService$* { *; }
 -keep class com.yiqun.translator.R$* { *; }
 
-# ExoPlayer
--keep class com.google.android.exoplayer2.** { *; }
--dontwarn com.google.android.exoplayer2.**
-
 # Coil
 -keep class coil.** { *; }
 -dontwarn coil.**

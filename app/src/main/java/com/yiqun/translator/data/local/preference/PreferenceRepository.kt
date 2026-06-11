@@ -28,7 +28,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import java.io.IOException
 import java.util.Locale
 import javax.inject.Inject
@@ -42,11 +41,9 @@ val Context.preferenceDataStore: DataStore<Preferences> by preferencesDataStore(
 @Singleton
 class PreferenceRepository @Inject constructor(@ApplicationContext val context: Context) {
 
-    private val TAG = javaClass.simpleName
-
     companion object PreferencesKeys {
-//        val IS_FIRST_START = booleanPreferencesKey("is_first_start")
         val WAS_TRAILER_SHOWN = booleanPreferencesKey("was_trailer_shown")
+        val WAS_PRACTICE_SHOWN = booleanPreferencesKey("was_practice_shown")
         val IS_REVIEW_DONE = booleanPreferencesKey("is_review_done")
         val WAS_BATTERY_EXEMPTION_REQUESTED = booleanPreferencesKey("was_battery_exemption_requested")
 
@@ -104,12 +101,13 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
         }
     }
 
-//    val isFirstStartFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
-//        preferences[IS_FIRST_START] ?: true
-//    }
-
     val wasTrailerShownFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
         preferences[WAS_TRAILER_SHOWN] ?: false
+    }
+
+    /** Whether the one-time first-run practice playground was already shown. */
+    val wasPracticeShownFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
+        preferences[WAS_PRACTICE_SHOWN] ?: false
     }
 
     val isReviewDoneFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
@@ -133,27 +131,20 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
         preferences[IS_SAY_HERE_L_SHOWN] ?: false
     }
 
+    // Sense-group translation is the hero feature, so it is the out-of-box mode.
+    // Without an AI key the recognition layer silently degrades to sentence
+    // translation (see TargetHandleViewModel.resolveSenseGroupVisionText).
     val textDetectModeFlow: Flow<TextDetectMode> = preferenceFlow.map { preferences ->
         val textDetectModeString = preferences[TEXT_DETECT_MODE]
-        textDetectModeString?.let { TextDetectMode.valueOf(textDetectModeString) } ?: TextDetectMode.SENTENCE
+        textDetectModeString?.let { TextDetectMode.valueOf(textDetectModeString) } ?: TextDetectMode.SENSE_GROUP
     }
 
-//    val sourceLanguageCodeFlow: Flow<String> = preferenceFlow.map { preferences ->
-//        preferences[SOURCE_LANGUAGE_CODE] ?: "en"//"auto"
-//    }
-//
-//    val targetLanguageCodeFlow: Flow<String> = preferenceFlow.map { preferences ->
-//        preferences[TARGET_LANGUAGE_CODE] ?: getCurrentLocale().language
-//    }
-
     val sourceLanguageCodeFlow: Flow<String> = preferenceFlow.map { preferences ->
-        Timber.tag(TAG).d(" preferences[SOURCE_LANGUAGE_CODE] ${preferences[SOURCE_LANGUAGE_CODE]} getCurrentLocale().language ${getCurrentLocale().language}")
-        preferences[SOURCE_LANGUAGE_CODE] ?: getCurrentLocale().language
+        preferences[SOURCE_LANGUAGE_CODE] ?: DefaultLanguagePolicy.DEFAULT_SOURCE_LANGUAGE_CODE
     }
 
     val targetLanguageCodeFlow: Flow<String> = preferenceFlow.map { preferences ->
-        Timber.tag(TAG).d(" preferences[TARGET_LANGUAGE_CODE] ${preferences[TARGET_LANGUAGE_CODE]}")
-        preferences[TARGET_LANGUAGE_CODE] ?: "en"
+        preferences[TARGET_LANGUAGE_CODE] ?: DefaultLanguagePolicy.defaultTargetLanguageCode(getCurrentLocale())
     }
 
     val translationKitTypeFlow: Flow<TranslationKitType> = preferenceFlow.map { preferences ->

@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.sp
 import com.yiqun.translator.R
 import com.yiqun.translator.core.OverlayService
 import com.yiqun.translator.data.local.vision.TextDetectMode
-import com.yiqun.translator.ui.common.MP4Player
 import com.yiqun.translator.ui.screen.overlay.OverlayView
 import com.yiqun.translator.ui.screen.overlay.menubar.MenuBarViewModel
 import com.yiqun.translator.ui.screen.overlay.menubar.TextDetectModeIconButton
@@ -191,7 +190,14 @@ class HelpTextDetectModeView private constructor() : OverlayView() {
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
-            MP4Player(textDetectMode.videoResourceId)
+            Text(
+                text = stringResource(id = textDetectMode.descriptionResourceId),
+                modifier = Modifier
+                    .sizeIn(maxWidth = 300.dp)
+                    .padding(top = 8.dp),
+                color = Color.White,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp, lineHeight = 26.sp)
+            )
         }
     }
 

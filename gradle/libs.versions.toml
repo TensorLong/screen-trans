@@ -43,7 +43,6 @@ retrofit2KotlinxSerializationConverter = "1.0.0"
 retrofit2 = "2.11.0"
 coilCompose = "2.6.0"
 reorderable = "2.4.2"
-exoplayer = "2.19.1"
 
 timber = "5.0.1"
 
@@ -137,7 +136,6 @@ squareup-retrofit2-retrofit = { group = "com.squareup.retrofit2", name = "retrof
 squareup-retrofit2-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit2" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 reorderable = { module = "sh.calvin.reorderable:reorderable", version.ref = "reorderable" }
-exoplayer = { module = "com.google.android.exoplayer:exoplayer", version.ref = "exoplayer" }
 
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 

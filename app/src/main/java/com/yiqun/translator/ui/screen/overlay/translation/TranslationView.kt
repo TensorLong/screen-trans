@@ -397,7 +397,7 @@ open class TranslationView : OverlayView() {
         )
         val textDetectMode by targetHandleViewModel.preferenceRepository.textDetectModeFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
-            initialValue = TextDetectMode.SENTENCE
+            initialValue = TextDetectMode.SENSE_GROUP
         )
         val selectedAiModel = ApiKeyInfo.getApiModelChatgpt(context)
         val showAiModelBadge = textDetectMode == TextDetectMode.SENSE_GROUP &&
