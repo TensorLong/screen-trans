@@ -7,11 +7,16 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.withTimeout
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.HttpException
 import timber.log.Timber
@@ -169,26 +174,8 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
             val jsonRequestBody = Gson().toJson(requestBody)
                 .toRequestBody("application/json".toMediaType())
 
-            val response: ChatGPTResponse = try {
-                chatGPTService.send(
-                    url = endpointUrl,
-                    apiKey = authorizationHeader(),
-                    body = jsonRequestBody
-                )
-            } catch (e: Exception) {
-                logApiFailure("senseGroupAt()", e)
-                if (e is HttpException) {
-                    val code = e.code()
-                    if (code == 402 || code == 429) {
-                        _senseGroupErrors.tryEmit(SenseGroupErrorEvent.Quota)
-                    } else {
-                        _senseGroupErrors.tryEmit(SenseGroupErrorEvent.Network(code))
-                    }
-                } else {
-                    _senseGroupErrors.tryEmit(SenseGroupErrorEvent.Network())
-                }
-                return@getOrLoad null
-            }
+            val response: ChatGPTResponse = sendSenseGroupWithRetry(endpointUrl, jsonRequestBody)
+                ?: return@getOrLoad null
 
             val raw = response.choices.firstOrNull()?.message?.content
             if (raw.isNullOrBlank()) {
@@ -218,6 +205,59 @@ class ChatGPTKit @Inject constructor(@ApplicationContext val context: Context, @
                 _senseGroupErrors.tryEmit(SenseGroupErrorEvent.Parse(e.message ?: e.javaClass.simpleName))
                 null
             }
+        }
+    }
+
+    /**
+     * Executes the chat-completions call under [SenseGroupRetryPolicy].
+     * Transient failures (connectivity blips, per-attempt timeouts,
+     * 408/429/5xx) are retried silently and only logged, so the user never
+     * sees an error prompt for a request that eventually succeeds. An error
+     * event is emitted solely when the failure is permanent or the final
+     * attempt fails; returns null in that case.
+     */
+    private suspend fun sendSenseGroupWithRetry(
+        endpointUrl: String,
+        body: RequestBody,
+    ): ChatGPTResponse? {
+        var attempt = 0
+        while (true) {
+            attempt++
+            val error: Throwable = try {
+                val response = withTimeout(SenseGroupRetryPolicy.ATTEMPT_TIMEOUT_MS) {
+                    chatGPTService.send(
+                        url = endpointUrl,
+                        apiKey = authorizationHeader(),
+                        body = body,
+                    )
+                }
+                if (attempt > 1) {
+                    Timber.tag(TAG).i(
+                        "senseGroupAt() recovered on attempt %d/%d",
+                        attempt,
+                        SenseGroupRetryPolicy.MAX_ATTEMPTS,
+                    )
+                }
+                return response
+            } catch (e: TimeoutCancellationException) {
+                Timber.tag(TAG).w(
+                    "senseGroupAt() attempt %d/%d timed out after %dms",
+                    attempt,
+                    SenseGroupRetryPolicy.MAX_ATTEMPTS,
+                    SenseGroupRetryPolicy.ATTEMPT_TIMEOUT_MS,
+                )
+                e
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logApiFailure("senseGroupAt() attempt $attempt/${SenseGroupRetryPolicy.MAX_ATTEMPTS}", e)
+                e
+            }
+            if (!SenseGroupRetryPolicy.shouldRetry(attempt, error)) {
+                _senseGroupErrors.tryEmit(SenseGroupRetryPolicy.errorEventFor(error))
+                return null
+            }
+            delay(SenseGroupRetryPolicy.backoffMs(attempt))
         }
     }
 
