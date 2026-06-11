@@ -411,6 +411,20 @@ object RecognitionDelayPolicy {
     fun captureStartDelayMs(): Long = 0L
 }
 
+object CaptureInterruptionPolicy {
+    /**
+     * When a dwell restarts (pointer moved beyond the stopped margin) the in-flight
+     * capture job is cancelled, but the render-level hide is driven by CaptureStatus.
+     * A capture that never finishes must release the hide, otherwise the target icon
+     * stays invisible across every abort-restart cycle of a fast drag.
+     * PermissionRequested and Captured are user-visible states owned by other flows
+     * and must survive the interruption.
+     */
+    fun statusAfterDwellInterruption(current: CaptureStatus): CaptureStatus {
+        return if (current == CaptureStatus.Requested) CaptureStatus.Idle else current
+    }
+}
+
 object PointerDwellPolicy {
     fun shouldRestartDwell(
         previous: Point?,

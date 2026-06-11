@@ -76,7 +76,7 @@ class RemoteConfigRepository @Inject constructor(@ApplicationContext val context
         // [START add_config_update_listener]
         remoteConfig.addOnConfigUpdateListener(object : ConfigUpdateListener {
             override fun onUpdate(configUpdate: ConfigUpdate) {
-                Timber.tag(TAG).i(TAG, "Updated keys: %s", configUpdate.updatedKeys)
+                Timber.tag(TAG).i("Updated keys: %s", configUpdate.updatedKeys)
 
                 remoteConfig.activate().addOnCompleteListener {
                     Timber.tag(TAG).i("------------------- onUpdate ------------------")

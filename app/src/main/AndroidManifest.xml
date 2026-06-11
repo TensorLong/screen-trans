@@ -92,34 +92,8 @@
             android:foregroundServiceType="mediaProjection">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Floating timers to display on top of other apps" />
+                android:value="Screen text recognition and translation overlay using media projection" />
         </service>
-
-        <activity
-            android:name=".ui.screen.test.TestMainActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity
-            android:name=".ui.screen.test.TestCapturedActivity"
-            android:configChanges="orientation|screenSize"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:launchMode="singleTop"
-            android:theme="@style/Theme.SenseGroupTranslator.Fullscreen" />
-
-        <activity
-            android:name=".ui.screen.test.TestVisionTextActivity"
-            android:configChanges="orientation|screenSize"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:launchMode="singleTop"
-            android:theme="@style/Theme.SenseGroupTranslator.Fullscreen" />
-
-        <!-- Automatically download the text recognition model after app install. -->
-        <meta-data
-            android:name="com.google.mlkit.vision.DEPENDENCIES"
-            android:value="service" />
 
         <meta-data
             android:name="google_analytics_default_allow_analytics_storage"

@@ -68,6 +68,10 @@ abstract class OverlayView : OverlayServiceEventListener {
     @CallSuper
     open suspend fun cast(applicationContext: Context, reattach: Boolean = false) {
         Timber.tag(TAG).i("#### cast ####")
+        // A re-cast without an intervening clear() must not leak the previous scopes'
+        // jobs (flow collectors keep running and hold the detached view otherwise).
+        avdCoroutineScope.cancel()
+        overlayViewCoroutineScope.cancel()
         avdCoroutineScope = CoroutineScope(Dispatchers.IO + Job())
         overlayViewCoroutineScope = CoroutineScope(Dispatchers.Main + Job())
         overlayService = getOverlayService(applicationContext)
@@ -212,12 +216,19 @@ abstract class OverlayView : OverlayServiceEventListener {
     private var serviceConnector: ServiceConnector<OverlayService>? = null
 
     private suspend fun getOverlayService(applicationContext: Context): OverlayService {
-        serviceConnector = ServiceConnector(
+        // Bind the new connection BEFORE unbinding the previous one: repeated casts used
+        // to accumulate ServiceConnections (clear() only unbinds the last), and dropping
+        // to zero bindings mid-cast could broadcast Event.Unbind to every overlay.
+        val previousConnector = serviceConnector
+        val connector = ServiceConnector(
             context = applicationContext,
             serviceClass = OverlayService::class.java,
             onConnected = { service -> onServiceConnected(service) }
         )
-        return serviceConnector!!.bind()
+        serviceConnector = connector
+        val service = connector.bind()
+        previousConnector?.unbind()
+        return service
     }
 
 

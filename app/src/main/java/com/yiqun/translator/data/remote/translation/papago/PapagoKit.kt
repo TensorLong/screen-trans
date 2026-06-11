@@ -13,8 +13,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.FormBody
 import okhttp3.RequestBody
 import timber.log.Timber
-import java.net.URLDecoder
-import java.net.URLEncoder
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,7 +21,7 @@ import javax.inject.Singleton
 class PapagoKit @Inject constructor(@ApplicationContext val context: Context, @PapagoRetrofit private val papagoService: PapagoService) : TranslationKit() {
 
     override fun available(): Boolean {
-        return ApiKeyInfo.apiKeyAvailable(context)
+        return ApiKeyInfo.papagoKeyAvailable(context)
     }
 
     private val supportedSourceLanguageCodes: List<String> by lazy {
@@ -97,23 +95,18 @@ class PapagoKit @Inject constructor(@ApplicationContext val context: Context, @P
                 throw IllegalStateException("API key might not have been initialized.")
             }
 
-            // Encode text for URL safety
-            val encodedText = URLEncoder.encode(sourceText, "UTF-8")
-
-            // Build request body
+            // FormBody applies form-urlencoding itself; pre-encoding with URLEncoder made
+            // Papago receive literal %XX escape sequences for any non-ASCII source text.
             val requestBody: RequestBody = FormBody.Builder()
                 .add("source", sourceLanguageCode)
                 .add("target", targetLanguageCode)
-                .add("text", encodedText)
+                .add("text", sourceText)
                 .build()
 
             val credentials = ApiKeyInfo.getApiKeyPapago(context)?.split("|")
                 ?.takeIf { it.size == 2 }
                 ?.let { it[0].toCharArray() to it[1].toCharArray() }
                 ?: ("unknown_id".toCharArray() to "unknown_secret".toCharArray())
-
-            Timber.tag(TAG).d("getApiKeyPapago [${ApiKeyInfo.getApiKeyPapago(context)}]")
-            Timber.tag(TAG).d("clientId ${credentials.first.joinToString("")} clientSecret [${credentials.second.joinToString("")}]")
 
             // Make API request
             val response = papagoService.send(
@@ -129,12 +122,12 @@ class PapagoKit @Inject constructor(@ApplicationContext val context: Context, @P
             val responseString = response.string()
             Timber.tag(TAG).d("sourceLanguageCode $sourceLanguageCode responseString  [${responseString}]")
             val jsonResponse = JsonParser.parseString(responseString).asJsonObject
-            val translatedTextEncoded = jsonResponse["message"]
+            // The API returns plain text; URL-decoding it threw IllegalArgumentException
+            // whenever a translation contained a literal '%' (e.g. "50%").
+            val resultText = jsonResponse["message"]
                 .asJsonObject["result"]
                 .asJsonObject["translatedText"]
                 .asString
-            Timber.tag(TAG).d("translatedTextEncoded $translatedTextEncoded")
-            val resultText = URLDecoder.decode(translatedTextEncoded, "UTF-8")
             Timber.tag(TAG).d("resultText $resultText")
 
             TranslationResponse.Success(

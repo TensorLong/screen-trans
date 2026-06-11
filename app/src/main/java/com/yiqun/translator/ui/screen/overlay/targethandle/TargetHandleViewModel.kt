@@ -73,6 +73,7 @@ import getBoundingBoxUnion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
@@ -595,6 +596,8 @@ class TargetHandleViewModel(
                 .collectLatest { pointerPosition ->
                     if (pointerPosition == null) {
                         captureJob?.cancel()
+                        captureStatusFlow.value =
+                            CaptureInterruptionPolicy.statusAfterDwellInterruption(captureStatusFlow.value)
                         return@collectLatest
                     }
                     if (!isPointedTranslationMode(textDetectMode)) {
@@ -628,8 +631,13 @@ class TargetHandleViewModel(
         visionResultFlow.value = null
         captureStatusFlow.value = CaptureStatus.Requested
 
-        captureJob?.cancel()
+        // Joining the previous job guarantees its NonCancellable transparency restore has
+        // finished before the new capture hides the surfaces — otherwise the old restore
+        // could interleave and un-hide them mid-capture (captureTransparent is a plain
+        // last-writer-wins flag).
+        val previousCaptureJob = captureJob
         captureJob = viewModelScope.launch {
+            previousCaptureJob?.cancelAndJoin()
             Timber.tag(TAG).d("requestCapture viewModelScope.launch -------------- 0")
             val startDelayMs = RecognitionDelayPolicy.captureStartDelayMs()
             if (startDelayMs > 0) delay(startDelayMs)
@@ -668,6 +676,13 @@ class TargetHandleViewModel(
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     applicationContext.startActivity(intent)
                 } else if (captureResponse.t is CapturePreventedException) {
+                } else {
+                    // A failed capture (e.g. CaptureTimeoutException) must release the
+                    // render-level hide, otherwise the target icon stays invisible until
+                    // the next pointer event.
+                    if (captureStatusFlow.value == CaptureStatus.Requested) {
+                        captureStatusFlow.value = CaptureStatus.Idle
+                    }
                 }
             }
         }

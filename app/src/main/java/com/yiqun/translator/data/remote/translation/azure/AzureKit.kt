@@ -22,7 +22,7 @@ import javax.inject.Singleton
 class AzureKit @Inject constructor(@ApplicationContext val context: Context, @AzureRetrofit private val azureService: AzureService) : TranslationKit() {
 
     override fun available(): Boolean {
-        return ApiKeyInfo.apiKeyAvailable(context)
+        return ApiKeyInfo.azureKeyAvailable(context)
     }
 
     private val supportedSourceLanguageCodes: List<String> by lazy {
@@ -96,7 +96,10 @@ class AzureKit @Inject constructor(@ApplicationContext val context: Context, @Az
 
             TranslationResponse.Success(
                 Transaction(
-                    sourceLanguageCode = detectedLanguageCode,
+                    // Must be the REQUESTED code: TranslationRequestCache keys on the
+                    // requested source, so storing the detected code here made every
+                    // "auto" Azure translation a permanent cache miss (paid re-request).
+                    sourceLanguageCode = sourceLanguageCode,
                     targetLanguageCode = targetLanguageCode,
                     sourceText = sourceText,
                     translationKitType = TranslationKitType.AZURE,

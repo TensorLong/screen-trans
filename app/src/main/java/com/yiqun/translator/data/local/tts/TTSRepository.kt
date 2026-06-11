@@ -2,6 +2,7 @@ package com.yiqun.translator.data.local.tts
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
+import androidx.core.os.ConfigurationCompat
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
 import com.yiqun.translator.data.AVDRepository
@@ -183,7 +184,8 @@ class TTSRepository @Inject constructor(@ApplicationContext val context: Context
     }
 
     private fun getCurrentLocale(): Locale {
-        return context.resources.configuration.locales.get(0)
+        // Configuration.getLocales() needs API 24; the compat call also works on minSdk 23.
+        return ConfigurationCompat.getLocales(context.resources.configuration)[0] ?: Locale.getDefault()
     }
 
     fun setVoice(voiceName: String) {

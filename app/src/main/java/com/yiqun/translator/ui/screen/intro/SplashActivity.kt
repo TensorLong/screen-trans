@@ -2,7 +2,6 @@ package com.yiqun.translator.ui.screen.intro
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -45,6 +44,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
 import com.yiqun.translator.R
@@ -144,7 +144,9 @@ class SplashActivity : AVDActivity() {
             )
         }
 
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        // NotificationManagerCompat: NotificationManager.areNotificationsEnabled() needs
+        // API 24 and would crash the unguarded call sites below on minSdk 23 devices.
+        val notificationManager = NotificationManagerCompat.from(context)
 
         val (notificationPermissionState_0, setNotificationPermissionState_0) = remember {
             mutableStateOf(

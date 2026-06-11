@@ -132,10 +132,13 @@ open class TranslationView : OverlayView() {
                         onResumeDismissRunning = { targetHandleViewModel.resumeDismissRunning() },
                         onRerunDismissRunning = { targetHandleViewModel.rerunDismissRunning() }
                     )
-                    targetHandleViewModel.analyticsRepository.translationReport(
-                        transaction = translation,
-                        textDetectMode = targetHandleViewModel.textDetectMode,
-                    )
+                    // One analytics event per shown translation, not one per recomposition.
+                    LaunchedEffect(translation) {
+                        targetHandleViewModel.analyticsRepository.translationReport(
+                            transaction = translation,
+                            textDetectMode = targetHandleViewModel.textDetectMode,
+                        )
+                    }
                 }
             }
         } ?: clear()
@@ -459,8 +462,12 @@ open class TranslationView : OverlayView() {
             initialValue = false
         )
 
-        if (automaticTranslationPlayback) {
-            targetHandleViewModel.playTTS(translation.sourceText!!)
+        // Side effect must not run on every recomposition (it used to replay TTS whenever
+        // any state in this composable changed) and sourceText is nullable.
+        LaunchedEffect(translation, automaticTranslationPlayback) {
+            if (automaticTranslationPlayback) {
+                translation.sourceText?.let { targetHandleViewModel.playTTS(it) }
+            }
         }
 
         Box(

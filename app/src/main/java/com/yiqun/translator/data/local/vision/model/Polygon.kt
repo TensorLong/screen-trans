@@ -13,12 +13,15 @@ import com.yiqun.translator.extensions.topRight
 data class Polygon(val points: List<Point>) {
 
     fun contains(point: Point): Boolean {
+        // isIntersecting nudges the ray height for vertex-degenerate cases; work on a
+        // copy so the caller's Point is never mutated by a hit-test.
+        val rayPoint = Point(point)
         var intersects = 0
         val n = points.size
         for (i in 0 until n) {
             val p1 = points[i]
             val p2 = points[(i + 1) % n]
-            if (isIntersecting(point, p1, p2)) {
+            if (isIntersecting(rayPoint, p1, p2)) {
                 intersects++
             }
         }

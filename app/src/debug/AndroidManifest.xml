@@ -5,5 +5,27 @@
             android:name=".ui.screen.test.OcrProbeActivity"
             android:exported="false"
             android:theme="@style/Theme.SenseGroupTranslator.Fullscreen" />
+
+        <!-- Developer-only screens; must not ship in the release manifest. -->
+        <activity
+            android:name=".ui.screen.test.TestMainActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".ui.screen.test.TestCapturedActivity"
+            android:configChanges="orientation|screenSize"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.SenseGroupTranslator.Fullscreen" />
+
+        <activity
+            android:name=".ui.screen.test.TestVisionTextActivity"
+            android:configChanges="orientation|screenSize"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.SenseGroupTranslator.Fullscreen" />
     </application>
 </manifest>

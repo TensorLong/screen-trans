@@ -2,6 +2,7 @@ package com.yiqun.translator.data.local.preference
 
 import android.content.Context
 import android.speech.tts.Voice
+import androidx.core.os.ConfigurationCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -242,7 +243,8 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
     }
 
     private fun getCurrentLocale(): Locale {
-        return context.resources.configuration.locales.get(0)
+        // Configuration.getLocales() needs API 24; the compat call also works on minSdk 23.
+        return ConfigurationCompat.getLocales(context.resources.configuration)[0] ?: Locale.getDefault()
     }
 
 }

@@ -23,6 +23,7 @@ import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
+import androidx.annotation.RequiresApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SignalWifiStatusbarConnectedNoInternet4
 import androidx.compose.runtime.Composable
@@ -567,6 +568,9 @@ class TargetHandleView private constructor(
                     MotionEvent.ACTION_CANCEL -> {
                         viewModel.motionEventFlow.value = MotionEvent.ACTION_UP
                         (targetView as? TargetIconNativeView)?.setPointerVisible(false)
+                        // Mirror ACTION_UP: a cancelled gesture must still bounce the handle
+                        // back on screen, otherwise it can stay parked past the edge.
+                        repositionWithinScreen(applicationContext)
                         restorePointerInteractionWindows()
                         isDraggingHandle = false
                     }
@@ -1248,7 +1252,7 @@ object TargetCaptureTransparency {
             withContext(Dispatchers.Main.immediate) {
                 hideableSurfaces.forEach { it.setCaptureTransparent(true) }
             }
-            coroutineScope {
+            val commitResults = coroutineScope {
                 hideableSurfaces
                     .map { surface ->
                         async(Dispatchers.Main.immediate) {
@@ -1258,6 +1262,14 @@ object TargetCaptureTransparency {
                         }
                     }
                     .awaitAll()
+            }
+            val timedOutCommits = commitResults.count { it == null }
+            if (timedOutCommits > 0) {
+                // The capture proceeds anyway (the post-hide flush is the fallback), but a
+                // frame that never committed in time is the one path that can still leak
+                // overlay pixels into OCR — keep it observable.
+                Timber.tag("TargetCaptureTransparency")
+                    .w("frame commit timed out for %d/%d surface(s)", timedOutCommits, hideableSurfaces.size)
             }
             delay(POST_HIDE_FLUSH_DELAY_MS)
             // Capture the gate timestamp AFTER the transparent frame is committed.
@@ -1331,6 +1343,7 @@ private suspend fun View.awaitCaptureFrameCommit() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.Q)
 private suspend fun View.awaitViewFrameCommit() {
     suspendCancellableCoroutine { continuation ->
         var resumed = false
@@ -1441,6 +1454,7 @@ internal class TargetIconNativeView(context: Context) : View(context) {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private suspend fun awaitFrameCommit() {
         suspendCancellableCoroutine { continuation ->
             var resumed = false

@@ -19,9 +19,10 @@ import javax.inject.Singleton
 class DeepLKit @Inject constructor(@ApplicationContext val context: Context) : TranslationKit() {
 
     private lateinit var translator: Translator
+    private var translatorApiKey: String? = null
 
     override fun available(): Boolean {
-        return ApiKeyInfo.apiKeyAvailable(context)
+        return ApiKeyInfo.deeplKeyAvailable(context)
     }
 
     override val supportedLanguagesAsSource: List<Language> by lazy {
@@ -60,12 +61,15 @@ class DeepLKit @Inject constructor(@ApplicationContext val context: Context) : T
         sourceText: String
     ): TranslationResponse {
         return try {
-            if (!::translator.isInitialized) {
-                if (available()) {
-                    translator = Translator(ApiKeyInfo.getApiKeyDeepl(context))
-                } else {
-                    throw IllegalStateException("api key might not have been initialized.")
-                }
+            if (!available()) {
+                throw IllegalStateException("api key might not have been initialized.")
+            }
+            val apiKey = ApiKeyInfo.getApiKeyDeepl(context)
+            // Rebuild the client when the key rotates — a once-initialized Translator
+            // otherwise keeps using the old key until process death.
+            if (!::translator.isInitialized || translatorApiKey != apiKey) {
+                translator = Translator(apiKey)
+                translatorApiKey = apiKey
             }
             val textResult: TextResult = withContext(Dispatchers.IO) {
                 translator.translateText(

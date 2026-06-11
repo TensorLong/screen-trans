@@ -7,6 +7,7 @@ import android.graphics.PixelFormat
 import android.os.Build
 import android.view.Gravity
 import android.view.WindowManager
+import androidx.core.os.ConfigurationCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -66,6 +67,7 @@ import com.yiqun.translator.ui.screen.overlay.OverlayView
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Singleton
 
 
@@ -162,7 +164,8 @@ class LanguageListView private constructor() : OverlayView() {
         // target language
         val targetLanguageCode by viewModel.preferenceRepository.targetLanguageCodeFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
-            initialValue = context.resources.configuration.locales.get(0).language
+            initialValue = ConfigurationCompat.getLocales(LocalConfiguration.current)[0]?.language
+                ?: Locale.getDefault().language
         )
         val targetLanguage: Language = viewModel.translationRepository.getSupportedTargetLanguage(targetLanguageCode)
 

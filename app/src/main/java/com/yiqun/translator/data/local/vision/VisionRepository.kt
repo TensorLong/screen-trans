@@ -219,7 +219,9 @@ class VisionRepository @Inject constructor() {
             .maxByOrNull { text ->
                 val confidenceScore = text.textBlocks.sumOf { block ->
                     block.lines.sumOf { line ->
-                        line.confidence.toDouble()
+                        // ML Kit can report NaN confidence for still images; a single
+                        // NaN would poison the sum and make maxByOrNull undefined.
+                        line.confidence.toDouble().takeIf { !it.isNaN() } ?: 0.0
                     }
                 }
                 if (sourceLanguageCode == "auto") {

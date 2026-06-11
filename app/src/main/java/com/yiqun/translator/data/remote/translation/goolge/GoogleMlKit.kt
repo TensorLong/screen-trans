@@ -34,7 +34,10 @@ class GoogleMlKit @Inject constructor() : TranslationKit() {
 
     private var pendingDownloads = HashMap<String, Task<Void>>()
 
-    private lateinit var modelCodes: List<String>
+    // Populated asynchronously by fetchDownloadedModels(); must have a safe default —
+    // available()/downloadLanguage() are reachable before (or without) the first success
+    // callback, e.g. offline on first app start.
+    private var modelCodes: List<String> = emptyList()
 
     private var translators: LruCache<TranslatorOptions, Translator> =
         object : LruCache<TranslatorOptions, Translator>(NUM_TRANSLATORS) {
@@ -106,8 +109,12 @@ class GoogleMlKit @Inject constructor() : TranslationKit() {
         targetLanguageCode: String,
         sourceText: String
     ): TranslationResponse {
-        val sourceLangCode = TranslateLanguage.fromLanguageTag(sourceLanguageCode)!!
-        val targetLangCode = TranslateLanguage.fromLanguageTag(targetLanguageCode)!!
+        // An unsupported tag must surface as TranslationResponse.Error like every other
+        // failure, not as a KotlinNullPointerException thrown out of request().
+        val sourceLangCode = TranslateLanguage.fromLanguageTag(sourceLanguageCode)
+            ?: return TranslationResponse.Error(IllegalArgumentException("Unsupported source language tag: $sourceLanguageCode"))
+        val targetLangCode = TranslateLanguage.fromLanguageTag(targetLanguageCode)
+            ?: return TranslationResponse.Error(IllegalArgumentException("Unsupported target language tag: $targetLanguageCode"))
         val options = TranslatorOptions.Builder()
             .setSourceLanguage(sourceLangCode)
             .setTargetLanguage(targetLangCode)

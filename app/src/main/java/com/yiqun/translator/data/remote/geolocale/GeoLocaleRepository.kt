@@ -1,6 +1,7 @@
 package com.yiqun.translator.data.remote.geolocale
 
 import android.content.Context
+import androidx.core.os.ConfigurationCompat
 import com.yiqun.translator.data.AVDRepository
 import com.yiqun.translator.data.remote.geolocale.GeoLocaleInfo
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -146,7 +147,8 @@ class GeoLocaleRepository @Inject constructor(@ApplicationContext val context: C
     }
 
     private fun getCurrentLocale(): Locale {
-        return context.resources.configuration.locales.get(0)
+        // Configuration.getLocales() needs API 24; the compat call also works on minSdk 23.
+        return ConfigurationCompat.getLocales(context.resources.configuration)[0] ?: Locale.getDefault()
     }
 
     private fun isValidLocale(testLocale: Locale): Boolean {

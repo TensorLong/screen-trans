@@ -29,7 +29,7 @@ import javax.inject.Singleton
 class YandexKit @Inject constructor(@ApplicationContext val context: Context, @YandexRetrofit private val yandexService: YandexService) : TranslationKit() {
 
     override fun available(): Boolean {
-        return ApiKeyInfo.apiKeyAvailable(context)
+        return ApiKeyInfo.yandexKeyAvailable(context)
     }
 
     private val supportedSourceLanguageCodes: List<String> by lazy {
@@ -97,10 +97,12 @@ class YandexKit @Inject constructor(@ApplicationContext val context: Context, @Y
                 body = requestBody
             )
 
-            Timber.tag(TAG).i("----------------responseBody.string() ----------- ${responseBody.string()}")
+            // ResponseBody.string() is one-shot — reading it twice throws IllegalStateException.
+            val responseJson = responseBody.string()
+            Timber.tag(TAG).i("----------------responseBody.string() ----------- $responseJson")
 
             val gson = Gson()
-            val response = gson.fromJson(responseBody.string(), YandexTranslationResponse::class.java)
+            val response = gson.fromJson(responseJson, YandexTranslationResponse::class.java)
             val resultText = response.translations.firstOrNull()?.text ?: throw IllegalStateException("No translation found")
 
             TranslationResponse.Success(

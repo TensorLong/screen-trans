@@ -100,9 +100,14 @@ class OverlayService : LifecycleService(), SavedStateRegistryOwner, ViewModelSto
                 )
             }
         } catch (e: SecurityException) {
-            val intent = Intent(applicationContext, SplashActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
+            // Without foreground status this service must not keep running (or be
+            // restarted by START_STICKY) — send the user back through the permission
+            // flow and stop.
+            val splashIntent = Intent(applicationContext, SplashActivity::class.java)
+            splashIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(splashIntent)
+            stopSelf()
+            return START_NOT_STICKY
         }
 
         intent?.let {

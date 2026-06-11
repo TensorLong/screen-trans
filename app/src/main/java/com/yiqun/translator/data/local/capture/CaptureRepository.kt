@@ -22,6 +22,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -38,6 +39,10 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
 
     companion object {
         private const val ARGB_8888_BYTES_PER_PIXEL = 4
+
+        // Generous upper bound: hide-commit (≤80ms) + post-hide flush (120ms) already passed
+        // before request() is reached, so a healthy pipeline answers within one or two frames.
+        private const val CAPTURE_RESPONSE_TIMEOUT_MS = 700L
 
         var mediaProjectionToken: Intent? = null
             set(value) {
@@ -82,19 +87,25 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
 
         try {
             val mediaProjectionManager = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-            mediaProjection = mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, mediaProjectionToken!!)
+            val projection = mediaProjectionManager.getMediaProjection(Activity.RESULT_OK, mediaProjectionToken!!)
+            mediaProjection = projection
 
             mediaProjectionStopCallback = object : MediaProjection.Callback() {
                 override fun onStop() {
                     // System or user stopped the projection (e.g. via system "Stop sharing" notification).
                     // Reset state so the next request() goes through start() and surfaces a proper
                     // NoMediaProjectionTokenException, which triggers the re-auth flow in the UI.
+                    // A stale dispatch for an already-replaced projection must not tear down the
+                    // current session's resources.
+                    if (mediaProjection !== projection) {
+                        return
+                    }
                     Timber.tag(TAG).w("#### MediaProjectionStopCallback onStop() ####")
                     clearResources()
                     state = State.Uninitialized
                 }
             }
-            mediaProjection!!.registerCallback(mediaProjectionStopCallback!!, null)
+            projection.registerCallback(mediaProjectionStopCallback!!, null)
 
             // maxImages must be >= 2: acquireLatestImage() needs a spare buffer to
             // drop stale frames and return the freshest one. With 1 it can hand back
@@ -248,7 +259,9 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
         val rowStride = plane.rowStride
         val width = rect.right - rect.left
         val height = rect.bottom - rect.top
-        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+        // ARGB_8888 is required: VisionRepository gates glyph normalization and
+        // hidden-separator merging on this config, and RGB_565 quantization costs OCR accuracy.
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val rowPixels = IntArray(width)
 
         for (row in 0 until height) {
@@ -339,12 +352,13 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
         imageReader?.setOnImageAvailableListener(null, null)
         imageReader?.close()
         imageReader = null
-        mediaProjectionStopCallback?.let {
-            Handler(Looper.getMainLooper()).post {
-                mediaProjection?.unregisterCallback(it)
-            }
-            mediaProjectionStopCallback = null
+        // Unregister synchronously BEFORE stop(): a posted unregister used to run after
+        // mediaProjection was nulled, leaving the callback registered forever and letting a
+        // stale onStop() tear down the next session's resources.
+        mediaProjectionStopCallback?.let { callback ->
+            mediaProjection?.unregisterCallback(callback)
         }
+        mediaProjectionStopCallback = null
         mediaProjection?.stop()
         mediaProjection = null
     }
@@ -364,7 +378,12 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
                 start()
             }
 
-            val captureResponse: CaptureResponse = captureResponseFlow.filterNotNull().first()
+            // An AUTO_MIRROR virtual display only produces frames on screen updates, and the
+            // timestamp gate may drop every pending frame — without a watchdog this await can
+            // suspend forever (observed as a silent fixed-area polling stall).
+            val captureResponse: CaptureResponse = withTimeoutOrNull(CAPTURE_RESPONSE_TIMEOUT_MS) {
+                captureResponseFlow.filterNotNull().first()
+            } ?: CaptureResponse.Error(CaptureTimeoutException())
             if (captureResponse is CaptureResponse.Success) {
 //            val (isCapturePrevented, checkerBitmap) = isCapturePrevented(capturedBitmap)
 //            captureWorkFlow.value =

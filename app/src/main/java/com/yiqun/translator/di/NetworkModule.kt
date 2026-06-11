@@ -128,7 +128,15 @@ object NetworkModule {
     @Singleton
     fun provideChatGPTRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
         .baseUrl(ChatGPTKit.BASE_URL)
-        .client(okHttpClient)
+        // LLM backends (especially free OpenRouter models) routinely take longer than
+        // the shared 20s read timeout to produce a non-streaming completion; the derived
+        // client shares the connection pool but waits longer for AI responses.
+        .client(
+            okHttpClient.newBuilder()
+                .readTimeout(60, TimeUnit.SECONDS)
+                .callTimeout(90, TimeUnit.SECONDS)
+                .build()
+        )
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 

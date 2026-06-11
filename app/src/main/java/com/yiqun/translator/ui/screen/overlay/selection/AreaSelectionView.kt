@@ -150,8 +150,10 @@ open class AreaSelectionView : OverlayView() {
 
             layoutParams.x = currentPosition.x
             layoutParams.y = currentPosition.y
-            layoutParams.width = layoutParams.x + 1
-            layoutParams.height = currentPosition.y + 1
+            // Collapse the window to a point; width/height previously reused the x/y
+            // coordinates as sizes, leaving a screen-spanning invisible window behind.
+            layoutParams.width = 1
+            layoutParams.height = 1
             updateLayout(context)
 
             view?.post {

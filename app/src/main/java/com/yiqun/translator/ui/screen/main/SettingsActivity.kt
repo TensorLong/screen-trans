@@ -429,7 +429,9 @@ class SettingsActivity : AVDActivity() {
         val dockingDelaySubtextOffset = remember { mutableStateOf(Point(0, 0)) }
         val dockingDelay by viewModel.preferenceRepository.dockingDelayFlow.collectAsStateWithLifecycle(
             lifecycle = lifecycleOwner.lifecycle,
-            initialValue = 3000L
+            // Must match the repository default (15s = docking off); 3000L made the first
+            // frames render "3.0 sec" and treat docking as enabled before DataStore emitted.
+            initialValue = 15000L
         )
 
         // Haptic feedback to detection

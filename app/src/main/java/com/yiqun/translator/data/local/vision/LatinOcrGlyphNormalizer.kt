@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Typeface
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -403,7 +404,11 @@ internal object LatinOcrGlyphNormalizer {
     }
 
     private object GlyphTemplateMatcher {
-        private val templateCache = mutableMapOf<Char, List<GlyphMask>>()
+        // OCR runs on Dispatchers.Default workers — successive requests can touch this
+        // singleton cache from different threads, so the map must be thread-safe.
+        // (Non-atomic getOrPut may recompute a template; values are immutable, so that
+        // is harmless.)
+        private val templateCache = ConcurrentHashMap<Char, List<GlyphMask>>()
 
         fun match(
             bitmap: Bitmap,

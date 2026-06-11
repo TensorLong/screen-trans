@@ -107,24 +107,27 @@ data class Line(
         val y1 = (localBoundingBox.top + localBoundingBox.height() / 3).coerceIn(0, bitmap.height - 1)
         val y2 = (localBoundingBox.top + 2 * localBoundingBox.height() / 3).coerceIn(0, bitmap.height - 1)
 
+        // Guards must be two-sided: ML Kit bounding boxes may extend past the bitmap
+        // (the vertical-writing path passes them unclamped), and a one-sided check let
+        // getPixel throw IllegalArgumentException on edge-touching boxes.
         val leftPixels = listOfNotNull(
-            if (left >= 0) bitmap.getPixel(left, y1) else null,
-            if (left >= 0) bitmap.getPixel(left, y2) else null
+            if (left in 0 until bitmap.width) bitmap.getPixel(left, y1) else null,
+            if (left in 0 until bitmap.width) bitmap.getPixel(left, y2) else null
         )
 
         val rightPixels = listOfNotNull(
-            if (right < bitmap.width) bitmap.getPixel(right, y1) else null,
-            if (right < bitmap.width) bitmap.getPixel(right, y2) else null
+            if (right in 0 until bitmap.width) bitmap.getPixel(right, y1) else null,
+            if (right in 0 until bitmap.width) bitmap.getPixel(right, y2) else null
         )
 
         val topPixels = listOfNotNull(
-            if (top >= 0) bitmap.getPixel(x1, top) else null,
-            if (top >= 0) bitmap.getPixel(x2, top) else null
+            if (top in 0 until bitmap.height) bitmap.getPixel(x1, top) else null,
+            if (top in 0 until bitmap.height) bitmap.getPixel(x2, top) else null
         )
 
         val bottomPixels = listOfNotNull(
-            if (bottom < bitmap.height) bitmap.getPixel(x1, bottom) else null,
-            if (bottom < bitmap.height) bitmap.getPixel(x2, bottom) else null
+            if (bottom in 0 until bitmap.height) bitmap.getPixel(x1, bottom) else null,
+            if (bottom in 0 until bitmap.height) bitmap.getPixel(x2, bottom) else null
         )
 
         val pixelColors = leftPixels + rightPixels + topPixels + bottomPixels
@@ -312,7 +315,8 @@ data class Line(
         colorCountMap: MutableMap<Int, Int>,
     ) {
         for (pixel in pixels) {
-            colorCountMap[pixel] = colorCountMap.getOrDefault(pixel, 0) + 1
+            // Map.getOrDefault needs API 24 / desugaring; the elvis form works on minSdk 23.
+            colorCountMap[pixel] = (colorCountMap[pixel] ?: 0) + 1
         }
     }
 
@@ -320,7 +324,7 @@ data class Line(
         if (colors.isEmpty()) return null
         val counts = mutableMapOf<Int, Int>()
         for (color in colors) {
-            counts[color] = counts.getOrDefault(color, 0) + 1
+            counts[color] = (counts[color] ?: 0) + 1
         }
         return counts.maxByOrNull { it.value }?.key
     }

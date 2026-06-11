@@ -125,6 +125,26 @@ object ApiKeyInfo {
         return !getApiKeyChatgpt(context).isNullOrBlank() && !getApiBaseUrlChatgpt(context).isNullOrBlank()
     }
 
+    // Per-engine availability: apiKeyAvailable() is an all-or-nothing provisioning check
+    // (used by SecureRepository to decide whether to re-fetch keys); using it as each
+    // kit's available() meant one missing key disabled every paid engine at once.
+
+    fun azureKeyAvailable(context: Context): Boolean {
+        return !getApiKeyAzure(context).isNullOrEmpty() && getApiKeyVersionAzure(context) != null
+    }
+
+    fun deeplKeyAvailable(context: Context): Boolean {
+        return !getApiKeyDeepl(context).isNullOrEmpty() && getApiKeyVersionDeepl(context) != null
+    }
+
+    fun papagoKeyAvailable(context: Context): Boolean {
+        return !getApiKeyPapago(context).isNullOrEmpty() && getApiKeyVersionPapago(context) != null
+    }
+
+    fun yandexKeyAvailable(context: Context): Boolean {
+        return !getApiKeyYandex(context).isNullOrEmpty() && getApiKeyVersionYandex(context) != null
+    }
+
     /**
      * Returns the previously-cached ChatGPT model list IF the stored fingerprint
      * (SHA-256 hash of "baseUrl|apiKey", first 16 hex chars) still matches the

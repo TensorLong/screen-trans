@@ -30,18 +30,20 @@ abstract class AVDRepository {
     }
 
     fun release() {
-        var shouldNotifyZeroReferences = false
+        // Capture the scope we owned inside the lock: if another thread re-acquires
+        // before the cancel below runs, cancelling the field would kill the NEW scope.
+        var scopeToCancel: CoroutineScope? = null
         synchronized(lock) {
             if (referenceCount > 0) {
                 referenceCount--
                 if (referenceCount == 0) {
-                    shouldNotifyZeroReferences = true
+                    scopeToCancel = avdCoroutineScope
                 }
             }
         }
-        if (shouldNotifyZeroReferences) {
+        scopeToCancel?.let { scope ->
             onZeroReferences()
-            avdCoroutineScope.cancel()
+            scope.cancel()
         }
     }
 
