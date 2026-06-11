@@ -7,6 +7,7 @@ import android.media.projection.MediaProjectionManager
 import android.os.Bundle
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import com.yiqun.translator.core.OverlayService
 import com.yiqun.translator.data.local.capture.CaptureRepository
 import com.yiqun.translator.ui.screen.AVDActivity
 import timber.log.Timber
@@ -26,6 +27,15 @@ class ScreenCapturePermissionRequesterActivity : AVDActivity() {
             val resultIntent = Intent()
             if (result.resultCode == Activity.RESULT_OK && result.data != null) {
                 CaptureRepository.mediaProjectionToken = result.data!!.clone() as Intent
+                // A service that came up without the grant runs foregrounded as
+                // specialUse only; kick onStartCommand so it (re-)promotes itself
+                // with the mediaProjection type — API 34+ rejects
+                // createVirtualDisplay from a service without that type.
+                if (OverlayService.isRunning) {
+                    applicationContext.startService(
+                        Intent(applicationContext, OverlayService::class.java)
+                    )
+                }
                 setResult(Activity.RESULT_OK, resultIntent)
             } else {
                 setResult(Activity.RESULT_CANCELED, resultIntent)

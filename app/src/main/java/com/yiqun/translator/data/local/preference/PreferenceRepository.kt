@@ -48,6 +48,7 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
 //        val IS_FIRST_START = booleanPreferencesKey("is_first_start")
         val WAS_TRAILER_SHOWN = booleanPreferencesKey("was_trailer_shown")
         val IS_REVIEW_DONE = booleanPreferencesKey("is_review_done")
+        val WAS_BATTERY_EXEMPTION_REQUESTED = booleanPreferencesKey("was_battery_exemption_requested")
 
         val IS_SAY_HERE_R_SHOWN = booleanPreferencesKey("is_say_here_r_shown")
         val IS_SAY_HERE_L_SHOWN = booleanPreferencesKey("is_say_here_l_shown")
@@ -113,6 +114,15 @@ class PreferenceRepository @Inject constructor(@ApplicationContext val context: 
 
     val isReviewDoneFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
         preferences[IS_REVIEW_DONE] ?: false
+    }
+
+    /**
+     * Whether the battery-optimization exemption dialog was already offered.
+     * Asked at most once so a user who declined is not nagged on every
+     * permission-flow pass.
+     */
+    val wasBatteryExemptionRequestedFlow: Flow<Boolean> = preferenceFlow.map { preferences ->
+        preferences[WAS_BATTERY_EXEMPTION_REQUESTED] ?: false
     }
 
     val isSayHereRShownFlow: Flow<Boolean> = preferenceFlow.map { preferences ->

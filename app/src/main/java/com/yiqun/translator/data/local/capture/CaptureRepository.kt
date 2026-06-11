@@ -12,6 +12,7 @@ import android.media.Image
 import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.core.graphics.createBitmap
@@ -103,6 +104,16 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
                     Timber.tag(TAG).w("#### MediaProjectionStopCallback onStop() ####")
                     clearResources()
                     state = State.Uninitialized
+                    // API 34+ forbids reusing the consent token for a second
+                    // getMediaProjection(); after a system stop (screen lock,
+                    // "Stop sharing") the token is dead, and keeping it would
+                    // make the foreground-service type chooser and the splash
+                    // permission counter believe the grant is still valid.
+                    // Below API 34 the token stays reusable, so the next
+                    // request() recovers silently without bothering the user.
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        mediaProjectionToken = null
+                    }
                 }
             }
             // A null handler would dispatch on the calling thread's Looper and throws

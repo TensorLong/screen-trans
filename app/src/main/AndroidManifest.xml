@@ -10,7 +10,16 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <!-- Keeps the overlay service in the foreground while the media-projection
+         grant is unavailable (after process death or a system projection stop);
+         API 34+ forbids starting a mediaProjection-typed service before the
+         user has granted projection. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- The overlay service is the app's core feature; without the exemption
+         aggressive vendor battery managers kill it on screen lock and the user
+         has to redo the authorization flow. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <!-- MediaProjection -->
 
@@ -89,7 +98,8 @@
             android:name=".core.OverlayService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="mediaProjection">
+            android:stopWithTask="false"
+            android:foregroundServiceType="mediaProjection|specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Screen text recognition and translation overlay using media projection" />

@@ -196,6 +196,8 @@
 -keep class com.yiqun.translator.data.local.screen.ScreenInfo { *; }
 -keep class com.yiqun.translator.ui.screen.overlay.targethandle.OverlayWindowAlpha { *; }
 -keep class com.yiqun.translator.ui.screen.permissions.ScreenCapturePermissionRequesterActivity { *; }
+-keep class com.yiqun.translator.core.OverlayService { *; }
+-keep class com.yiqun.translator.core.OverlayService$* { *; }
 -keep class com.yiqun.translator.R$* { *; }
 
 # ExoPlayer

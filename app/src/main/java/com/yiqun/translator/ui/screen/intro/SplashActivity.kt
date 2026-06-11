@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.Settings
 import android.view.WindowManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -27,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.ScreenshotMonitor
 import androidx.compose.material3.Text
@@ -49,6 +51,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
 import com.yiqun.translator.R
 import com.yiqun.translator.data.local.capture.CaptureRepository
+import com.yiqun.translator.data.local.preference.PreferenceRepository
 import com.yiqun.translator.ui.screen.AVDActivity
 import com.yiqun.translator.ui.common.MyDialog
 import com.yiqun.translator.ui.screen.main.SettingsActivity
@@ -129,6 +132,7 @@ class SplashActivity : AVDActivity() {
         }
     }
 
+    @SuppressLint("BatteryLife")
     @Composable
     fun Splash(viewModel: SplashViewModel = hiltViewModel()) {
         val context = LocalContext.current
@@ -176,6 +180,28 @@ class SplashActivity : AVDActivity() {
                 else
                     PermissionStatus.Prepared
             )
+        }
+
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        // Optional step: starts as Requested (neutral, no dialog) until the
+        // "already offered once?" preference is read; Granted here means
+        // "resolved", not necessarily exempted — the step never blocks startup.
+        val (batteryExemptionState, setBatteryExemptionState) = remember {
+            mutableStateOf(
+                if (powerManager.isIgnoringBatteryOptimizations(context.packageName))
+                    PermissionStatus.Granted
+                else
+                    PermissionStatus.Requested
+            )
+        }
+        LaunchedEffect(Unit) {
+            if (batteryExemptionState == PermissionStatus.Requested) {
+                val alreadyOffered =
+                    viewModel.preferenceRepository.wasBatteryExemptionRequestedFlow.first()
+                setBatteryExemptionState(
+                    if (alreadyOffered) PermissionStatus.Granted else PermissionStatus.Prepared
+                )
+            }
         }
 
 
@@ -334,6 +360,59 @@ class SplashActivity : AVDActivity() {
 
         ////////////////////////////////////////////////////////////////////////////////////////////////
         //                                                                                            //
+        //                                Battery optimization exemption                              //
+        //                                                                                            //
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+
+        val batteryExemptionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            // Optional: whatever the user chose, the step is resolved and must
+            // not block startup.
+            setBatteryExemptionState(PermissionStatus.Granted)
+        }
+
+        AnimatedVisibility(
+            visible = (notificationPermissionState_0 == PermissionStatus.Granted || notificationPermissionState_1 == PermissionStatus.Granted)
+                    && overlayPermissionState == PermissionStatus.Granted
+                    && mediaProjectionState == PermissionStatus.Granted
+                    && batteryExemptionState == PermissionStatus.Prepared,
+            enter = fadeIn(animationSpec = tween(dialogAnimDuration)) + scaleIn(animationSpec = tween(dialogAnimDuration)),
+            exit = fadeOut(animationSpec = tween(dialogAnimDuration)) + scaleOut(animationSpec = tween(dialogAnimDuration)),
+            content = {
+                MyDialog(
+                    icon = Icons.Default.BatteryChargingFull,
+                    dialogTitle = stringResource(id = R.string.message_permission_battery),
+                    dialogText = stringResource(id = R.string.message_permission_battery_detail),
+                    onConfirmLabel = stringResource(id = android.R.string.ok),
+                    onConfirm = { setBatteryExemptionState(PermissionStatus.Ready) },
+                    onDismissLabel = stringResource(id = android.R.string.cancel),
+                    onDismiss = {
+                        // Skippable: remember the offer and move on.
+                        viewModel.preferenceRepository.update(
+                            PreferenceRepository.WAS_BATTERY_EXEMPTION_REQUESTED, true
+                        )
+                        setBatteryExemptionState(PermissionStatus.Granted)
+                    },
+                )
+            }
+        )
+
+        LaunchedEffect(batteryExemptionState) {
+            if (batteryExemptionState == PermissionStatus.Ready) {
+                delay(300)
+                viewModel.preferenceRepository.update(
+                    PreferenceRepository.WAS_BATTERY_EXEMPTION_REQUESTED, true
+                )
+                batteryExemptionLauncher.launch(
+                    Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                    }
+                )
+            }
+        }
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////
+        //                                                                                            //
         //                                             Start                                          //
         //                                                                                            //
         ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -385,12 +464,13 @@ class SplashActivity : AVDActivity() {
             }
         }
 
-        LaunchedEffect(notificationPermissionState_0, notificationPermissionState_1, overlayPermissionState, mediaProjectionState) {
+        LaunchedEffect(notificationPermissionState_0, notificationPermissionState_1, overlayPermissionState, mediaProjectionState, batteryExemptionState) {
             if (
                 isTargetHandleRunning
                 && (notificationPermissionState_0 == PermissionStatus.Granted || notificationPermissionState_1 == PermissionStatus.Granted)
                 && overlayPermissionState == PermissionStatus.Granted
                 && mediaProjectionState == PermissionStatus.Granted
+                && batteryExemptionState == PermissionStatus.Granted
             ) {
                 delay(200)
                 SettingsActivity.start(context)
@@ -402,7 +482,8 @@ class SplashActivity : AVDActivity() {
             visible = !isTargetHandleRunning
                     && (notificationPermissionState_0 == PermissionStatus.Granted || notificationPermissionState_1 == PermissionStatus.Granted)
                     && overlayPermissionState == PermissionStatus.Granted
-                    && mediaProjectionState == PermissionStatus.Granted,
+                    && mediaProjectionState == PermissionStatus.Granted
+                    && batteryExemptionState == PermissionStatus.Granted,
             enter = fadeIn(animationSpec = tween(dialogAnimDuration)) + scaleIn(animationSpec = tween(dialogAnimDuration)),
             exit = fadeOut(animationSpec = tween(dialogAnimDuration)) + scaleOut(animationSpec = tween(dialogAnimDuration)),
             content = {

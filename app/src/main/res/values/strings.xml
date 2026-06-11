@@ -17,6 +17,10 @@
     <string name="message_media_projection_denied">Screen Recording permission denied</string>
     <string name="message_media_projection_denied_detail">The Screen Recording permission is not granted.\nExit the app.</string>
 
+    <!-- Battery optimization exemption -->
+    <string name="message_permission_battery">Recommended :\nAllow background activity</string>
+    <string name="message_permission_battery_detail">To keep the translation overlay running after the screen is locked, allow the app to ignore battery optimizations. Without it, some devices stop the service and you must grant screen recording again.</string>
+
     <!-- Foreground Service notification -->
     <string name="notification_foreground_service">The screen capture function is being used for translation work.</string>
     <string name="title_start_foreground_service">Foreground Service starts</string>

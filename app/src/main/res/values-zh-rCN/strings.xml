@@ -17,6 +17,10 @@
   <string name="message_media_projection_denied">屏幕录制权限被拒绝</string>
   <string name="message_media_projection_denied_detail">未授予屏幕录制权限。\n应用将退出。</string>
 
+  <!-- 电池优化白名单 -->
+  <string name="message_permission_battery">建议开启：\n允许后台运行</string>
+  <string name="message_permission_battery_detail">为了在锁屏后保持翻译悬浮窗持续运行，请允许应用忽略电池优化。否则部分设备会在锁屏后停止服务，需要重新授予屏幕录制权限。</string>
+
   <!-- Foreground Service 启动通知 -->
   <string name="notification_foreground_service">正在使用屏幕捕捉功能进行翻译。</string>
   <string name="title_start_foreground_service">前台服务已启动</string>
