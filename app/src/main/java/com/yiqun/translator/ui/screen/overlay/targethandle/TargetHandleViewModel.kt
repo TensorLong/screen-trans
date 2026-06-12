@@ -912,7 +912,6 @@ class TargetHandleViewModel(
         val positionedParagraph: Paragraph? = visionResult.paragraphs.find { paragraph ->
             paragraph.boundingBox.contains(pointerPosition.x, pointerPosition.y)
         }
-//        Timber.tag(TAG).d("pointerPosition.x [${pointerPosition.x}] pointerPosition.x [${pointerPosition.x}] positionedParagraph [${positionedParagraph?.representation}]")
         if (textDetectMode == TextDetectMode.PARAGRAPH) {
             return positionedParagraph
         }

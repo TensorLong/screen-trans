@@ -725,6 +725,30 @@ class PointerPlacementTest {
     }
 
     @Test
+    fun frameNudgeIntervalIsThreeFramesAt60Hz() {
+        // (1000 / 60) * 3 = 50.0 → 50L, above the 48L floor
+        assertEquals(50L, CaptureHideFrameSyncPolicy.frameNudgeIntervalMs(60f))
+    }
+
+    @Test
+    fun frameNudgeIntervalScalesUpForLowRefreshDisplays() {
+        // (1000 / 30) * 3 = 100.0 → 100L, above the 48L floor
+        assertEquals(100L, CaptureHideFrameSyncPolicy.frameNudgeIntervalMs(30f))
+    }
+
+    @Test
+    fun frameNudgeIntervalFallsBackTo60HzWhenRefreshRateUnknown() {
+        // null → default 60Hz → 50L
+        assertEquals(CaptureHideFrameSyncPolicy.frameNudgeIntervalMs(60f), CaptureHideFrameSyncPolicy.frameNudgeIntervalMs(null))
+    }
+
+    @Test
+    fun frameNudgeIntervalIsFlooredAtMinimumForHighRefreshDisplays() {
+        // (1000 / 120) * 3 = 25.0 → 25L, coerced up to 48L floor
+        assertEquals(48L, CaptureHideFrameSyncPolicy.frameNudgeIntervalMs(120f))
+    }
+
+    @Test
     fun activeDraggedPointerIconStaysOpaqueWhenOnlyFixedAreaIsTranslating() {
         val state = TargetIconRenderPolicy.stateFor(
             side = PointerSide.LEFT,

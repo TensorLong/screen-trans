@@ -54,6 +54,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -132,6 +133,21 @@ class TargetHandleView private constructor(
             return registeredInstances().mapNotNull { handleView ->
                 handleView.targetView as? TargetIconNativeView
             }
+        }
+
+        /**
+         * Handle icons of the running pointers, used as capture-time frame pumps.
+         * The capture-hidden surfaces draw fully transparent content, which HWUI
+         * culls to an empty display list — invalidating them produces no new frame.
+         * The handle stays visible in the capture anyway, so an imperceptible
+         * imageAlpha toggle on it is the one redraw guaranteed to reach the
+         * compositor and feed the virtual display on an otherwise static screen.
+         */
+        internal fun frameNudgeImageViews(): List<ImageView> {
+            return registeredInstances().mapNotNull { handleView ->
+                if (!handleView.isRunning.get()) return@mapNotNull null
+                runCatching { handleView.view as? ImageView }.getOrNull()
+            }.filter { it.isAttachedToWindow }
         }
 
         private fun showOnlyInteractingPointer(activeSide: PointerSide) {
@@ -214,11 +230,14 @@ class TargetHandleView private constructor(
     }
 
     private fun applyHandleEinkFilter(imageView: ImageView, eink: Boolean) {
-        imageView.colorFilter = if (eink) {
-            // Mid-gray multiply: keeps shape detail but darkens white-ish handle for e-ink visibility.
-            PorterDuffColorFilter(Color.rgb(0x40, 0x40, 0x40), PorterDuff.Mode.MULTIPLY)
+        if (eink) {
+            // Pure-black glyph on a white disc with a black rim: the disc keeps the handle
+            // visible on black e-ink panels, the black glyph/rim on white panels.
+            imageView.setColorFilter(Color.BLACK, PorterDuff.Mode.SRC_IN)
+            imageView.background = imageView.context.getDrawable(R.drawable.eink_handle_background)
         } else {
-            null
+            imageView.colorFilter = null
+            imageView.background = null
         }
     }
 
@@ -1290,7 +1309,37 @@ object TargetCaptureTransparency {
             // drops them. Capturing it before the commit makes the gate a no-op and
             // leaks overlay pixels into OCR. Do not move this above the awaitAll().
             val minimumImageTimestampNs = System.nanoTime()
-            block(minimumImageTimestampNs)
+            coroutineScope {
+                // The gate also excludes the hide-commit frame itself. On a static
+                // screen (e-ink readers especially) nothing else ever redraws, so no
+                // frame can pass the gate and the capture starves until the watchdog
+                // kills it. Pump the visible handle icons while the capture runs —
+                // invalidating the hidden surfaces is NOT enough, HWUI culls their
+                // fully transparent draws to an empty display list and never submits
+                // a buffer (see frameNudgeImageViews).
+                val frameNudgeJob = launch(Dispatchers.Main.immediate) {
+                    val nudgeIntervalMs = CaptureHideFrameSyncPolicy.frameNudgeIntervalMs(displayRefreshRate)
+                    val pumpViews = TargetHandleView.frameNudgeImageViews()
+                    var tick = 0
+                    try {
+                        while (true) {
+                            tick++
+                            // 255↔254: invisible to the eye and to OCR, but real pixel
+                            // damage — HWUI cannot cull it, so the compositor must
+                            // produce a frame whose timestamp clears the gate.
+                            pumpViews.forEach { it.imageAlpha = if (tick % 2 == 0) 255 else 254 }
+                            delay(nudgeIntervalMs)
+                        }
+                    } finally {
+                        pumpViews.forEach { it.imageAlpha = 255 }
+                    }
+                }
+                try {
+                    block(minimumImageTimestampNs)
+                } finally {
+                    frameNudgeJob.cancel()
+                }
+            }
         } finally {
             withContext(NonCancellable + Dispatchers.Main.immediate) {
                 hideableSurfaces.forEach { it.setCaptureTransparent(false) }
@@ -1433,6 +1482,11 @@ internal class TargetIconNativeView(context: Context) : View(context) {
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.SQUARE
         color = Color.BLACK
+    }
+    private val einkHaloPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.SQUARE
+        color = Color.WHITE
     }
 
     var einkStrokePx: Float = 0f
@@ -1607,10 +1661,17 @@ internal class TargetIconNativeView(context: Context) : View(context) {
     }
 
     private fun drawEinkPointer(canvas: Canvas, contentAlpha: Float) {
+        // Black frame inside a white halo: at least one of the two layers contrasts
+        // with the page on both white and black e-ink panels.
         val stroke = einkStrokePx.coerceAtLeast(1f)
+        val halo = (stroke / 2f).coerceAtLeast(1f)
+        val alpha = (255 * contentAlpha).roundToInt().coerceIn(0, 255)
+        einkHaloPaint.strokeWidth = stroke + halo * 2
+        einkHaloPaint.alpha = alpha
         einkPaint.strokeWidth = stroke
-        einkPaint.alpha = (255 * contentAlpha).roundToInt().coerceIn(0, 255)
-        val inset = stroke / 2f
+        einkPaint.alpha = alpha
+        val inset = (stroke + halo * 2) / 2f
+        canvas.drawRect(inset, inset, width - inset, height - inset, einkHaloPaint)
         canvas.drawRect(inset, inset, width - inset, height - inset, einkPaint)
     }
 

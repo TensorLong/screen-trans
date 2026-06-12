@@ -429,8 +429,10 @@ object CaptureHideFrameSyncPolicy {
     private const val DEFAULT_REFRESH_RATE = 60f
     private const val HIDE_COMMIT_TIMEOUT_FRAMES = 5
     private const val POST_HIDE_FLUSH_FRAMES = 7
+    private const val FRAME_NUDGE_INTERVAL_FRAMES = 3
     private const val MIN_FRAME_COMMIT_TIMEOUT_MS = 80L
     private const val MIN_POST_HIDE_FLUSH_DELAY_MS = 120L
+    private const val MIN_FRAME_NUDGE_INTERVAL_MS = 48L
 
     /**
      * The legacy 80ms commit timeout and 120ms post-hide flush were tuned on 60Hz
@@ -448,6 +450,21 @@ object CaptureHideFrameSyncPolicy {
     fun postHideFlushDelayMs(displayRefreshRate: Float?): Long {
         return (frameIntervalMs(displayRefreshRate) * POST_HIDE_FLUSH_FRAMES).toLong()
             .coerceAtLeast(MIN_POST_HIDE_FLUSH_DELAY_MS)
+    }
+
+    /**
+     * The capture gate timestamp is taken AFTER the hide-commit frame, so that frame
+     * itself can never satisfy the gate. On a perfectly static screen (an e-ink reader
+     * showing a page of text is the extreme case) nothing else redraws, the virtual
+     * display never produces a newer frame, and every capture starves until the
+     * watchdog kills it. While a capture is in flight the visible handle icon's
+     * imageAlpha is therefore toggled 255↔254 on this interval — imperceptible, but
+     * real pixel damage that HWUI cannot cull, so SurfaceFlinger keeps compositing
+     * fresh, overlay-free frames past the gate.
+     */
+    fun frameNudgeIntervalMs(displayRefreshRate: Float?): Long {
+        return (frameIntervalMs(displayRefreshRate) * FRAME_NUDGE_INTERVAL_FRAMES).toLong()
+            .coerceAtLeast(MIN_FRAME_NUDGE_INTERVAL_MS)
     }
 
     private fun frameIntervalMs(displayRefreshRate: Float?): Float {
