@@ -701,11 +701,6 @@ class TargetHandleViewModel(
         visionCaptureScreenRect = null
     }
 
-    fun restartCaptureRepository() {
-        captureRepository.restart()
-    }
-
-
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //                                                                                            //
     //                                        ml-kit vision                                       //

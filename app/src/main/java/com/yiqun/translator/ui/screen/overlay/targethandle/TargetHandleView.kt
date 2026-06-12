@@ -964,7 +964,6 @@ class TargetHandleView private constructor(
     private fun onConfigurationChanged(context: Context) {
         Timber.tag(TAG).d("#### onConfigurationChanged() ####")
         if (pointerSide == PointerSide.LEFT) {
-            viewModel.restartCaptureRepository()
             launchInOverlayViewCoroutineScope {
                 recastForCurrentConfiguration(context)
             }
