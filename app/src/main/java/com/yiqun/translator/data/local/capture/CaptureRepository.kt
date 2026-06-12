@@ -120,7 +120,10 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
             // when start() runs on a looperless thread (e.g. the instrumentation thread).
             projection.registerCallback(mediaProjectionStopCallback!!, handler)
 
-            imageReader = newImageReader(screenInfo)
+            // maxImages must be >= 2: acquireLatestImage() needs a spare buffer to
+            // drop stale frames and return the freshest one. With 1 it can hand back
+            // a stale, pre-transparency frame that still contains overlay pixels.
+            imageReader = ImageReader.newInstance(screenInfo.width, screenInfo.height, PixelFormat.RGBA_8888, 2)
 
             virtualDisplay = mediaProjection!!.createVirtualDisplay(
                 "Sense Group Translator",
@@ -133,7 +136,41 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
                 null,
             )
 
-            imageReader!!.setOnImageAvailableListener(imageListenerFor(screenInfo), handler)
+            imageReader!!.setOnImageAvailableListener({ imageReader ->
+//                Timber.tag(TAG).d("---- onImageAvailable imageReader $imageReader ----")
+                val capturedImage = imageReader.acquireLatestImage()
+                try {
+                    if (captureResponseFlow.value == null) {
+                        if (capturedImage != null) {
+                            val minimumTimestamp = minimumImageTimestampNs
+                            if (minimumTimestamp != null &&
+                                capturedImage.timestamp > 0 &&
+                                capturedImage.timestamp < minimumTimestamp
+                            ) {
+                                Timber.tag(TAG).d(
+                                    "drop stale capture frame timestamp=${capturedImage.timestamp} minimum=$minimumTimestamp"
+                                )
+                                return@setOnImageAvailableListener
+                            }
+                            val (capturedBitmap, screenRect) = bitmapFromImage(
+                                image = capturedImage,
+                                screenInfo = screenInfo,
+                                requestedRect = requestedScreenRect,
+                            )
+//                            Timber.tag(TAG).d("capturedBitmap.allocationByteCount ${capturedBitmap.allocationByteCount}")
+                            captureResponseFlow.value = CaptureResponse.Success(capturedBitmap, screenRect)
+                        } else {
+                            captureResponseFlow.value = CaptureResponse.Error(CapturedImageInvalidException())
+                        }
+                    }
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                    Timber.tag(TAG).e("err t ${t.toString()} $mediaProjectionToken")
+                    captureResponseFlow.value = CaptureResponse.Error(NoMediaProjectionTokenException(t.toString()))
+                } finally {
+                    capturedImage?.close()
+                }
+            }, handler)
 
             state = State.Ready
         }
@@ -151,50 +188,6 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
             e.printStackTrace()
             Timber.tag(TAG).e("err e ${e.toString()} $mediaProjectionToken")
             captureResponseFlow.value = CaptureResponse.Error(NoMediaProjectionTokenException(e.toString()))
-        }
-    }
-
-    // maxImages must be >= 2: acquireLatestImage() needs a spare buffer to
-    // drop stale frames and return the freshest one. With 1 it can hand back
-    // a stale, pre-transparency frame that still contains overlay pixels.
-    private fun newImageReader(screenInfo: ScreenInfo): ImageReader =
-        ImageReader.newInstance(screenInfo.width, screenInfo.height, PixelFormat.RGBA_8888, 2)
-
-    private fun imageListenerFor(screenInfo: ScreenInfo): ImageReader.OnImageAvailableListener {
-        return ImageReader.OnImageAvailableListener listener@{ imageReader ->
-//                Timber.tag(TAG).d("---- onImageAvailable imageReader $imageReader ----")
-            val capturedImage = imageReader.acquireLatestImage()
-            try {
-                if (captureResponseFlow.value == null) {
-                    if (capturedImage != null) {
-                        val minimumTimestamp = minimumImageTimestampNs
-                        if (minimumTimestamp != null &&
-                            capturedImage.timestamp > 0 &&
-                            capturedImage.timestamp < minimumTimestamp
-                        ) {
-                            Timber.tag(TAG).d(
-                                "drop stale capture frame timestamp=${capturedImage.timestamp} minimum=$minimumTimestamp"
-                            )
-                            return@listener
-                        }
-                        val (capturedBitmap, screenRect) = bitmapFromImage(
-                            image = capturedImage,
-                            screenInfo = screenInfo,
-                            requestedRect = requestedScreenRect,
-                        )
-//                        Timber.tag(TAG).d("capturedBitmap.allocationByteCount ${capturedBitmap.allocationByteCount}")
-                        captureResponseFlow.value = CaptureResponse.Success(capturedBitmap, screenRect)
-                    } else {
-                        captureResponseFlow.value = CaptureResponse.Error(CapturedImageInvalidException())
-                    }
-                }
-            } catch (t: Throwable) {
-                t.printStackTrace()
-                Timber.tag(TAG).e("err t ${t.toString()} $mediaProjectionToken")
-                captureResponseFlow.value = CaptureResponse.Error(NoMediaProjectionTokenException(t.toString()))
-            } finally {
-                capturedImage?.close()
-            }
         }
     }
 
@@ -325,6 +318,11 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
                 first.bottom == second.bottom
     }
 
+    fun restart() {
+        clearResources()
+        state = State.Uninitialized
+    }
+
     /**
      * https://stackoverflow.com/questions/42158782/mediaprojection-api-on-protected-drm-content
      * https://support.google.com/googleplay/android-developer/answer/14638385?hl=ko&ref_topic=13878452&sjid=17736376115784780377-AP#zippy=%2Cflag-secure%EA%B0%80-%EC%9D%98%EB%8F%84%ED%95%9C-%EB%8C%80%EB%A1%9C-%EC%9E%91%EB%8F%99%ED%95%98%EB%8A%94-%EB%B0%A9%EC%8B%9D%EC%9D%98-%EC%98%88%EB%8A%94-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80%EC%9A%94%2Cflag-secure-%EB%B0%8F-require-secure-env-%ED%94%8C%EB%9E%98%EA%B7%B8%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%A0-%EC%88%98-%EC%9E%88%EB%8A%94-%EC%95%B1-%EC%9C%A0%ED%98%95%EC%9D%80-%EB%AC%B4%EC%97%87%EC%9D%B8%EA%B0%80%EC%9A%94%2C%EC%9D%B4%EB%9F%AC%ED%95%9C-%ED%94%8C%EB%9E%98%EA%B7%B8%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%98%EB%A9%B4-%EC%95%B1%EC%97%90-%EB%B6%80%EC%A0%95%EC%A0%81%EC%9D%B8-%EC%98%81%ED%96%A5%EC%9D%84-%EB%AF%B8%EC%B9%98%EB%82%98%EC%9A%94-%EA%B5%AC%ED%98%84%ED%95%98%EB%8A%94-%EB%8D%B0-%EC%8B%9C%EA%B0%84%EC%9D%B4-%EC%96%BC%EB%A7%88%EB%82%98-%EA%B1%B8%EB%A6%AC%EB%82%98%EC%9A%94
@@ -361,40 +359,6 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
         return Pair(isCapturePrevented, checkerBitmap)
     }
 
-    // Alive = projection-backed display & reader still exist and the display wasn't released.
-    private fun isPipelineLive(): Boolean {
-        val display = virtualDisplay ?: return false
-        if (imageReader == null) return false
-        return display.display?.isValid == true
-    }
-
-    private fun matchesCurrentScreen(): Boolean {
-        val reader = imageReader ?: return false
-        val screenInfo = ScreenInfoHolder.get()
-        return reader.width == screenInfo.width && reader.height == screenInfo.height
-    }
-
-    private fun resizePipeline() {
-        val display = virtualDisplay ?: return
-        val screenInfo = ScreenInfoHolder.get()
-        val dpi = context.resources.displayMetrics.densityDpi
-        try {
-            val oldReader = imageReader
-            val newReader = newImageReader(screenInfo)
-            newReader.setOnImageAvailableListener(imageListenerFor(screenInfo), handler)
-            display.resize(screenInfo.width, screenInfo.height, dpi)
-            display.surface = newReader.surface
-            imageReader = newReader
-            oldReader?.setOnImageAvailableListener(null, null)
-            oldReader?.close()
-            Timber.tag(TAG).i("#### resizePipeline ${screenInfo.width}x${screenInfo.height} dpi $dpi ####")
-        } catch (e: Exception) {
-            // Resize failed — fall back to a full rebuild (may surface re-auth, but never starve).
-            Timber.tag(TAG).e("resizePipeline failed: $e")
-            start()
-        }
-    }
-
     private fun clearResources() {
         virtualDisplay?.release()
         virtualDisplay = null
@@ -423,14 +387,8 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
 
         try {
             Timber.tag(TAG).i("State $state")
-            if (state == State.Uninitialized || !isPipelineLive()) {
+            if (state == State.Uninitialized) {
                 start()
-            } else if (!matchesCurrentScreen()) {
-                // Fold/rotation changed the mirrored display bounds. Resize the existing virtual
-                // display instead of rebuilding the projection: on API 34+ the consent token is
-                // single-use, and a full start() here would burn a healthy session and pop the
-                // consent dialog on every orientation change.
-                resizePipeline()
             }
 
             // An AUTO_MIRROR virtual display only produces frames on screen updates, and the
@@ -438,19 +396,7 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
             // suspend forever (observed as a silent fixed-area polling stall).
             val captureResponse: CaptureResponse = withTimeoutOrNull(CAPTURE_RESPONSE_TIMEOUT_MS) {
                 captureResponseFlow.filterNotNull().first()
-            } ?: if (!isPipelineLive()) {
-                // The pipeline died mid-session (e.g. OEM killed it without dispatching onStop).
-                // Reset so the next request() goes through start() and surfaces
-                // NoMediaProjectionTokenException → triggers the re-auth flow in the UI.
-                // Do NOT reset in the pipeline-alive branch: on API 34+ the consent token is
-                // single-use, so blindly restarting a healthy session would burn a live
-                // projection and nag the user with re-auth dialogs on transient timeouts.
-                clearResources()
-                state = State.Uninitialized
-                CaptureResponse.Error(NoMediaProjectionTokenException("capture pipeline died"))
-            } else {
-                CaptureResponse.Error(CaptureTimeoutException())
-            }
+            } ?: CaptureResponse.Error(CaptureTimeoutException())
             if (captureResponse is CaptureResponse.Success) {
 //            val (isCapturePrevented, checkerBitmap) = isCapturePrevented(capturedBitmap)
 //            captureWorkFlow.value =
@@ -470,9 +416,6 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
     override fun onZeroReferences() {
         Timber.tag(TAG).d("====================== mediaProjectionToken = null ============================ ")
         clearResources()
-        // Resources are gone; without this reset the singleton would stay Ready forever
-        // and every later request() would skip start() and starve on a dead pipeline.
-        state = State.Uninitialized
         mediaProjectionToken = null
     }
 
