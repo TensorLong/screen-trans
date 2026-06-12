@@ -416,6 +416,10 @@ class CaptureRepository @Inject constructor(@ApplicationContext val context: Con
     override fun onZeroReferences() {
         Timber.tag(TAG).d("====================== mediaProjectionToken = null ============================ ")
         clearResources()
+        // Resources are gone; without this reset the singleton stays Ready forever and every
+        // later request() skips start() and starves on the dead pipeline — a permanent,
+        // silent capture brick that re-granting the projection can never heal.
+        state = State.Uninitialized
         mediaProjectionToken = null
     }
 
