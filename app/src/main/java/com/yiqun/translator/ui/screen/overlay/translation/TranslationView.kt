@@ -140,8 +140,14 @@ open class TranslationView : OverlayView() {
                         )
                     }
                 }
+                else {
+                    Timber.tag("DIAG").w("TranslationView skip: not attached to window")
+                }
             }
-        } ?: clear()
+        } ?: run {
+            Timber.tag("DIAG").w("TranslationView clear() flow null/mismatch")
+            clear()
+        }
     }
 
     override fun onServiceConnected(overlayService: OverlayService) {
@@ -165,6 +171,7 @@ open class TranslationView : OverlayView() {
         translation: Transaction,
         visionText: VisionText
     ) {
+        Timber.tag("DIAG").i("TranslationView.cast text=[${translation.sourceText?.take(80)}] result=[${translation.resultText?.take(80)}]")
         layoutParams = getTranslationLayout(
             applicationContext,
             translation,
@@ -221,6 +228,7 @@ open class TranslationView : OverlayView() {
             || translation.detectedLanguageCode != drawnTranslation?.detectedLanguageCode
         ) {
             Timber.tag(TAG).e("+++++++++++ clear() !!!!!!!!!!!!!!!!!!")
+            Timber.tag("DIAG").w("TranslationView clear() layout self-heal sourceText/lang mismatch")
             clear()
         }
 
@@ -293,6 +301,7 @@ open class TranslationView : OverlayView() {
                 R.dimen.translation_view_vision_text_v_margin
             ) - viewHeight
         Timber.tag(TAG).d("layoutPosX [${layoutPosX}] layoutPosY [${layoutPosY}]")
+        Timber.tag("DIAG").i("TranslationView layout x=$layoutPosX y=$layoutPosY w=$viewWidth h=$viewHeight box=${visionText.boundingBox}")
 
         return WindowManager.LayoutParams(
             viewWidth,

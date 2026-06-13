@@ -124,9 +124,13 @@ abstract class OverlayView : OverlayServiceEventListener {
 
                             oldView.postDelayed(oldViewDetachRunnable, 900)
                         }
-                    } catch (_: IllegalStateException) {
+                    } catch (e: IllegalStateException) {
+                        Timber.tag("DIAG").e(e, "OverlayView addView/removeView IllegalState swallowed ($TAG)")
                     }
                 }
+            }
+            else {
+                Timber.tag("DIAG").w("OverlayView addView skipped: already attached or guard failed ($TAG)")
             }
         }
 

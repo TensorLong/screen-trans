@@ -17,6 +17,7 @@ import java.io.UnsupportedEncodingException
 import java.util.zip.GZIPInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
+import timber.log.Timber
 
 
 @Singleton
@@ -124,6 +125,7 @@ class GoogleWebKit @Inject constructor(@GoogleWebRetrofit private val googleWebS
 
         var detectedLanguageCode = sourceLanguageCode
         val resultText: String
+        var responseJson: String? = null
 
         try {
             val responseBody = googleWebService.send(
@@ -133,7 +135,7 @@ class GoogleWebKit @Inject constructor(@GoogleWebRetrofit private val googleWebS
                 tk = token(sourceText.trim { it <= ' ' }),
                 sourceText = sourceText.trim { it <= ' ' },
             )
-            val responseJson = withContext(Dispatchers.IO) {
+            responseJson = withContext(Dispatchers.IO) {
                 val `is` = responseBody.byteStream()
                 val gis = GZIPInputStream(`is`)
                 val `in` = BufferedReader(InputStreamReader(gis, "UTF-8"))
@@ -144,7 +146,7 @@ class GoogleWebKit @Inject constructor(@GoogleWebRetrofit private val googleWebS
                 }
                 sb.toString()
             }
-            val jsonArr = JSONArray(responseJson)
+            val jsonArr = JSONArray(responseJson!!)
             val jsonArr_0 = jsonArr[0] as JSONArray
             val originStringBuilder = StringBuilder()
             val transStringBuilder = StringBuilder()
@@ -160,6 +162,9 @@ class GoogleWebKit @Inject constructor(@GoogleWebRetrofit private val googleWebS
                 }
             }
             resultText = transStringBuilder.toString()
+            if (resultText.isEmpty()) {
+                Timber.tag("DIAG").w("GoogleWebKit EMPTY result for input=[$sourceText] raw=${responseJson?.take(1500)}")
+            }
 
             try {
                 detectedLanguageCode = jsonArr[2] as String
@@ -167,15 +172,20 @@ class GoogleWebKit @Inject constructor(@GoogleWebRetrofit private val googleWebS
                 e.printStackTrace()
             }
         } catch (e: UnsupportedEncodingException) {
+            Timber.tag("DIAG").e(e, "GoogleWebKit FAIL(UnsupportedEncoding) input=[$sourceText] raw=${responseJson?.take(1500)}")
             return TranslationResponse.Error(e)
         } catch (e: IOException) {
+            Timber.tag("DIAG").e(e, "GoogleWebKit FAIL(IO) input=[$sourceText] raw=${responseJson?.take(1500)}")
             return TranslationResponse.Error(e)
         } catch (e: HttpException) {
+            Timber.tag("DIAG").e(e, "GoogleWebKit FAIL(HTTP ${e.code()}) input=[$sourceText] raw=${responseJson?.take(1500)}")
             return TranslationResponse.Error(e)
         } catch (e: Exception) {
+            Timber.tag("DIAG").e(e, "GoogleWebKit FAIL(${e.javaClass.simpleName}) input=[$sourceText] raw=${responseJson?.take(1500)}")
             return TranslationResponse.Error(e)
         }
 
+        Timber.tag("DIAG").i("GoogleWebKit OK input=[${sourceText.take(80)}] output=[${resultText.take(80)}] detected=$detectedLanguageCode")
         return TranslationResponse.Success(
             Transaction(
                 sourceLanguageCode = sourceLanguageCode,

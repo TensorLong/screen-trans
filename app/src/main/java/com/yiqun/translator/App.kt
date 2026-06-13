@@ -16,9 +16,9 @@ class App : Application() {
         super.onCreate()
 
         // timber
-        if (BuildConfig.DEBUG) {
-            Timber.plant(Timber.DebugTree())
-        }
+        // DIAGNOSTIC BUILD (v3.5.3-diag1): Timber planted unconditionally so DIAG logs reach
+        // logcat on user devices. Revert to the BuildConfig.DEBUG guard before any normal release.
+        Timber.plant(Timber.DebugTree())
 
         if (!BuildConfig.DEBUG) {
             // firebase

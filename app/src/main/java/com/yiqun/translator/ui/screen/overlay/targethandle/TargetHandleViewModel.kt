@@ -1108,6 +1108,7 @@ class TargetHandleViewModel(
                                 pointerPositionedVisionText is SenseGroupVisionText &&
                                 pointerPositionedVisionText.precomputedTranslation.isNotBlank()
                             ) {
+                                Timber.tag("DIAG").i("senseGroup precomputed used for [${pointerPositionedVisionText.representation.take(80)}]")
                                 val chunkText = pointerPositionedVisionText.representation
                                 val chunkTranslation = pointerPositionedVisionText.precomputedTranslation
                                 Timber.tag(TAG).d("SENSE_GROUP precomputed: [$chunkText] -> [$chunkTranslation]")
@@ -1127,6 +1128,10 @@ class TargetHandleViewModel(
                                 )
                                 pointerPositionedTranslationFlow.value = transaction
                                 return@let
+                            }
+
+                            if (pointerPositionedVisionText is SenseGroupVisionText) {
+                                Timber.tag("DIAG").i("senseGroup precomputed BLANK -> engine fallback for [${pointerPositionedVisionText.representation.take(80)}]")
                             }
 
                             Timber.tag(TAG).d("translationKitType $translationKitType")
@@ -1159,6 +1164,7 @@ class TargetHandleViewModel(
                                                         detectedLanguageCode = it.result.detectedLanguageCode,
                                                         resultText = it.result.resultText,
                                                     )
+                                                    Timber.tag("DIAG").i("translate OK kit=${it.result.translationKitType} text=[${transaction.sourceText?.take(80)}] result=[${transaction.resultText?.take(80)}] blankResult=${transaction.resultText.isNullOrBlank()}")
                                                     Timber.tag(TAG).d("translationRepository Translated transaction $transaction")
 
                                                     TranslationView.INSTANCE.cast(
@@ -1171,10 +1177,17 @@ class TargetHandleViewModel(
 
                                                 is TranslationResponse.Error -> {
                                                     Timber.tag(TAG).d("Response Error ${it.t}")
+                                                    Timber.tag("DIAG").e(it.t, "translate ERROR kit=$translationKitType text=[${pointerPositionedVisionText.representation}]")
                                                 }
                                             }
                                         }
+                                        else {
+                                            Timber.tag("DIAG").w("translate aborted mid-flight: motionEvent=$motionEventState (finger lifted)")
+                                        }
                                     }
+                            }
+                            else {
+                                Timber.tag("DIAG").w("translate aborted mid-flight: motionEvent=$motionEventState (finger lifted)")
                             }
                         }
                     }
@@ -1278,6 +1291,13 @@ class TargetHandleViewModel(
                     ttsRepository.stopTTS()
                 }
                 // null emit.
+                if (visionText != null) {
+                    Timber.tag("DIAG").w(
+                        "popup suppressed: translationNull=${translation == null} " +
+                            "match=${visionText.representation == translation?.sourceText} " +
+                            "vision=[${visionText.representation.take(120)}] source=[${translation?.sourceText?.take(120)}]"
+                    )
+                }
                 flowOf(null)
             }
         }
